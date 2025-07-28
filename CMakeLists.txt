@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.10.2)
 
-set(APP_NAME 08-helloTriangle)
+set(APP_NAME BP)
 project(${APP_NAME})
 
 set(APP_SOURCES
