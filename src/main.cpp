@@ -10,6 +10,7 @@
 #include <iostream>
 #include "core/Instance.hpp"
 #include "core/Device.hpp"
+#include "core/Swapchain.hpp"
 #include "window.h"
 
 int main() {
@@ -33,9 +34,20 @@ int main() {
 		Device device(instance, *surface);
 		std::cout << "Successfully created device!" << std::endl;
 
-		std::cout << "Entering main loop..." << std::endl;
+		std::cout << "Creating swapchain..." << std::endl;
+		Swapchain swapchain(device, *surface, 800, 600);
+
+		std::cout << "\n✓ Swapchain created successfully!" << std::endl;
+		std::cout << "  - Image format: " << vk::to_string(swapchain.getImageFormat()) << std::endl;
+		std::cout << "  - Extent: " << swapchain.getExtent().width << "x" << swapchain.getExtent().height << std::endl;
+		std::cout << "  - Image count: " << swapchain.getImages().size() << std::endl;
+		std::cout << "  - Image views: " << swapchain.getImageViews().size() << std::endl;
+
 		while (!window.shouldClose()) {
 			window.pollEvents();
+			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+				break;
+			}
 		}
 	}
 	catch (vk::Error& e)

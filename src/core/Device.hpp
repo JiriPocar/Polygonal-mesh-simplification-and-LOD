@@ -20,7 +20,7 @@ public:
 	}
 
 	vk::Queue getPresentQueue() const {
-		return graphicsQueue;
+		return presentQueue;
 	}
 
 	uint32_t getGraphicsQueueFamily() const {

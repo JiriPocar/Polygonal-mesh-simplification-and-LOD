@@ -22,7 +22,24 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/;${CMAKE_MODULE_PATH}")
 find_package(Vulkan REQUIRED)
 
 # Executable
-add_executable(${APP_NAME} ${APP_SOURCES} ${APP_SHADERS} "src/core/Device.cpp" "src/core/Instance.cpp" "src/core/Pipeline.cpp" "src/rendering/Renderer.cpp" "src/rendering/RenderPass.cpp" "src/rendering/Descriptors.cpp" "src/rendering/CommandManager.cpp" "src/resources/Mesh.cpp" "src/resources/Textures.cpp" "src/resources/Model.cpp" "src/resources/ResourceManager.cpp" "src/scene/Camera.cpp" "src/scene/Light.cpp" "src/scene/Scene.cpp")
+add_executable(${APP_NAME}
+    ${APP_SOURCES}
+    ${APP_SHADERS}
+    "src/core/Device.cpp"
+    "src/core/Instance.cpp"
+    "src/core/Pipeline.cpp"
+    "src/core/Swapchain.cpp"
+    "src/rendering/Renderer.cpp"
+    "src/rendering/RenderPass.cpp"
+    "src/rendering/Descriptors.cpp"
+    "src/rendering/CommandManager.cpp"
+    "src/resources/Mesh.cpp"
+    "src/resources/Textures.cpp"
+    "src/resources/Model.cpp"
+    "src/resources/ResourceManager.cpp"
+    "src/scene/Camera.cpp"
+    "src/scene/Light.cpp"
+    "src/scene/Scene.cpp")
 
 # Include directories
 target_include_directories(${APP_NAME} PRIVATE 
