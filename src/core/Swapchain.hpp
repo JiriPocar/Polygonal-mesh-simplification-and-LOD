@@ -14,6 +14,7 @@ public:
 	const std::vector<vk::UniqueImageView>& getImageViews() const { return imageViews; }
 	vk::Format getImageFormat() const { return imageFormat; }
 	vk::Extent2D getExtent() const { return extent; }
+	const vk::UniqueSwapchainKHR& get() const { return swapchain; }
 
 	uint32_t acquireNextImage(vk::Semaphore signalSemaphore);
 	void presentImage(uint32_t imageIndex,vk::Semaphore waitSemaphore);

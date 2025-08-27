@@ -13,6 +13,9 @@
 #include "core/Swapchain.hpp"
 #include "core/Pipeline.hpp"
 #include "rendering/RenderPass.hpp"
+#include "rendering/FrameBuffer.hpp"
+#include "rendering/CommandManager.hpp"
+#include "rendering/Renderer.hpp"
 #include "window.h"
 
 int main() {
@@ -53,11 +56,28 @@ int main() {
 		std::cout << "  - Pipeline layout: " << (pipeline.getLayout() ? "VALID" : "INVALID") << std::endl;
 		std::cout << "  - Pipeline handle: " << (pipeline.get() ? "VALID" : "INVALID") << std::endl;
 
+		FrameBuffer framebuffer(device, renderPass, swapchain);
+		std::cout << "\nFramebuffers created successfully!" << std::endl;
+		for (size_t i = 0; i < framebuffer.getFramebuffers().size(); i++) {
+			std::cout << "  - Framebuffer " << i << ": "
+				<< (framebuffer.getFrameBufferAt(i) ? "VALID" : "INVALID") << std::endl;
+		}
+
+		std::cout << "\nCreating command manager..." << std::endl;
+		CommandManager commandManager(device);
+		commandManager.createCommandBuffers(static_cast<uint32_t>(swapchain.getImages().size()));
+		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
+
+		std::cout << "\nCreating renderer..." << std::endl;
+		Renderer renderer(device, swapchain, renderPass, pipeline, framebuffer, commandManager);
+
 		while (!window.shouldClose()) {
 			window.pollEvents();
 			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 				break;
 			}
+
+			renderer.drawFrame();
 		}
 	}
 	catch (vk::Error& e)

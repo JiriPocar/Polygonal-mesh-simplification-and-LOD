@@ -77,7 +77,7 @@ add_executable(${APP_NAME}
     "src/resources/ResourceManager.cpp"
     "src/scene/Camera.cpp"
     "src/scene/Light.cpp"
-    "src/scene/Scene.cpp")
+    "src/scene/Scene.cpp" "src/rendering/FrameBuffer.cpp")
 
 # Pokud jsou shadery kompilovány, přidej závislost
 if(EXISTS "${GLSL_VALIDATOR}")
