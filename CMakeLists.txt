@@ -9,13 +9,51 @@ set(APP_SOURCES
     "src/window.h"
 )
 
+# Nastavení cesty k Vulkan SDK
+set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.313.0")
+set(GLSL_VALIDATOR "${VULKAN_SDK_PATH}/Bin/glslangValidator.exe")
+
+# Kontrola existence glslangValidator
+if(NOT EXISTS "${GLSL_VALIDATOR}")
+    message(WARNING "glslangValidator not found at: ${GLSL_VALIDATOR}")
+    message("Shader compilation will be skipped")
+endif()
+
 set(APP_INCLUDES
 )
 
-set(APP_SHADERS
-    "src/shaders/shader.vert"
-    "src/shaders/shader.frag"
-)
+# Shader soubory
+set(VERTEX_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.vert")
+set(FRAGMENT_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.frag")
+
+# Output SPIR-V soubory
+set(VERTEX_SPV "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.vert.spv")
+set(FRAGMENT_SPV "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.frag.spv")
+
+# Kompilace shaderů pokud je dostupný glslangValidator
+if(EXISTS "${GLSL_VALIDATOR}")
+    add_custom_command(
+        OUTPUT ${VERTEX_SPV}
+        COMMAND ${GLSL_VALIDATOR} -V ${VERTEX_SHADER} -o ${VERTEX_SPV}
+        DEPENDS ${VERTEX_SHADER}
+        COMMENT "Compiling vertex shader"
+    )
+
+    add_custom_command(
+        OUTPUT ${FRAGMENT_SPV}
+        COMMAND ${GLSL_VALIDATOR} -V ${FRAGMENT_SHADER} -o ${FRAGMENT_SPV}
+        DEPENDS ${FRAGMENT_SHADER}
+        COMMENT "Compiling fragment shader"
+    )
+
+    # Cíl pro kompilaci shaderů
+    add_custom_target(CompileShaders ALL DEPENDS ${VERTEX_SPV} ${FRAGMENT_SPV})
+    
+    # Přidat SPIR-V soubory k aplikaci
+    set(APP_SOURCES ${APP_SOURCES} ${VERTEX_SPV} ${FRAGMENT_SPV})
+else()
+    message(WARNING "Shader compilation disabled - glslangValidator not found")
+endif()
 
 # Dependencies
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/;${CMAKE_MODULE_PATH}")
@@ -41,6 +79,11 @@ add_executable(${APP_NAME}
     "src/scene/Light.cpp"
     "src/scene/Scene.cpp")
 
+# Pokud jsou shadery kompilovány, přidej závislost
+if(EXISTS "${GLSL_VALIDATOR}")
+    add_dependencies(${APP_NAME} CompileShaders)
+endif()
+
 # Include directories
 target_include_directories(${APP_NAME} PRIVATE 
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -59,4 +102,15 @@ target_link_libraries(${APP_NAME} PRIVATE
 set_target_properties(${APP_NAME} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
+)
+
+# Kopírování shaderů do output directory
+add_custom_command(TARGET ${APP_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory 
+        ${CMAKE_CURRENT_BINARY_DIR}/shaders
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${VERTEX_SHADER} ${CMAKE_CURRENT_BINARY_DIR}/shaders/
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${FRAGMENT_SHADER} ${CMAKE_CURRENT_BINARY_DIR}/shaders/
+    COMMENT "Copying shaders to output directory"
 )
