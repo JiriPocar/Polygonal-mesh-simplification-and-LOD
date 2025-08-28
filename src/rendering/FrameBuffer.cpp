@@ -13,6 +13,8 @@ FrameBuffer::FrameBuffer(const Device& device, const RenderPass& renderPass, con
 
 void FrameBuffer::createFramebuffers(const RenderPass& renderPass, const Swapchain& swapchain)
 {
+	cleanup();
+
 	auto const& imageViews = swapchain.getImageViews();
 	framebuffers.reserve(imageViews.size());
 

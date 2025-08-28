@@ -1,5 +1,6 @@
 #include "window.h"
 #include <stdexcept>
+#include <iostream>
 
 Window::Window(int width, int height, const char* name)
 {
@@ -16,12 +17,29 @@ Window::Window(int width, int height, const char* name)
 		glfwTerminate();
 		throw std::runtime_error("Failed to create GLFW window");
 	}
+
+	glfwSetWindowUserPointer(window, this);
+	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
 Window::~Window()
 {
 	glfwDestroyWindow(window);
 	glfwTerminate();
+}
+
+void Window::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	auto *win = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+	win->width = width;
+	win->height = height;
+	win->resized = true;
+
+	if (win->resizeCallback)
+	{
+		win->resizeCallback(width, height);
+	}
+
+	//std::cout << "Window resized to " << width << "x" << height << std::endl;
 }
 
 vk::UniqueSurfaceKHR Window::createSurface(vk::Instance instance)

@@ -19,6 +19,9 @@ public:
 	uint32_t acquireNextImage(vk::Semaphore signalSemaphore);
 	void presentImage(uint32_t imageIndex,vk::Semaphore waitSemaphore);
 
+	void recreateOnResize(vk::SurfaceKHR surface, uint32_t width, uint32_t height);
+	void cleanup();
+
 private:
 	struct SwapchainSupportDetails {
 		vk::SurfaceCapabilitiesKHR capabilities;

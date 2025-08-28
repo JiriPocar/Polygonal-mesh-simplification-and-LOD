@@ -69,15 +69,27 @@ int main() {
 		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
 
 		std::cout << "\nCreating renderer..." << std::endl;
-		Renderer renderer(device, swapchain, renderPass, pipeline, framebuffer, commandManager);
+		Renderer renderer(device, swapchain, renderPass, pipeline,
+						  framebuffer, commandManager, window, surface.get());
 
 		while (!window.shouldClose()) {
 			window.pollEvents();
 			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 				break;
 			}
-
-			renderer.drawFrame();
+			try {
+				renderer.drawFrame();
+			}
+			catch (const vk::OutOfDateKHRError&) {
+				renderer.recreateSwapchain();
+			}
+			catch (const std::exception& e) {
+				std::cerr << "Error during frame rendering: " << e.what() << std::endl;
+			}
+			
+			if (window.wasResized()) {
+				window.resetResizedFlag();
+			}
 		}
 	}
 	catch (vk::Error& e)

@@ -3,15 +3,23 @@
 #include <iostream>
 
 Renderer::Renderer(Device& device, Swapchain& swapchain, RenderPass& renderPass,
-	Pipeline& pipeline, FrameBuffer& framebuffer, CommandManager& commandManager)
+	Pipeline& pipeline, FrameBuffer& framebuffer, CommandManager& commandManager,
+	Window& window, vk::SurfaceKHR surface)
 	:	m_device(device),
 		m_swapchain(swapchain),
 		m_renderPass(renderPass),
 		m_pipeline(pipeline),
 		m_framebuffer(framebuffer),
-		m_commandManager(commandManager)
+		m_commandManager(commandManager),
+		m_window(window),
+		m_surface(surface)
 {
 	createSyncObjects();
+
+	m_window.setResizeCallback([this](int width, int height)
+		{
+			this->framebufferResized = true;
+		});
 }
 
 Renderer::~Renderer()
@@ -40,6 +48,12 @@ void Renderer::cleanupSyncObjects()
 
 void Renderer::drawFrame()
 {
+	if (framebufferResized)
+	{
+		recreateSwapchain();
+		return;
+	}
+
 	// wait for gpu to finish frame
 	m_device.operator*().waitForFences(1, &*inFlightFence, VK_TRUE, UINT64_MAX);
 	m_device.operator*().resetFences(1, &*inFlightFence);
@@ -103,4 +117,29 @@ void Renderer::drawFrame()
 	);
 
 	m_device.getPresentQueue().presentKHR(presentInfo);
+}
+
+void Renderer::recreateSwapchain()
+{
+	int width = 0, height = 0;
+
+	while (width == 0 || height == 0)
+	{
+		glfwGetFramebufferSize(m_window.getGLFWWindow(), &width, &height);
+		glfwWaitEvents();
+	}
+
+	m_device.operator*().waitIdle();
+
+	m_swapchain.recreateOnResize(m_surface, width, height);
+
+	recreateFramebuffers();
+
+	framebufferResized = false;
+}
+
+void Renderer::recreateFramebuffers()
+{
+	m_framebuffer.cleanup();
+	m_framebuffer.createFramebuffers(m_renderPass, m_swapchain);
 }

@@ -134,3 +134,23 @@ void Swapchain::presentImage(uint32_t imageIndex, vk::Semaphore waitSemaphore)
 		throw std::runtime_error("Failed to present swapchain image.");
 	}
 }
+
+void Swapchain::recreateOnResize(vk::SurfaceKHR surface, uint32_t width, uint32_t height)
+{
+	// wait for the device to be idle before recreating
+	swapchainDevice.operator*().waitIdle();
+
+	// cleanup old swapchain
+	cleanup();
+
+	// create new swapchain
+	createSwapchain(surface, width, height);
+	createImageViews();
+}
+
+void Swapchain::cleanup()
+{
+	imageViews.clear();
+	swapchain.reset();
+	images.clear();
+}
