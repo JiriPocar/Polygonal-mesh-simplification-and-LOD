@@ -71,10 +71,13 @@ void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapcha
 	vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
 	// vertex input
+	auto bindingDescription = Vertex::getBindingDesc();
+	auto attributeDescriptions = Vertex::getAttributeDesc();
+
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo(
-		{},			// flags
-		0, nullptr, // no vertex bindings
-		0, nullptr  // no vertex attributes
+		{},
+		1, &bindingDescription,
+		static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data()
 	);
 
 	// input assembly

@@ -24,7 +24,7 @@ public:
 	vk::Framebuffer getFrameBufferAt(size_t index) const { return framebuffers.at(index).get(); }
 	void createFramebuffers(const RenderPass& renderPass, const Swapchain& swapchain);
 	void cleanup() { framebuffers.clear(); }
-
+	 
 private:
 	const Device& dev;
 	std::vector<vk::UniqueFramebuffer> framebuffers;

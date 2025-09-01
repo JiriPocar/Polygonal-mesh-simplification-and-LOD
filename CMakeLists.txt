@@ -77,7 +77,7 @@ add_executable(${APP_NAME}
     "src/resources/ResourceManager.cpp"
     "src/scene/Camera.cpp"
     "src/scene/Light.cpp"
-    "src/scene/Scene.cpp" "src/rendering/FrameBuffer.cpp")
+    "src/scene/Scene.cpp" "src/rendering/FrameBuffer.cpp" "external/tinygltf/stb_image.h" "external/tinygltf/stb_image_write.h" "external/tinygltf/tiny_gltf.h" "src/resources/Buffer.cpp")
 
 # Pokud jsou shadery kompilovány, přidej závislost
 if(EXISTS "${GLSL_VALIDATOR}")
@@ -87,7 +87,9 @@ endif()
 # Include directories
 target_include_directories(${APP_NAME} PRIVATE 
     ${CMAKE_CURRENT_BINARY_DIR}
-    external/glfw/include)
+    external/glfw/include
+    external/tinygltf
+)
 
 # Link directories
 target_link_directories(${APP_NAME} PRIVATE external/glfw/lib)

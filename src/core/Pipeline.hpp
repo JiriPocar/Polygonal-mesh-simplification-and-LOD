@@ -1,5 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
+#include "../resources/Model.hpp"
 #include <memory>
 #include <vector>
 

@@ -16,6 +16,7 @@
 #include "rendering/FrameBuffer.hpp"
 #include "rendering/CommandManager.hpp"
 #include "rendering/Renderer.hpp"
+#include "resources/Model.hpp"
 #include "window.h"
 
 int main() {
@@ -67,6 +68,10 @@ int main() {
 		CommandManager commandManager(device);
 		commandManager.createCommandBuffers(static_cast<uint32_t>(swapchain.getImages().size()));
 		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
+
+		std::cout << "\nLoading model..." << std::endl;
+		Model model(device, "C:/Users/tf2ma/source/repos/Renderer/assets/Fox.gltf");
+		std::cout << "Model loaded successfully!" << std::endl;
 
 		std::cout << "\nCreating renderer..." << std::endl;
 		Renderer renderer(device, swapchain, renderPass, pipeline,
