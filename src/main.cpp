@@ -75,7 +75,7 @@ int main() {
 
 		std::cout << "\nCreating renderer..." << std::endl;
 		Renderer renderer(device, swapchain, renderPass, pipeline,
-						  framebuffer, commandManager, window, surface.get());
+						  framebuffer, commandManager, window, surface.get(), model);
 
 		while (!window.shouldClose()) {
 			window.pollEvents();

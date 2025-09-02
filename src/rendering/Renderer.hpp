@@ -9,6 +9,7 @@
 #include "RenderPass.hpp"
 #include "FrameBuffer.hpp"
 #include "CommandManager.hpp"
+#include "../resources/Model.hpp"
 
 class Renderer {
 public:
@@ -20,7 +21,8 @@ public:
 		FrameBuffer& framebuffer,
 		CommandManager& commandManager,
 		Window& window,
-		vk::SurfaceKHR surface
+		vk::SurfaceKHR surface,
+		Model& model
 	);
 
 	~Renderer();
@@ -41,6 +43,7 @@ private:
 	CommandManager& m_commandManager;
 	Window& m_window;
 	vk::SurfaceKHR m_surface;
+	Model& m_model;
 
 	vk::UniqueSemaphore imageAvailableSemaphores;
 	vk::UniqueSemaphore renderFinishedSemaphores;

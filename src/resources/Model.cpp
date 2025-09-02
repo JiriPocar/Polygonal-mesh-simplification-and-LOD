@@ -61,6 +61,18 @@ Mesh::Mesh(const Device& device, const tinygltf::Model& model, const tinygltf::P
 
 	createVertexBuffer(vertices);
 	createIndexBuffer(indices);
+
+	std::cout << "Loaded mesh with " << vertexCount << " vertices and " << indexCount << " indices." << std::endl;
+	if (!vertices.empty()) {
+		glm::vec3 minPos = vertices[0].pos;
+		glm::vec3 maxPos = vertices[0].pos;
+		for (const auto& v : vertices) {
+			minPos = glm::min(minPos, v.pos);
+			maxPos = glm::max(maxPos, v.pos);
+		}
+		std::cout << "(" << minPos.x << "," << minPos.y << "," << minPos.z << ") to "
+			<< "(" << maxPos.x << "," << maxPos.y << "," << maxPos.z << ")" << std::endl;
+	}
 }
 
 void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<Vertex>& vertices)
@@ -122,7 +134,7 @@ void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive&
 				normalsData[i * 3 + 2]
 			);
 		}
-		else
+		else // default to up vector if no normals are provided
 		{
 			vertices[i].normal = glm::vec3(0.0f, 1.0f, 0.0f);
 		}
@@ -134,7 +146,7 @@ void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive&
 				texCoordsData[i * 2 + 1]
 			);
 		}
-		else
+		else // default to zero if no texcoords are provided
 		{
 			vertices[i].texCoord = glm::vec2(0.0f, 0.0f);
 		}

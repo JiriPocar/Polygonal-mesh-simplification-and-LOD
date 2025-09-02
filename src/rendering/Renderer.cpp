@@ -4,7 +4,7 @@
 
 Renderer::Renderer(Device& device, Swapchain& swapchain, RenderPass& renderPass,
 	Pipeline& pipeline, FrameBuffer& framebuffer, CommandManager& commandManager,
-	Window& window, vk::SurfaceKHR surface)
+	Window& window, vk::SurfaceKHR surface, Model& model)
 	:	m_device(device),
 		m_swapchain(swapchain),
 		m_renderPass(renderPass),
@@ -12,7 +12,8 @@ Renderer::Renderer(Device& device, Swapchain& swapchain, RenderPass& renderPass,
 		m_framebuffer(framebuffer),
 		m_commandManager(commandManager),
 		m_window(window),
-		m_surface(surface)
+		m_surface(surface),
+		m_model(model)
 {
 	createSyncObjects();
 
@@ -83,7 +84,8 @@ void Renderer::drawFrame()
 
 	// bind pipeline a draw call
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
-	cmdBuffer.draw(3, 1, 0, 0);
+	
+	m_model.draw(cmdBuffer);
 
 	cmdBuffer.endRenderPass();
 	cmdBuffer.end();
