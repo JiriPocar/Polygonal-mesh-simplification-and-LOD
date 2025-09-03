@@ -1,10 +1,11 @@
 #include "Renderer.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <iostream>
 
 Renderer::Renderer(Device& device, Swapchain& swapchain, RenderPass& renderPass,
 	Pipeline& pipeline, FrameBuffer& framebuffer, CommandManager& commandManager,
-	Window& window, vk::SurfaceKHR surface, Model& model)
+	Window& window, vk::SurfaceKHR surface, Model& model, UniformBuffer& uniformBuffer, Descriptor& descriptor)
 	:	m_device(device),
 		m_swapchain(swapchain),
 		m_renderPass(renderPass),
@@ -13,7 +14,9 @@ Renderer::Renderer(Device& device, Swapchain& swapchain, RenderPass& renderPass,
 		m_commandManager(commandManager),
 		m_window(window),
 		m_surface(surface),
-		m_model(model)
+		m_model(model),
+		m_uniformBuffer(uniformBuffer),
+		m_descriptor(descriptor)
 {
 	createSyncObjects();
 
@@ -47,7 +50,7 @@ void Renderer::cleanupSyncObjects()
 	m_device.operator*().waitIdle();
 }
 
-void Renderer::drawFrame()
+void Renderer::drawFrame(const Camera& camera, const Transform& transform)
 {
 	if (framebufferResized)
 	{
@@ -85,6 +88,21 @@ void Renderer::drawFrame()
 	// bind pipeline a draw call
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 	
+	UniformBufferObject ubo{};
+	ubo.model = transform.getModelMatrix();
+	ubo.view = camera.getViewMatrix();
+	ubo.proj = camera.getProjectionMatrix();
+
+	m_uniformBuffer.update(ubo);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+								 m_pipeline.getLayout(),
+								 0,
+								 1,
+								 &m_descriptor.get(),
+								 0,
+								 nullptr);
+
 	m_model.draw(cmdBuffer);
 
 	cmdBuffer.endRenderPass();

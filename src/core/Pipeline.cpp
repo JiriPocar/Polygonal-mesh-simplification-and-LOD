@@ -27,10 +27,10 @@ static std::vector<char> readFile(const std::string& filename)
 	return buffer;
 }
 
-Pipeline::Pipeline(const Device& device, const RenderPass& renderPass, vk::Extent2D swapchainExtent)
+Pipeline::Pipeline(const Device& device, const RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout)
 	: pipelineDevice(device)
 {
-	createPipeline(renderPass, swapchainExtent);
+	createPipeline(renderPass, swapchainExtent, descriptorSetLayout);
 }
 
 vk::UniqueShaderModule Pipeline::createShaderModule(const std::vector<char>& inputCode)
@@ -44,7 +44,7 @@ vk::UniqueShaderModule Pipeline::createShaderModule(const std::vector<char>& inp
 	return pipelineDevice.operator*().createShaderModuleUnique(createInfo);
 }
 
-void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapchainExtent)
+void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout)
 {
 	// load shaders
 	auto vert = readFile("shader.vert.spv");
@@ -151,8 +151,10 @@ void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapcha
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo(
 		{},				// flags
-		0, nullptr,		// no descriptor sets
-		0, nullptr		// no push constants
+		1,
+		&descriptorSetLayout,		// descriptor sets
+		0,
+		nullptr			// no push constants
 	);
 
 	pipelineLayout = pipelineDevice.operator*().createPipelineLayoutUnique(pipelineLayoutInfo);

@@ -10,6 +10,10 @@
 #include "FrameBuffer.hpp"
 #include "CommandManager.hpp"
 #include "../resources/Model.hpp"
+#include "UniformBuffer.hpp"
+#include "Descriptors.hpp"
+#include "../scene/Camera.hpp"
+#include "../scene/Transform.hpp"
 
 class Renderer {
 public:
@@ -22,12 +26,14 @@ public:
 		CommandManager& commandManager,
 		Window& window,
 		vk::SurfaceKHR surface,
-		Model& model
+		Model& model,
+		UniformBuffer& uniformBuffer,
+		Descriptor& descriptor
 	);
 
 	~Renderer();
 
-	void drawFrame();
+	void drawFrame(const Camera& camera, const Transform& transform);
 	void recreateSwapchain();
 
 private:
@@ -44,6 +50,8 @@ private:
 	Window& m_window;
 	vk::SurfaceKHR m_surface;
 	Model& m_model;
+	UniformBuffer& m_uniformBuffer;
+	Descriptor& m_descriptor;
 
 	vk::UniqueSemaphore imageAvailableSemaphores;
 	vk::UniqueSemaphore renderFinishedSemaphores;

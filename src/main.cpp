@@ -8,6 +8,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include <iostream>
+#include <chrono>
 #include "core/Instance.hpp"
 #include "core/Device.hpp"
 #include "core/Swapchain.hpp"
@@ -16,7 +17,11 @@
 #include "rendering/FrameBuffer.hpp"
 #include "rendering/CommandManager.hpp"
 #include "rendering/Renderer.hpp"
+#include "rendering/Descriptors.hpp"
+#include "rendering/UniformBuffer.hpp"
 #include "resources/Model.hpp"
+#include "scene/Camera.hpp"
+#include "scene/Transform.hpp"
 #include "window.h"
 
 int main() {
@@ -52,7 +57,15 @@ int main() {
 		RenderPass renderPass(device, swapchain.getImageFormat());
 		std::cout << "\nRenderPass format: " << vk::to_string(renderPass.getFormat()) << std::endl;
 
-		Pipeline pipeline(device, renderPass, swapchain.getExtent());
+		std::cout << "Creating uniform buffer..." << std::endl;
+		UniformBuffer uniformBuffer(device);
+		std::cout << "Uniform buffer created successfully!" << std::endl;
+
+		std::cout << "Creating descriptor set..." << std::endl;
+		Descriptor descriptorSet(device, uniformBuffer);
+		std::cout << "Descriptor set created successfully!" << std::endl;
+
+		Pipeline pipeline(device, renderPass, swapchain.getExtent(), descriptorSet.getLayout());
 		std::cout << "\nPipeline created successfully!" << std::endl;
 		std::cout << "  - Pipeline layout: " << (pipeline.getLayout() ? "VALID" : "INVALID") << std::endl;
 		std::cout << "  - Pipeline handle: " << (pipeline.get() ? "VALID" : "INVALID") << std::endl;
@@ -73,17 +86,46 @@ int main() {
 		Model model(device, "C:/Users/tf2ma/source/repos/Renderer/assets/Fox.gltf");
 		std::cout << "Model loaded successfully!" << std::endl;
 
+		Camera camera;
+		camera.setPerspective(45.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 1000.0f);
+		camera.setView(glm::vec3(0.0f, 0.5f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		Transform transform;
+		transform.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
+		transform.setRot(glm::vec3(0.0f, 0.0f, 0.0f));
+		transform.setScale(glm::vec3(1.0f, 1.0f, 1.0f));
+
 		std::cout << "\nCreating renderer..." << std::endl;
 		Renderer renderer(device, swapchain, renderPass, pipeline,
-						  framebuffer, commandManager, window, surface.get(), model);
+						  framebuffer, commandManager, window, surface.get(), model, uniformBuffer, descriptorSet);
 
-		while (!window.shouldClose()) {
+		auto last = std::chrono::high_resolution_clock::now();
+		float totalRotation = 0.0f;
+
+		while (!window.shouldClose())
+		{
+			auto current = std::chrono::high_resolution_clock::now();
+			float delta = std::chrono::duration<float, std::chrono::seconds::period>(current - last).count();
+			last = current;
+
 			window.pollEvents();
-			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+
+			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			{
 				break;
 			}
+
+			camera.handleInput(window.getGLFWWindow(), delta);
+
+			totalRotation += 50.0f * delta; // rotate 50 degrees per second
+			transform.setRot(glm::vec3(25.0f, totalRotation, 0.0f));
+
+			static int frameCount = 0;
+			if (frameCount++ % 60 == 0) {
+				std::cout << "Rotation: " << totalRotation << " degrees" << std::endl;
+			}
+
 			try {
-				renderer.drawFrame();
+				renderer.drawFrame(camera, transform);
 			}
 			catch (const vk::OutOfDateKHRError&) {
 				renderer.recreateSwapchain();
@@ -94,6 +136,7 @@ int main() {
 			
 			if (window.wasResized()) {
 				window.resetResizedFlag();
+				camera.setPerspective(45.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 100.0f);
 			}
 		}
 	}
