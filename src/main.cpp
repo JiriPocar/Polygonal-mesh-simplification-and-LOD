@@ -83,7 +83,7 @@ int main() {
 		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
 
 		std::cout << "\nLoading model..." << std::endl;
-		Model model(device, "C:/Users/tf2ma/source/repos/Renderer/assets/Fox.gltf");
+		Model model(device, "../../../assets/Fox.gltf");
 		std::cout << "Model loaded successfully!" << std::endl;
 
 		Camera camera;
@@ -118,11 +118,6 @@ int main() {
 
 			totalRotation += 50.0f * delta; // rotate 50 degrees per second
 			transform.setRot(glm::vec3(25.0f, totalRotation, 0.0f));
-
-			static int frameCount = 0;
-			if (frameCount++ % 60 == 0) {
-				std::cout << "Rotation: " << totalRotation << " degrees" << std::endl;
-			}
 
 			try {
 				renderer.drawFrame(camera, transform);
