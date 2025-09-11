@@ -81,14 +81,13 @@ void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive&
 		throw std::runtime_error("Mesh missing POSITION attribute");
 	}
 
-	// Naèti pozice
 	const auto& positionsAccessor = model.accessors[primitive.attributes.at("POSITION")];
 	const auto& positionsView = model.bufferViews[positionsAccessor.bufferView];
 	const float* positionsData = reinterpret_cast<const float*>(
 		&model.buffers[positionsView.buffer].data[positionsView.byteOffset + positionsAccessor.byteOffset]
 		);
 
-	// Normály - volitelné
+	// normals (optional)
 	bool hasNormals = primitive.attributes.find("NORMAL") != primitive.attributes.end();
 	std::vector<float> normalsData;
 
@@ -101,7 +100,7 @@ void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive&
 		normalsData.assign(normalsRawData, normalsRawData + normalsAccessor.count * 3);
 	}
 
-	// Texcoords - volitelné
+	// texcoords (optional)
 	bool hasTexCoords = primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end();
 	std::vector<float> texCoordsData;
 

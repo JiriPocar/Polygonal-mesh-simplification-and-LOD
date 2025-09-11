@@ -1,3 +1,12 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Instance.cpp
+ * @brief Instance creation for Vulkan application with extension and validation layer support.
+ *
+ * This file contains the implementation of the Instance class,
+ * which is responsible for creating an unique Vulkan instance.
+ */
+
 #include "Instance.hpp"
 #include <vector>
 
@@ -20,21 +29,23 @@ Instance::Instance(bool validation)
 	}
 
 	vk::ApplicationInfo appInfo = {
-		"LOD in huge scenes",
-		VK_MAKE_VERSION(0,0,0),
-		nullptr,
-		VK_MAKE_VERSION(0,0,0),
-		VK_API_VERSION_1_3
+		"LOD in huge scenes",	// application name
+		VK_MAKE_VERSION(0,0,0), // application version
+		nullptr,				// engine name
+		VK_MAKE_VERSION(0,0,0), // engine version
+		VK_API_VERSION_1_3		// api version
 	};
 
 	vk::InstanceCreateInfo createInfo = {
-		{},
-		&appInfo,
-		static_cast<uint32_t>(layers.size()),
-		layers.data(),
-		static_cast<uint32_t>(extensions.size()),
-		extensions.data()
+		{},											// flags
+		&appInfo,								    // application info	
+		static_cast<uint32_t>(layers.size()),		// number of enabled layers
+		layers.data(),						        // enabled layers
+		static_cast<uint32_t>(extensions.size()),   // number of enabled extensions
+		extensions.data()						    // enabled extensions
 	};
 
 	instance = vk::createInstanceUnique(createInfo);
 }
+
+/* End of the Instance.cpp file */

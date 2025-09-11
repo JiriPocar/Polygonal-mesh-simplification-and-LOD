@@ -1,11 +1,19 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Pipeline.cpp
+ * @brief Pipeline class declaration for Vulkan application.
+ *
+ * This file contains the declaration of the Pipeline class.
+ */
+
 #pragma once
 #include <vulkan/vulkan.hpp>
-#include "../resources/Model.hpp"
 #include <memory>
 #include <vector>
 
-class Device;
-class RenderPass;
+#include "../resources/Model.hpp"
+#include "Device.hpp"
+#include "../rendering/RenderPass.hpp"
 
 class Pipeline {
 public:
@@ -25,3 +33,5 @@ private:
 	vk::UniquePipeline graphicsPipeline;
 	vk::UniqueDescriptorSetLayout descriptorSetLayout;
 };
+
+/* End of the Pipeline.hpp file */

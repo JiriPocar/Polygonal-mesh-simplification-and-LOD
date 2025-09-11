@@ -1,10 +1,20 @@
-﻿#include "Pipeline.hpp"
-#include "Device.hpp"
-#include "../rendering/RenderPass.hpp"
+﻿/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Pipeline.cpp
+ * @brief Pipeline class methods implementation for Vulkan application.
+ *
+ * This file contains the implementation of the Pipeline class, shader
+ * loading and graphics pipeline creation.
+ */
+
 #include <fstream>
 #include <stdexcept>
 #include <iostream>
 #include <filesystem>
+
+#include "Pipeline.hpp"
+#include "Device.hpp"
+#include "../rendering/RenderPass.hpp"
 
 static std::vector<char> readFile(const std::string& filename)
 {
@@ -49,7 +59,6 @@ void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapcha
 	// load shaders
 	auto vert = readFile("shader.vert.spv");
 	auto frag = readFile("shader.frag.spv");
-
 	auto vertShaderModule = createShaderModule(vert);
 	auto fragShaderModule = createShaderModule(frag);
 
@@ -142,19 +151,20 @@ void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapcha
 	);
 
 	vk::PipelineColorBlendStateCreateInfo colorBlending(
-		{},					// flags
-		VK_FALSE,			// no logic op
-		vk::LogicOp::eCopy,
-		1, &colorBlendingAttach
+		{},					 // flags
+		VK_FALSE,			 // no logic op
+		vk::LogicOp::eCopy,  // logic op
+		1,					 // attachment count
+		&colorBlendingAttach // attachment states
 	);
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo(
-		{},				// flags
-		1,
-		&descriptorSetLayout,		// descriptor sets
+		{},						// flags
+		1,						// set layouts
+		&descriptorSetLayout,	// descriptor sets
 		0,
-		nullptr			// no push constants
+		nullptr					// no push constants
 	);
 
 	pipelineLayout = pipelineDevice.operator*().createPipelineLayoutUnique(pipelineLayoutInfo);
@@ -187,3 +197,5 @@ void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapcha
 
 	graphicsPipeline = std::move(result.value);
 }
+
+/* End of the Pipeline.cpp file */

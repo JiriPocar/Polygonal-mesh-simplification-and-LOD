@@ -1,14 +1,26 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Device.cpp
+ * @brief Device management for Vulkan application.
+ *
+ * This file contains the implementation of the Device class,
+ * which is responsible for selecting a physical device (GPU)
+ * and creating a logical device along with the necessary queues.
+ */
+
 #include "Device.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <vector>
 
-Device::Device(vk::Instance instance, vk::SurfaceKHR surface) {
+Device::Device(vk::Instance instance, vk::SurfaceKHR surface)
+{
 	pickPhysicalDevice(instance, surface);
 	createLogicalDevice(surface);
 }
 
-void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface) {
+void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface)
+{
 	auto availableDevices = instance.enumeratePhysicalDevices();
 	auto suitableDevices = std::vector<vk::PhysicalDevice>();
 
@@ -16,6 +28,7 @@ void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface) {
 		throw std::runtime_error("No Vulkan-compatible GPU found.");
 	}
 
+	// evaluate each device
 	for (const auto& dev : availableDevices)
 	{
 		QueueFamilyIndices indices = findQueueFamilies(dev, surface);
@@ -31,6 +44,7 @@ void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface) {
 			}
 		}
 
+		// check if device is suitable
 		if (indices.isComplete() && swapchainSupport)
 		{
 			suitableDevices.push_back(dev);
@@ -39,16 +53,19 @@ void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface) {
 			presentQueueFamily = indices.presentFamily.value();
 		}
 
+		// print device info
 		vk::PhysicalDeviceProperties props = dev.getProperties();
 		std::cout << "Found GPU: " << props.deviceName
 			<< " (Suitable: " << (indices.isComplete() && swapchainSupport ? "YES" : "NO")
 			<< ")" << std::endl;
 	}
 
+	// select the first suitable device
 	if (!suitableDevices.empty())
 	{
 		physicalDevice = suitableDevices[0];
 
+		// print selected device info
 		vk::PhysicalDeviceProperties props = physicalDevice.getProperties();
 		std::cout << "Selected GPU: " << props.deviceName << std::endl;
 		std::cout << "graphicsQueueFamily: " << graphicsQueueFamily
@@ -62,7 +79,6 @@ void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface) {
 void Device::createLogicalDevice(vk::SurfaceKHR surface)
 {
 	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-
 	float queuePriority = 1.0f;
 
 	vk::DeviceQueueCreateInfo graphicsQueueCreateInfo(
@@ -72,6 +88,7 @@ void Device::createLogicalDevice(vk::SurfaceKHR surface)
 		&queuePriority
 	);
 	
+	// add graphics queue info
 	queueCreateInfos.push_back(graphicsQueueCreateInfo);
 
 	if (graphicsQueueFamily != presentQueueFamily)
@@ -82,11 +99,15 @@ void Device::createLogicalDevice(vk::SurfaceKHR surface)
 			1,
 			&queuePriority
 		);
+
+		// add present queue info
 		queueCreateInfos.push_back(presentQueueCreateInfo);
 	}
 
+	// specify device features
 	vk::PhysicalDeviceFeatures deviceFeatures = {};
 
+	// specify device extensions
 	std::vector<const char*> extensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
@@ -113,18 +134,22 @@ Device::QueueFamilyIndices Device::findQueueFamilies(vk::PhysicalDevice device, 
 	QueueFamilyIndices indices;
 	auto queueFamilies = device.getQueueFamilyProperties();
 
+	// loop through each queue family
 	for (uint32_t i = 0; i < queueFamilies.size(); i++)
 	{
+		// check for graphics support
 		if (queueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics)
 		{
 			indices.graphicsFamily = i;
 		}
 
+		// check for presentation support
 		if (device.getSurfaceSupportKHR(i, surface))
 		{
 			indices.presentFamily = i;
 		}
 
+		// if both families are found, stop searching and return
 		if (indices.isComplete())
 		{
 			break;
@@ -133,3 +158,5 @@ Device::QueueFamilyIndices Device::findQueueFamilies(vk::PhysicalDevice device, 
 
 	return indices;
 }
+
+/* End of the Device.cpp file */

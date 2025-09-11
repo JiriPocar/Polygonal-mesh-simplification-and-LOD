@@ -74,9 +74,9 @@ add_executable(${APP_NAME}
     "src/resources/Mesh.cpp"
     "src/resources/Textures.cpp"
     "src/resources/Model.cpp"
-    "src/resources/ResourceManager.cpp"
+    
     "src/scene/Camera.cpp"
-    "src/scene/Light.cpp"
+    
     "src/scene/Scene.cpp" "src/rendering/FrameBuffer.cpp" "external/tinygltf/stb_image.h" "external/tinygltf/stb_image_write.h" "external/tinygltf/tiny_gltf.h" "src/resources/Buffer.cpp" "src/rendering/UniformBuffer.cpp" "src/scene/Transform.cpp")
 
 # Pokud jsou shadery kompilovány, přidej závislost

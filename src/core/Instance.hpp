@@ -1,3 +1,12 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Instance.hpp
+ * @brief Instance creation for Vulkan application with extension and validation layer support.
+ *
+ * This file contains the implementation of the Instance class,
+ * which is responsible for creating an unique Vulkan instance.
+ */
+
 #pragma once
 #if defined(_WIN32)
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -10,9 +19,19 @@
 class Instance
 {
 public:
+	/**
+	 * @brief Constructs a Vulkan instance with optional validation layers.
+	 * 
+	 * @param validation If true, enables validation layers for debugging.
+	 */
 	Instance(bool validation);
 	~Instance() = default;
 
+	/**
+	 * @brief Returns the Vulkan instance.
+	 *
+	 * @return vk::Instance - member variable 'instance'.
+	 */
 	operator vk::Instance() const
 	{
 		return *instance;
@@ -21,3 +40,5 @@ public:
 private:
 	vk::UniqueInstance instance;
 };
+
+/* End of the Instance.hpp file */
