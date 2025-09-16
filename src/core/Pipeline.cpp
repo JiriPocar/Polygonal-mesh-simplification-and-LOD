@@ -120,8 +120,8 @@ void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapcha
 		{},							// flags
 		VK_FALSE,					// depth clamp
 		VK_FALSE,					// rasterizer discard
-		vk::PolygonMode::eFill,		// fill polygons
-		vk::CullModeFlagBits::eBack,
+		vk::PolygonMode::eLine,		// fill polygons
+		vk::CullModeFlagBits::eFront,
 		vk::FrontFace::eClockwise,
 		VK_FALSE,					// depth bias
 		0.0f, 0.0f, 0.0f,			// depth bias params
