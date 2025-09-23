@@ -40,3 +40,20 @@
 ├── LICENSE.txt
 └── README.md
 ```
+
+## TODO's
+
+- [ ] ImGui Integration
+- [ ] Dynamic model loading via ImGui
+- [ ] Set model scaling based on model size
+- [ ] Simplification algorithms for LOD generation
+	- [ ] Quadric Error Metrics
+	- [ ] Edge Collapse
+	- [ ] Vertex Clustering
+	- [ ] Progressive Meshes
+	- [ ] Own implementation of simplification algorithms
+- [ ] Demo application / applications
+	- [ ] LOD switching
+	- [ ] Performance comparison
+	- [ ] Visual comparison
+	- [ ] Moving scene(s) with dynamic LOD adjustment

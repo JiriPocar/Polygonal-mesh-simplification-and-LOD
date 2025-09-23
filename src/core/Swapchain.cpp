@@ -55,20 +55,20 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 
 	// create the swapchain
 	vk::SwapchainCreateInfoKHR createInfo(
-		{},
-		surface,
-		imageCount,
-		imageFormat,
-		vk::ColorSpaceKHR::eSrgbNonlinear,
-		extent,
-		1, // imageArrayLayers
-		vk::ImageUsageFlagBits::eColorAttachment,
-		vk::SharingMode::eExclusive,
-		0, nullptr, // queueFamilyIndices
-		vk::SurfaceTransformFlagBitsKHR::eIdentity,
-		vk::CompositeAlphaFlagBitsKHR::eOpaque,
-		presentMode,
-		VK_TRUE // clipped
+		{},											// flags
+		surface,									// surface
+		imageCount,									// minImageCount		
+		imageFormat,								// imageFormat
+		vk::ColorSpaceKHR::eSrgbNonlinear,			// imageColorSpace
+		extent,										// imageExtent		
+		1,											// imageArrayLayers
+		vk::ImageUsageFlagBits::eColorAttachment,	// imageUsage
+		vk::SharingMode::eExclusive,				// imageSharingMode
+		0, nullptr,									// queueFamilyIndices
+		vk::SurfaceTransformFlagBitsKHR::eIdentity, // preTransform
+		vk::CompositeAlphaFlagBitsKHR::eOpaque,		// compositeAlpha
+		presentMode,								// presentMode
+		VK_TRUE										// clipped
 	);
 
 	swapchain = swapchainDevice.operator*().createSwapchainKHRUnique(createInfo);

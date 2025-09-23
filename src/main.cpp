@@ -83,7 +83,7 @@ int main() {
 		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
 
 		std::cout << "\nLoading model..." << std::endl;
-		Model model(device, "../../../assets/Lantern.gltf");
+		Model model(device, "../../../assets/Fox.gltf");
 		std::cout << "Model loaded successfully!" << std::endl;
 
 		Camera camera;
