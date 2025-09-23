@@ -43,9 +43,16 @@
 
 ## TODO's
 
-- [ ] ImGui Integration
-- [ ] Dynamic model loading via ImGui
+- [x] Basic Vulkan setup
+- [x] Resizable window via ```glfw```
+- [x] Model loading via ```tinygltf```
+- [x] Rotate and show model + basic camera movement 
+- [ ] Fix window resizing with loaded model
+- [ ] ```ImGui``` integration
+- [ ] Dynamic model loading via ```ImGui```
 - [ ] Set model scaling based on model size
+- [ ] Connect mouse movement to camera rotation
+- [ ] Setup data structures for LOD manipulation
 - [ ] Simplification algorithms for LOD generation
 	- [ ] Quadric Error Metrics
 	- [ ] Edge Collapse
