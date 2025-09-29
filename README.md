@@ -51,7 +51,7 @@
 - [ ] ```ImGui``` integration
 - [ ] Dynamic model loading via ```ImGui```
 - [ ] Set model scaling based on model size
-- [ ] Connect mouse movement to camera rotation
+- [x] Connect mouse movement to camera rotation
 - [ ] Setup data structures for LOD manipulation
 - [ ] Simplification algorithms for LOD generation
 	- [ ] Quadric Error Metrics

@@ -51,3 +51,29 @@ vk::UniqueSurfaceKHR Window::createSurface(vk::Instance instance)
 	}
 	return vk::UniqueSurfaceKHR(surface, instance);
 }
+
+void Window::setMouseCallback(std::function<void(double, double)> callback)
+{
+	mouseMoveCallback = callback;
+	glfwSetCursorPosCallback(window, mouseCallback);
+}
+
+void Window::mouseCallback(GLFWwindow* window, double xpos, double ypos)
+{
+	auto* win = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+
+	if (win && win->mouseCallback)
+	{
+		win->mouseMoveCallback(xpos, ypos);
+	}
+}
+
+void Window::disableCursor()
+{
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void Window::enableCursor()
+{
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}

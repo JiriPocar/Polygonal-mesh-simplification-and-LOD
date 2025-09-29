@@ -9,11 +9,17 @@ public:
 
 	void setPerspective(float fov, float aspect, float near, float far);
 	void setView(glm::vec3 pos, glm::vec3 target, glm::vec3 up);
-	void handleInput(GLFWwindow *window, float delta);
+	void handleInput(GLFWwindow* window, float delta);
+
+	void handleMouseInput(double x, double y);
+	void resetMouse();
 
 	glm::mat4 getViewMatrix() const { return viewMatrix; };
 	glm::mat4 getProjectionMatrix() const { return projectionMatrix; };
 	glm::vec3 getPosition() const { return position; };
+
+	void processMouseMovement(float xOffset, float yOffset, bool conPitch = true);
+	void setMouseSens(float sens) { mouseSens = sens; };
 
 private:
 	glm::mat4 viewMatrix;
@@ -22,6 +28,10 @@ private:
 
 	float pitch;
 	float yaw;
+	float mouseSens;
+	bool inititalMouse = true;
+	float xLast;
+	float yLast;
 
 	glm::vec3 front;
 	glm::vec3 up;

@@ -30,7 +30,7 @@ int main() {
 		std::cout << "Starting Vulkan application...\n" << std::endl;
 
 		std::cout << "\nCreating window..." << std::endl;
-		Window window(800, 600, "Vulkan Window");
+		Window window(1200, 1000, "Vulkan Window");
 		std::cout << "Successfully created window!" << std::endl;
 
 		std::cout << "\nCreating instance..." << std::endl;
@@ -46,7 +46,7 @@ int main() {
 		std::cout << "Successfully created device!" << std::endl;
 
 		std::cout << "\nCreating swapchain..." << std::endl;
-		Swapchain swapchain(device, *surface, 800, 600);
+		Swapchain swapchain(device, *surface, 1200, 1000);
 
 		std::cout << "\nSwapchain created successfully!" << std::endl;
 		std::cout << "  - Image format: " << vk::to_string(swapchain.getImageFormat()) << std::endl;
@@ -101,6 +101,12 @@ int main() {
 		auto last = std::chrono::high_resolution_clock::now();
 		float totalRotation = 0.0f;
 
+		// fps camera movement
+		window.setMouseCallback([&](double xPos, double yPos)
+		{
+				camera.handleMouseInput(xPos, yPos);
+		});
+
 		while (!window.shouldClose())
 		{
 			auto current = std::chrono::high_resolution_clock::now();
@@ -114,10 +120,21 @@ int main() {
 				break;
 			}
 
+			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_M) == GLFW_PRESS)
+			{
+				window.disableCursor();
+			}
+
+			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_N) == GLFW_PRESS)
+			{
+				window.enableCursor();
+				camera.resetMouse();
+			}
+
 			camera.handleInput(window.getGLFWWindow(), delta);
 
 			totalRotation += 50.0f * delta; // rotate 50 degrees per second
-			transform.setRot(glm::vec3(25.0f, totalRotation, 0.0f));
+			transform.setRot(glm::vec3(0.0f, totalRotation, 0.0f));
 
 			try {
 				renderer.drawFrame(camera, transform);

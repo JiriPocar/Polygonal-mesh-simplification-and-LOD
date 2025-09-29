@@ -30,10 +30,16 @@ public:
 	void resetResizedFlag() { resized = false; }
 	void setResizeCallback(ResizeCallback callback) { resizeCallback = callback; };
 
+	void setMouseCallback(std::function<void(double, double)> callback);
+	void disableCursor();
+	void enableCursor();
+
 	vk::UniqueSurfaceKHR createSurface(vk::Instance instance);
 
 private:
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+	static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+	std::function<void(double, double)> mouseMoveCallback;
 
 	int width;
 	int height;
