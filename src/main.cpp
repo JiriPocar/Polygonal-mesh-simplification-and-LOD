@@ -22,6 +22,7 @@
 #include "resources/Model.hpp"
 #include "scene/Camera.hpp"
 #include "scene/Transform.hpp"
+#include "ui/ui.hpp"
 #include "window.h"
 
 int main() {
@@ -82,6 +83,10 @@ int main() {
 		commandManager.createCommandBuffers(static_cast<uint32_t>(swapchain.getImages().size()));
 		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
 
+		std::cout << "\nUI initialization" << std::endl;
+		UserInterface ui(instance, device, swapchain, renderPass, window, commandManager);
+		std::cout << "UI initialized successfully!" << std::endl;
+
 		std::cout << "\nLoading model..." << std::endl;
 		Model model(device, "../../../assets/Fox.gltf");
 		std::cout << "Model loaded successfully!" << std::endl;
@@ -136,8 +141,10 @@ int main() {
 			totalRotation += 50.0f * delta; // rotate 50 degrees per second
 			transform.setRot(glm::vec3(0.0f, totalRotation, 0.0f));
 
+			ui.beginFrame();
+
 			try {
-				renderer.drawFrame(camera, transform);
+				renderer.drawFrame(camera, transform, ui);
 			}
 			catch (const vk::OutOfDateKHRError&) {
 				renderer.recreateSwapchain();
@@ -148,7 +155,7 @@ int main() {
 			
 			if (window.wasResized()) {
 				window.resetResizedFlag();
-				camera.setPerspective(45.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 100.0f);
+				camera.setPerspective(45.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 1000.0f);
 			}
 		}
 	}

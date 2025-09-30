@@ -9,11 +9,11 @@ set(APP_SOURCES
     "src/window.h"
 )
 
-# Nastavení cesty k Vulkan SDK
+# Set path to Vulkan SDK
 set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.313.0")
 set(GLSL_VALIDATOR "${VULKAN_SDK_PATH}/Bin/glslangValidator.exe")
 
-# Kontrola existence glslangValidator
+# Check for glslangValidator
 if(NOT EXISTS "${GLSL_VALIDATOR}")
     message(WARNING "glslangValidator not found at: ${GLSL_VALIDATOR}")
     message("Shader compilation will be skipped")
@@ -22,15 +22,15 @@ endif()
 set(APP_INCLUDES
 )
 
-# Shader soubory
+# Shader files
 set(VERTEX_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.vert")
 set(FRAGMENT_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.frag")
 
-# Output SPIR-V soubory
+# Output SPIR-V files
 set(VERTEX_SPV "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.vert.spv")
 set(FRAGMENT_SPV "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.frag.spv")
 
-# Kompilace shaderů pokud je dostupný glslangValidator
+# Shader compilation
 if(EXISTS "${GLSL_VALIDATOR}")
     add_custom_command(
         OUTPUT ${VERTEX_SPV}
@@ -46,10 +46,8 @@ if(EXISTS "${GLSL_VALIDATOR}")
         COMMENT "Compiling fragment shader"
     )
 
-    # Cíl pro kompilaci shaderů
     add_custom_target(CompileShaders ALL DEPENDS ${VERTEX_SPV} ${FRAGMENT_SPV})
     
-    # Přidat SPIR-V soubory k aplikaci
     set(APP_SOURCES ${APP_SOURCES} ${VERTEX_SPV} ${FRAGMENT_SPV})
 else()
     message(WARNING "Shader compilation disabled - glslangValidator not found")
@@ -59,10 +57,21 @@ endif()
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/;${CMAKE_MODULE_PATH}")
 find_package(Vulkan REQUIRED)
 
+set(IMGUI_SOURCES
+    "external/imgui/imgui.cpp"
+    "external/imgui/imgui_draw.cpp"
+    "external/imgui/imgui_tables.cpp"
+    "external/imgui/imgui_widgets.cpp"
+    "external/imgui/backends/imgui_impl_glfw.cpp"
+    "external/imgui/backends/imgui_impl_vulkan.cpp"
+)
+
+
 # Executable
 add_executable(${APP_NAME}
     ${APP_SOURCES}
     ${APP_SHADERS}
+    ${IMGUI_SOURCES}
     "src/core/Device.cpp"
     "src/core/Instance.cpp"
     "src/core/Pipeline.cpp"
@@ -77,9 +86,17 @@ add_executable(${APP_NAME}
     
     "src/scene/Camera.cpp"
     
-    "src/scene/Scene.cpp" "src/rendering/FrameBuffer.cpp" "external/tinygltf/stb_image.h" "external/tinygltf/stb_image_write.h" "external/tinygltf/tiny_gltf.h" "src/resources/Buffer.cpp" "src/rendering/UniformBuffer.cpp" "src/scene/Transform.cpp")
+    "src/scene/Scene.cpp"
+    "src/rendering/FrameBuffer.cpp"
+    "external/tinygltf/stb_image.h"
+    "external/tinygltf/stb_image_write.h"
+    "external/tinygltf/tiny_gltf.h"
+    "src/resources/Buffer.cpp"
+    "src/rendering/UniformBuffer.cpp"
+    "src/scene/Transform.cpp"
+    "src/ui/ui.cpp"
+ "external/glfw/include/GLFW/glfw3native.h")
 
-# Pokud jsou shadery kompilovány, přidej závislost
 if(EXISTS "${GLSL_VALIDATOR}")
     add_dependencies(${APP_NAME} CompileShaders)
 endif()
@@ -89,6 +106,8 @@ target_include_directories(${APP_NAME} PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     external/glfw/include
     external/tinygltf
+    external/imgui
+    external/imgui/backends
 )
 
 # Link directories
@@ -106,7 +125,7 @@ set_target_properties(${APP_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
-# Kopírování shaderů do output directory
+# Copy shaders to output directory
 add_custom_command(TARGET ${APP_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory 
         ${CMAKE_CURRENT_BINARY_DIR}/shaders

@@ -14,6 +14,7 @@
 #include "Descriptors.hpp"
 #include "../scene/Camera.hpp"
 #include "../scene/Transform.hpp"
+#include "../ui/ui.hpp"
 
 class Renderer {
 public:
@@ -33,7 +34,7 @@ public:
 
 	~Renderer();
 
-	void drawFrame(const Camera& camera, const Transform& transform);
+	void drawFrame(const Camera& camera, const Transform& transform, UserInterface& ui);
 	void recreateSwapchain();
 
 private:

@@ -50,7 +50,7 @@ void Renderer::cleanupSyncObjects()
 	m_device.operator*().waitIdle();
 }
 
-void Renderer::drawFrame(const Camera& camera, const Transform& transform)
+void Renderer::drawFrame(const Camera& camera, const Transform& transform, UserInterface& ui)
 {
 	if (framebufferResized)
 	{
@@ -104,6 +104,8 @@ void Renderer::drawFrame(const Camera& camera, const Transform& transform)
 								 nullptr);
 
 	m_model.draw(cmdBuffer);
+
+	ui.render(cmdBuffer);
 
 	cmdBuffer.endRenderPass();
 	cmdBuffer.end();

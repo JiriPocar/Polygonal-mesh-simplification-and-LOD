@@ -37,6 +37,11 @@ public:
 		return *instance;
 	}
 
+	vk::Instance get() const
+	{
+		return *instance;
+	}
+
 private:
 	vk::UniqueInstance instance;
 };
