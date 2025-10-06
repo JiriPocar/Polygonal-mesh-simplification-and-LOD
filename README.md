@@ -47,10 +47,11 @@
 - [x] Resizable window via ```glfw```
 - [x] Model loading via ```tinygltf```
 - [x] Rotate and show model + basic camera movement 
-- [ ] Fix window resizing with loaded model
-- [ ] ```ImGui``` integration
+- [x] Fix window resizing with loaded model (far plane)
+- [x] Basic ```ImGui``` integration
+- [x] Performance statistics via ```ImGui```
 - [ ] Dynamic model loading via ```ImGui```
-- [ ] Set model scaling based on model size
+- [ ] Bounding box visualization
 - [x] Connect mouse movement to camera rotation
 - [ ] Setup data structures for LOD manipulation
 - [ ] Simplification algorithms for LOD generation

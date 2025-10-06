@@ -11,6 +11,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
+#include <deque>
 
 #include "../window.h"
 #include "../core/Device.hpp"
@@ -33,6 +34,8 @@ public:
 private:
 	void createDescriptorPool();
 	void cleanUp();
+
+	std::deque<float> frameTimes;
 
 	Instance& uiInstance;
 	Device& uiDevice;

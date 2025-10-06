@@ -83,13 +83,14 @@ int main() {
 		commandManager.createCommandBuffers(static_cast<uint32_t>(swapchain.getImages().size()));
 		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
 
+		std::cout << "\nLoading model..." << std::endl;
+		//Model model(device, "../../../assets/Lantern.gltf");
+		std::unique_ptr<Model> currentModel = std::make_unique<Model>(device, "../../../assets/Lantern.gltf");
+		std::cout << "Model loaded successfully!" << std::endl;
+
 		std::cout << "\nUI initialization" << std::endl;
 		UserInterface ui(instance, device, swapchain, renderPass, window, commandManager);
 		std::cout << "UI initialized successfully!" << std::endl;
-
-		std::cout << "\nLoading model..." << std::endl;
-		Model model(device, "../../../assets/Fox.gltf");
-		std::cout << "Model loaded successfully!" << std::endl;
 
 		Camera camera;
 		camera.setPerspective(45.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 1000.0f);
@@ -101,7 +102,7 @@ int main() {
 
 		std::cout << "\nCreating renderer..." << std::endl;
 		Renderer renderer(device, swapchain, renderPass, pipeline,
-						  framebuffer, commandManager, window, surface.get(), model, uniformBuffer, descriptorSet);
+						  framebuffer, commandManager, window, surface.get(), *currentModel, uniformBuffer, descriptorSet);
 
 		auto last = std::chrono::high_resolution_clock::now();
 		float totalRotation = 0.0f;

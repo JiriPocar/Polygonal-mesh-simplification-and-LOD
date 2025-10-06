@@ -70,10 +70,45 @@ void UserInterface::beginFrame()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	// fps counter
-	ImGui::Begin("FPS Counter");
-	ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+	float fps = ImGui::GetIO().Framerate;
+	float delta = ImGui::GetIO().DeltaTime;
+
+	frameTimes.push_back(fps);
+	if (frameTimes.size() > 1000)
+	{
+		frameTimes.pop_front();
+	}
+
+	float avgFps = 0.0f;
+	float minFps = FLT_MAX;
+	float maxFps = 0.0f;
+	for (float t : frameTimes)
+	{
+		avgFps += t;
+		if (t < minFps) minFps = t;
+		if (t > maxFps) maxFps = t;
+	}
+
+	if (!frameTimes.empty())
+	{
+		avgFps /= frameTimes.size();
+	}
+	ImGui::SetNextWindowSize(ImVec2(200, 300));
+	ImGui::Begin("Statistics");
+	ImGui::Text("FPS: %.1f", fps);
+	ImGui::Text("Delta time: %.3f ms", delta * 1000.0f);
+	ImGui::Separator();
+	ImGui::Text("Average: %.1f");
+	ImGui::Text("Min: %.1f", minFps);
+	ImGui::Text("Max: %.1f", maxFps);
+	if (!frameTimes.empty())
+	{
+		std::vector<float> frameTimesVec(frameTimes.begin(), frameTimes.end());
+		ImGui::PlotLines("Graph", frameTimesVec.data(), (int)frameTimes.size(), 0, nullptr, 0.0f, 200.0f, ImVec2(150, 100));
+	}
 	ImGui::End();
+
+
 }
 
 void UserInterface::render(vk::CommandBuffer cmdBuffer)
