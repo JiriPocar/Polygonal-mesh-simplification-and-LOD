@@ -19,6 +19,8 @@
 #include "../core/Swapchain.hpp"
 #include "../rendering/Renderpass.hpp"
 #include "../rendering/CommandManager.hpp"
+#include "../scene/Camera.hpp"
+#include "../resources/Model.hpp"
 
 
 class UserInterface {
@@ -27,15 +29,19 @@ public:
 	~UserInterface();
 
 	void init();
-	void beginFrame();
+	void beginFrame(std::unique_ptr<Model>& currentModel, Device& device);
 	void render(vk::CommandBuffer cmdBuffer);
-
+	void handleMouseMove(double x, double y);
 
 private:
 	void createDescriptorPool();
 	void cleanUp();
 
 	std::deque<float> frameTimes;
+
+	std::vector<std::string> menuModels;
+	void scanModels();
+	void showModelMenu(std::unique_ptr<Model>& currentModel, Device& devices);
 
 	Instance& uiInstance;
 	Device& uiDevice;

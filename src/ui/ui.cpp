@@ -1,8 +1,11 @@
 #include "ui.hpp"
+#include <filesystem>
+#include <iostream>
 
 UserInterface::UserInterface(Instance &instance, Device& dev, Swapchain& swapchain, RenderPass& renderPass, Window& window, CommandManager& cmdManager)
 	: uiDevice(dev), uiInstance(instance), uiSwapchain(swapchain), uiRenderPass(renderPass), uiWindow(window), uiCmdManager(cmdManager)
 {
+	scanModels();
 	init();
 }
 
@@ -64,7 +67,7 @@ void UserInterface::createDescriptorPool()
 	descriptorPool = uiDevice.operator*().createDescriptorPoolUnique(poolInfo);
 }
 
-void UserInterface::beginFrame()
+void UserInterface::beginFrame(std::unique_ptr<Model>& currentModel, Device& device)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -108,7 +111,60 @@ void UserInterface::beginFrame()
 	}
 	ImGui::End();
 
+	showModelMenu(currentModel, device);
+}
 
+void UserInterface::scanModels()
+{
+	menuModels.clear();
+	std::string path = "../../../assets/";
+	for (const auto& entry : std::filesystem::directory_iterator(path))
+	{
+		if (entry.is_regular_file())
+		{
+			std::string filePath = entry.path().string();
+			std::string extension = entry.path().extension().string();
+			if (extension == ".gltf" || extension == ".glb" || extension == ".obj" || extension == ".fbx")
+			{
+				menuModels.push_back(filePath);
+			}
+		}
+	}
+}
+
+void UserInterface::showModelMenu(std::unique_ptr<Model>& currentModel, Device& device)
+{
+	ImGui::SetNextWindowPos(ImVec2(800, 10));
+	ImGui::SetNextWindowSize(ImVec2(250, 400));
+	ImGui::Begin("Models");
+	ImGui::Separator();
+	if (ImGui::BeginChild("ModelList", ImVec2(0, 300), true))
+	{
+		for (const auto& modelPath : menuModels)
+		{
+			if (ImGui::Selectable(modelPath.c_str())) {
+				try {
+					currentModel = std::make_unique<Model>(device, modelPath);
+					std::cout << "Loaded model: " << modelPath << std::endl;
+				}
+				catch (const std::exception& e) {
+					std::cerr << "Failed to load model: " << modelPath << " - " << e.what() << std::endl;
+				}
+			}
+		}
+		ImGui::EndChild();
+	}
+	ImGui::Separator();
+	if (ImGui::Button("Refresh List"))
+	{
+		scanModels();
+	}
+	ImGui::End();
+}
+
+void UserInterface::handleMouseMove(double x, double y)
+{
+	ImGui_ImplGlfw_CursorPosCallback(uiWindow.getGLFWWindow(), x, y);
 }
 
 void UserInterface::render(vk::CommandBuffer cmdBuffer)

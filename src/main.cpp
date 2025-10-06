@@ -108,10 +108,15 @@ int main() {
 		float totalRotation = 0.0f;
 
 		// fps camera movement
-		bool mouseDisabled = true;
+		bool cameraActive = false;
 		window.setMouseCallback([&](double xPos, double yPos)
 		{
-				camera.handleMouseInput(xPos, yPos, mouseDisabled);
+				ui.handleMouseMove(xPos, yPos);
+
+				if (cameraActive)
+				{
+					camera.handleMouseInput(xPos, yPos, cameraActive);
+				}
 		});
 
 		while (!window.shouldClose())
@@ -130,13 +135,13 @@ int main() {
 			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_M) == GLFW_PRESS)
 			{
 				window.disableCursor();
-				mouseDisabled = false;
+				cameraActive = true;
 			}
 
 			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_N) == GLFW_PRESS)
 			{
 				window.enableCursor();
-				mouseDisabled = true;
+				cameraActive = false;
 				camera.resetMouse();
 			}
 
@@ -145,7 +150,7 @@ int main() {
 			totalRotation += 50.0f * delta; // rotate 50 degrees per second
 			transform.setRot(glm::vec3(0.0f, totalRotation, 0.0f));
 
-			ui.beginFrame();
+			ui.beginFrame(currentModel, device);
 
 			try {
 				renderer.drawFrame(camera, transform, ui);
