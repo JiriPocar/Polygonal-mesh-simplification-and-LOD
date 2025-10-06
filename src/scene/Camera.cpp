@@ -47,8 +47,11 @@ void Camera::handleInput(GLFWwindow *window, float delta)
 	setView(position, position + front, up);
 }
 
-void Camera::handleMouseInput(double x, double y)
+void Camera::handleMouseInput(double x, double y, bool mouseDisabled)
 {
+	if (mouseDisabled)
+		return;
+
 	if (inititalMouse)
 	{
 		xLast = x;

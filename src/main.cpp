@@ -107,9 +107,10 @@ int main() {
 		float totalRotation = 0.0f;
 
 		// fps camera movement
+		bool mouseDisabled = true;
 		window.setMouseCallback([&](double xPos, double yPos)
 		{
-				camera.handleMouseInput(xPos, yPos);
+				camera.handleMouseInput(xPos, yPos, mouseDisabled);
 		});
 
 		while (!window.shouldClose())
@@ -128,11 +129,13 @@ int main() {
 			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_M) == GLFW_PRESS)
 			{
 				window.disableCursor();
+				mouseDisabled = false;
 			}
 
 			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_N) == GLFW_PRESS)
 			{
 				window.enableCursor();
+				mouseDisabled = true;
 				camera.resetMouse();
 			}
 

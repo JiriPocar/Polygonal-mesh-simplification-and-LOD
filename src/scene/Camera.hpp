@@ -11,7 +11,7 @@ public:
 	void setView(glm::vec3 pos, glm::vec3 target, glm::vec3 up);
 	void handleInput(GLFWwindow* window, float delta);
 
-	void handleMouseInput(double x, double y);
+	void handleMouseInput(double x, double y, bool mouseDisabled);
 	void resetMouse();
 
 	glm::mat4 getViewMatrix() const { return viewMatrix; };
@@ -29,6 +29,7 @@ private:
 	float pitch;
 	float yaw;
 	float mouseSens;
+	bool mouseDisabled = false;
 	bool inititalMouse = true;
 	float xLast;
 	float yLast;

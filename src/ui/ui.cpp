@@ -70,9 +70,9 @@ void UserInterface::beginFrame()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	// Example window
-	ImGui::Begin("Example Window");
-	ImGui::Text("Hello, Vulkan ImGui!");
+	// fps counter
+	ImGui::Begin("FPS Counter");
+	ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
 	ImGui::End();
 }
 
