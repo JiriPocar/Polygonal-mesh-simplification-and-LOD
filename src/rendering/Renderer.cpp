@@ -2,6 +2,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <iostream>
+#include "../ui/ui.hpp"
 
 Renderer::Renderer(Device& device, Swapchain& swapchain, RenderPass& renderPass,
 	Pipeline& pipeline, FrameBuffer& framebuffer, CommandManager& commandManager,
@@ -14,7 +15,7 @@ Renderer::Renderer(Device& device, Swapchain& swapchain, RenderPass& renderPass,
 		m_commandManager(commandManager),
 		m_window(window),
 		m_surface(surface),
-		m_model(model),
+		m_model(&model),
 		m_uniformBuffer(uniformBuffer),
 		m_descriptor(descriptor)
 {
@@ -103,7 +104,7 @@ void Renderer::drawFrame(const Camera& camera, const Transform& transform, UserI
 								 0,
 								 nullptr);
 
-	m_model.draw(cmdBuffer);
+	m_model->draw(cmdBuffer);
 
 	ui.render(cmdBuffer);
 

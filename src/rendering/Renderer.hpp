@@ -2,19 +2,20 @@
 #include <vulkan/vulkan.hpp>
 #include <memory>
 
-#include "../core/Device.hpp"
-#include "../core/Swapchain.hpp"
-#include "../core/Pipeline.hpp"
-#include "../window.h"
 #include "RenderPass.hpp"
 #include "FrameBuffer.hpp"
 #include "CommandManager.hpp"
-#include "../resources/Model.hpp"
 #include "UniformBuffer.hpp"
 #include "Descriptors.hpp"
+#include "../window.h"
+#include "../core/Device.hpp"
+#include "../core/Swapchain.hpp"
+#include "../core/Pipeline.hpp"
+#include "../resources/Model.hpp"
 #include "../scene/Camera.hpp"
 #include "../scene/Transform.hpp"
-#include "../ui/ui.hpp"
+
+class UserInterface;
 
 class Renderer {
 public:
@@ -36,6 +37,7 @@ public:
 
 	void drawFrame(const Camera& camera, const Transform& transform, UserInterface& ui);
 	void recreateSwapchain();
+	void setModel(Model& newModel) { m_model = &newModel; }
 
 private:
 	void createSyncObjects();
@@ -50,7 +52,7 @@ private:
 	CommandManager& m_commandManager;
 	Window& m_window;
 	vk::SurfaceKHR m_surface;
-	Model& m_model;
+	Model* m_model;
 	UniformBuffer& m_uniformBuffer;
 	Descriptor& m_descriptor;
 

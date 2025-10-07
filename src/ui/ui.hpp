@@ -22,6 +22,7 @@
 #include "../scene/Camera.hpp"
 #include "../resources/Model.hpp"
 
+class Renderer;
 
 class UserInterface {
 public:
@@ -29,7 +30,7 @@ public:
 	~UserInterface();
 
 	void init();
-	void beginFrame(std::unique_ptr<Model>& currentModel, Device& device);
+	void beginFrame(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer);
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);
 
@@ -41,7 +42,8 @@ private:
 
 	std::vector<std::string> menuModels;
 	void scanModels();
-	void showModelMenu(std::unique_ptr<Model>& currentModel, Device& devices);
+	void showModelMenu(std::unique_ptr<Model>& currentModel, Device& devices, Renderer& renderer);
+	void showStatistics();
 
 	Instance& uiInstance;
 	Device& uiDevice;

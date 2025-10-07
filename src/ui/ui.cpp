@@ -1,6 +1,7 @@
 #include "ui.hpp"
 #include <filesystem>
 #include <iostream>
+#include "../rendering/Renderer.hpp"
 
 UserInterface::UserInterface(Instance &instance, Device& dev, Swapchain& swapchain, RenderPass& renderPass, Window& window, CommandManager& cmdManager)
 	: uiDevice(dev), uiInstance(instance), uiSwapchain(swapchain), uiRenderPass(renderPass), uiWindow(window), uiCmdManager(cmdManager)
@@ -67,12 +68,36 @@ void UserInterface::createDescriptorPool()
 	descriptorPool = uiDevice.operator*().createDescriptorPoolUnique(poolInfo);
 }
 
-void UserInterface::beginFrame(std::unique_ptr<Model>& currentModel, Device& device)
+void UserInterface::beginFrame(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	showStatistics();
+	showModelMenu(currentModel, device, renderer);
+}
+
+void UserInterface::scanModels()
+{
+	menuModels.clear();
+	std::string path = "../../../assets/";
+	for (const auto& entry : std::filesystem::directory_iterator(path))
+	{
+		if (entry.is_regular_file())
+		{
+			std::string filePath = entry.path().string();
+			std::string extension = entry.path().extension().string();
+			if (extension == ".gltf")
+			{
+				menuModels.push_back(filePath);
+			}
+		}
+	}
+}
+
+void UserInterface::showStatistics()
+{
 	float fps = ImGui::GetIO().Framerate;
 	float delta = ImGui::GetIO().DeltaTime;
 
@@ -96,6 +121,8 @@ void UserInterface::beginFrame(std::unique_ptr<Model>& currentModel, Device& dev
 	{
 		avgFps /= frameTimes.size();
 	}
+
+	ImGui::SetNextWindowPos(ImVec2(10, 10));
 	ImGui::SetNextWindowSize(ImVec2(200, 300));
 	ImGui::Begin("Statistics");
 	ImGui::Text("FPS: %.1f", fps);
@@ -104,62 +131,47 @@ void UserInterface::beginFrame(std::unique_ptr<Model>& currentModel, Device& dev
 	ImGui::Text("Average: %.1f");
 	ImGui::Text("Min: %.1f", minFps);
 	ImGui::Text("Max: %.1f", maxFps);
+
 	if (!frameTimes.empty())
 	{
 		std::vector<float> frameTimesVec(frameTimes.begin(), frameTimes.end());
 		ImGui::PlotLines("Graph", frameTimesVec.data(), (int)frameTimes.size(), 0, nullptr, 0.0f, 200.0f, ImVec2(150, 100));
 	}
-	ImGui::End();
 
-	showModelMenu(currentModel, device);
+	ImGui::End();
 }
 
-void UserInterface::scanModels()
-{
-	menuModels.clear();
-	std::string path = "../../../assets/";
-	for (const auto& entry : std::filesystem::directory_iterator(path))
-	{
-		if (entry.is_regular_file())
-		{
-			std::string filePath = entry.path().string();
-			std::string extension = entry.path().extension().string();
-			if (extension == ".gltf" || extension == ".glb" || extension == ".obj" || extension == ".fbx")
-			{
-				menuModels.push_back(filePath);
-			}
-		}
-	}
-}
-
-void UserInterface::showModelMenu(std::unique_ptr<Model>& currentModel, Device& device)
-{
-	ImGui::SetNextWindowPos(ImVec2(800, 10));
-	ImGui::SetNextWindowSize(ImVec2(250, 400));
-	ImGui::Begin("Models");
-	ImGui::Separator();
-	if (ImGui::BeginChild("ModelList", ImVec2(0, 300), true))
-	{
-		for (const auto& modelPath : menuModels)
-		{
-			if (ImGui::Selectable(modelPath.c_str())) {
-				try {
-					currentModel = std::make_unique<Model>(device, modelPath);
-					std::cout << "Loaded model: " << modelPath << std::endl;
-				}
-				catch (const std::exception& e) {
-					std::cerr << "Failed to load model: " << modelPath << " - " << e.what() << std::endl;
-				}
-			}
-		}
-		ImGui::EndChild();
-	}
-	ImGui::Separator();
-	if (ImGui::Button("Refresh List"))
-	{
-		scanModels();
-	}
-	ImGui::End();
+void UserInterface::showModelMenu(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer)  
+{  
+	ImGui::SetNextWindowPos(ImVec2(10, 350));  
+	ImGui::SetNextWindowSize(ImVec2(250, 400));  
+	if (ImGui::Begin("Models", nullptr, ImGuiWindowFlags_None))
+	{  
+		ImGui::Separator();  
+		if (ImGui::BeginChild("ModelList", ImVec2(0, 300), true))  
+		{  
+			for (const auto& modelPath : menuModels)  
+			{  
+				if (ImGui::Selectable(modelPath.c_str())) {  
+					try {  
+						currentModel = std::make_unique<Model>(device, modelPath);  
+						renderer.setModel(*currentModel);  
+						std::cout << "Loaded model: " << modelPath << std::endl;  
+					}  
+					catch (const std::exception& e) {  
+						std::cerr << "Failed to load model: " << modelPath << " - " << e.what() << std::endl;  
+					}  
+				}  
+			}  
+			ImGui::EndChild();  
+		}  
+		ImGui::Separator();  
+		if (ImGui::Button("Refresh List"))  
+		{  
+			scanModels();  
+		}  
+	}  
+	ImGui::End();  
 }
 
 void UserInterface::handleMouseMove(double x, double y)

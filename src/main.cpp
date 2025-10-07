@@ -150,7 +150,7 @@ int main() {
 			totalRotation += 50.0f * delta; // rotate 50 degrees per second
 			transform.setRot(glm::vec3(0.0f, totalRotation, 0.0f));
 
-			ui.beginFrame(currentModel, device);
+			ui.beginFrame(currentModel, device, renderer);
 
 			try {
 				renderer.drawFrame(camera, transform, ui);
