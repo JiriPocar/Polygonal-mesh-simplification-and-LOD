@@ -55,6 +55,7 @@
 - [x] Connect mouse movement to camera rotation
 - [ ] Setup data structures for LOD manipulation
 - [ ] Simplification algorithms for LOD generation
+	- [ ] Side by side comparison with original model 
 	- [ ] Quadric Error Metrics
 	- [ ] Edge Collapse
 	- [ ] Vertex Clustering
@@ -62,6 +63,10 @@
 	- [ ] Own implementation of simplification algorithms
 - [ ] Demo application / applications
 	- [ ] LOD switching
+		- [ ] Setup secondary static camera close to the model
+		- [ ] Switch LOD levels based on distance from the main camera
 	- [ ] Performance comparison
+		- [ ] Save performance statistics to file
+		- [ ] Create graphs using ```python```, ```matplotlib```, ...
 	- [ ] Visual comparison
 	- [ ] Moving scene(s) with dynamic LOD adjustment
