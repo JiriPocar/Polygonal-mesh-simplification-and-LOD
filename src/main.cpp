@@ -98,7 +98,9 @@ int main() {
 		Transform transform;
 		transform.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
 		transform.setRot(glm::vec3(0.0f, 0.0f, 0.0f));
-		transform.setScale(glm::vec3(1.0f, 1.0f, 1.0f));
+		// get model auto scale and apply
+		float modelScale = currentModel->getScaleIndex();
+		transform.setScale(glm::vec3(modelScale, modelScale, modelScale));
 
 		std::cout << "\nCreating renderer..." << std::endl;
 		Renderer renderer(device, swapchain, renderPass, pipeline,
@@ -150,7 +152,7 @@ int main() {
 			totalRotation += 50.0f * delta; // rotate 50 degrees per second
 			transform.setRot(glm::vec3(0.0f, totalRotation, 0.0f));
 
-			ui.beginFrame(currentModel, device, renderer);
+			ui.beginFrame(currentModel, device, renderer, transform);
 
 			try {
 				renderer.drawFrame(camera, transform, ui);

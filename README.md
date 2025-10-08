@@ -51,7 +51,7 @@
 - [x] Basic ```ImGui``` integration
 - [x] Performance statistics via ```ImGui```
 - [x] Dynamic model loading via ```ImGui```
-- [ ] Bounding box visualization
+- [x] Bounding box compute (autoscaling of a model)
 - [x] Connect mouse movement to camera rotation
 - [ ] Setup data structures for LOD manipulation
 - [ ] Simplification algorithms for LOD generation

@@ -20,6 +20,7 @@
 #include "../rendering/Renderpass.hpp"
 #include "../rendering/CommandManager.hpp"
 #include "../scene/Camera.hpp"
+#include "../scene/Transform.hpp"
 #include "../resources/Model.hpp"
 
 class Renderer;
@@ -30,7 +31,7 @@ public:
 	~UserInterface();
 
 	void init();
-	void beginFrame(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer);
+	void beginFrame(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer, Transform& transform);
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);
 
@@ -42,7 +43,7 @@ private:
 
 	std::vector<std::string> menuModels;
 	void scanModels();
-	void showModelMenu(std::unique_ptr<Model>& currentModel, Device& devices, Renderer& renderer);
+	void showModelMenu(std::unique_ptr<Model>& currentModel, Device& devices, Renderer& renderer, Transform& transform);
 	void showStatistics();
 
 	Instance& uiInstance;

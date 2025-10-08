@@ -25,11 +25,19 @@ public:
 	Mesh(const Device& device, const tinygltf::Model& model, const tinygltf::Primitive& primitive);
 	void draw(vk::CommandBuffer commandBuffer) const;
 
+	uint32_t getVertexCount() const { return vertexCount; }
+	uint32_t getIndexCount() const { return indexCount; }
+	void getBounds(glm::vec3& minBound, glm::vec3& maxBound) const;
+
 private:
 	void loadVertices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<Vertex>& vertices);
 	void loadIndices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<uint32_t>& indices);
 	void createVertexBuffer(const std::vector<Vertex>& vertices);
 	void createIndexBuffer(const std::vector<uint32_t>& indices);
+
+	void calculateMeshBounds(const std::vector<Vertex>& vertices);
+	glm::vec3 minBound;
+	glm::vec3 maxBound;
 
 	const Device& dev;
 	std::unique_ptr<Buffer> vertexBuffer;
@@ -44,10 +52,10 @@ public:
 	~Model() = default;
 
 	void draw(vk::CommandBuffer commandBuffer) const;
+	float getScaleIndex() const;
 
 private:
 	void loadModel(const std::string& modelPath);
-	void processNode(const tinygltf::Node& node);
 	void processMesh(const tinygltf::Mesh& mesh);
 
 	const Device& dev;

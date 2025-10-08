@@ -68,14 +68,14 @@ void UserInterface::createDescriptorPool()
 	descriptorPool = uiDevice.operator*().createDescriptorPoolUnique(poolInfo);
 }
 
-void UserInterface::beginFrame(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer)
+void UserInterface::beginFrame(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer, Transform& transform)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
 	showStatistics();
-	showModelMenu(currentModel, device, renderer);
+	showModelMenu(currentModel, device, renderer, transform);
 }
 
 void UserInterface::scanModels()
@@ -141,7 +141,7 @@ void UserInterface::showStatistics()
 	ImGui::End();
 }
 
-void UserInterface::showModelMenu(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer)  
+void UserInterface::showModelMenu(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer, Transform& transform)  
 {  
 	ImGui::SetNextWindowPos(ImVec2(10, 350));  
 	ImGui::SetNextWindowSize(ImVec2(250, 400));  
@@ -155,7 +155,9 @@ void UserInterface::showModelMenu(std::unique_ptr<Model>& currentModel, Device& 
 				if (ImGui::Selectable(modelPath.c_str())) {  
 					try {  
 						currentModel = std::make_unique<Model>(device, modelPath);  
-						renderer.setModel(*currentModel);  
+						float setScale = currentModel->getScaleIndex();
+						transform.setScale(glm::vec3(setScale, setScale, setScale));
+						renderer.setModel(*currentModel);
 						std::cout << "Loaded model: " << modelPath << std::endl;  
 					}  
 					catch (const std::exception& e) {  

@@ -59,6 +59,8 @@ Mesh::Mesh(const Device& device, const tinygltf::Model& model, const tinygltf::P
 	loadVertices(model, primitive, vertices);
 	loadIndices(model, primitive, indices);
 
+	calculateMeshBounds(vertices);
+
 	createVertexBuffer(vertices);
 	createIndexBuffer(indices);
 
@@ -238,6 +240,25 @@ void Mesh::draw(vk::CommandBuffer commandBuffer) const
 	commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
 }
 
+void Mesh::calculateMeshBounds(const std::vector<Vertex>& vertices)
+{
+	if (vertices.empty()) return;
+
+	minBound = vertices[0].pos;
+	maxBound = vertices[0].pos;
+
+	for (const auto& v : vertices) {
+		minBound = glm::min(minBound, v.pos);
+		maxBound = glm::max(maxBound, v.pos);
+	}
+}
+
+void Mesh::getBounds(glm::vec3& minBound, glm::vec3& maxBound) const
+{
+	minBound = this->minBound;
+	maxBound = this->maxBound;
+}
+
 Model::Model(const Device& device, const std::string& modelPath)
 	: dev(device)
 {
@@ -296,4 +317,26 @@ void Model::draw(vk::CommandBuffer commandBuffer) const
 	for (const auto& mesh : meshes) {
 		mesh->draw(commandBuffer);
 	}
+}
+
+float Model::getScaleIndex() const
+{
+	if (meshes.empty()) return 1.0f;
+
+	glm::vec3 min = glm::vec3(FLT_MAX);
+	glm::vec3 max = glm::vec3(-FLT_MAX);
+
+	for (const auto& m : meshes)
+	{
+		glm::vec3 meshMin, meshMax;
+		m->getBounds(meshMin, meshMax);
+
+		min = glm::min(min, meshMin);
+		max = glm::max(max, meshMax);
+	}
+
+	glm::vec3 size = max - min;
+	float scaleCoordinate = glm::max(size.x, glm::max(size.y, size.z));
+
+	return 10.0f / scaleCoordinate;
 }
