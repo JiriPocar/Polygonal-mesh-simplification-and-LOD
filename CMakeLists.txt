@@ -80,7 +80,6 @@ add_executable(${APP_NAME}
     "src/rendering/RenderPass.cpp"
     "src/rendering/Descriptors.cpp"
     "src/rendering/CommandManager.cpp"
-    "src/resources/Mesh.cpp"
     "src/resources/Textures.cpp"
     "src/resources/Model.cpp"
     
