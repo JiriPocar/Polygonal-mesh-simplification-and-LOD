@@ -121,6 +121,8 @@ int main() {
 				}
 		});
 
+		bool rotate = true;
+
 		while (!window.shouldClose())
 		{
 			auto current = std::chrono::high_resolution_clock::now();
@@ -147,10 +149,23 @@ int main() {
 				camera.resetMouse();
 			}
 
+			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_R) == GLFW_PRESS)
+			{
+				rotate = true;
+			}
+
+			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_T) == GLFW_PRESS)
+			{
+				rotate = false;
+			}
+
 			camera.handleInput(window.getGLFWWindow(), delta);
 
-			totalRotation += 50.0f * delta; // rotate 50 degrees per second
-			transform.setRot(glm::vec3(0.0f, totalRotation, 0.0f));
+			if (rotate)
+			{
+				totalRotation += 50.0f * delta; // rotate 50 degrees per second
+				transform.setRot(glm::vec3(0.0f, totalRotation, 0.0f));
+			}
 
 			ui.beginFrame(currentModel, device, renderer, transform);
 
