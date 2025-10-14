@@ -14,6 +14,7 @@
 #include "../resources/Model.hpp"
 #include "../scene/Camera.hpp"
 #include "../scene/Transform.hpp"
+#include "../resources/DualModel.hpp"
 
 class UserInterface;
 
@@ -36,13 +37,20 @@ public:
 	~Renderer();
 
 	void drawFrame(const Camera& camera, const Transform& transform, UserInterface& ui);
+	void drawSplitScreen(const Camera& camera, const Transform& transform, UserInterface& ui);
+	
 	void recreateSwapchain();
+
 	void setModel(Model& newModel) { m_model = &newModel; }
+	void setDualModel(DualModel& newDualModel) { m_dualModel = &newDualModel; }
 
 private:
 	void createSyncObjects();
 	void cleanupSyncObjects();
 	void recreateFramebuffers();
+
+	void drawDualModel(vk::CommandBuffer cmd, const Camera& camera, const Transform& transform, int side);
+	void setupViewportScissor(vk::CommandBuffer cmd, vk::Extent2D extent, uint32_t width, int side);
 
 	Device& m_device;
 	Swapchain& m_swapchain;
@@ -55,6 +63,7 @@ private:
 	Model* m_model;
 	UniformBuffer& m_uniformBuffer;
 	Descriptor& m_descriptor;
+	DualModel* m_dualModel;
 
 	vk::UniqueSemaphore imageAvailableSemaphores;
 	vk::UniqueSemaphore renderFinishedSemaphores;

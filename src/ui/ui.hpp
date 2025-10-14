@@ -22,6 +22,7 @@
 #include "../scene/Camera.hpp"
 #include "../scene/Transform.hpp"
 #include "../resources/Model.hpp"
+#include "../resources/DualModel.hpp"
 
 class Renderer;
 
@@ -31,7 +32,7 @@ public:
 	~UserInterface();
 
 	void init();
-	void beginFrame(std::unique_ptr<Model>& currentModel, Device& device, Renderer& renderer, Transform& transform);
+	void beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform);
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);
 
@@ -43,7 +44,7 @@ private:
 
 	std::vector<std::string> menuModels;
 	void scanModels();
-	void showModelMenu(std::unique_ptr<Model>& currentModel, Device& devices, Renderer& renderer, Transform& transform);
+	void showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& devices, Renderer& renderer, Transform& transform);
 	void showStatistics();
 
 	Instance& uiInstance;

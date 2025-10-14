@@ -20,6 +20,7 @@
 #include "rendering/Descriptors.hpp"
 #include "rendering/UniformBuffer.hpp"
 #include "resources/Model.hpp"
+#include "resources/DualModel.hpp"
 #include "scene/Camera.hpp"
 #include "scene/Transform.hpp"
 #include "ui/ui.hpp"
@@ -31,7 +32,7 @@ int main() {
 		std::cout << "Starting Vulkan application...\n" << std::endl;
 
 		std::cout << "\nCreating window..." << std::endl;
-		Window window(1200, 1000, "Vulkan Window");
+		Window window(1400, 800, "Vulkan Window");
 		std::cout << "Successfully created window!" << std::endl;
 
 		std::cout << "\nCreating instance..." << std::endl;
@@ -84,8 +85,8 @@ int main() {
 		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
 
 		std::cout << "\nLoading model..." << std::endl;
-		//Model model(device, "../../../assets/Lantern.gltf");
-		std::unique_ptr<Model> currentModel = std::make_unique<Model>(device, "../../../assets/Lantern.gltf");
+		//std::unique_ptr<Model> currentModel = std::make_unique<Model>(device, "../../../assets/Lantern.gltf");
+		std::unique_ptr<DualModel> currentDualModel = std::make_unique<DualModel>(device, "../../../assets/Sponza.gltf");
 		std::cout << "Model loaded successfully!" << std::endl;
 
 		std::cout << "\nUI initialization" << std::endl;
@@ -99,13 +100,13 @@ int main() {
 		transform.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
 		transform.setRot(glm::vec3(0.0f, 0.0f, 0.0f));
 		// get model auto scale and apply
-		float modelScale = currentModel->getScaleIndex();
+		float modelScale = currentDualModel->getOriginalModel().getScaleIndex();
 		transform.setScale(glm::vec3(modelScale, modelScale, modelScale));
 
 		std::cout << "\nCreating renderer..." << std::endl;
 		Renderer renderer(device, swapchain, renderPass, pipeline,
-						  framebuffer, commandManager, window, surface.get(), *currentModel, uniformBuffer, descriptorSet);
-
+						  framebuffer, commandManager, window, surface.get(), currentDualModel->getOriginalModel(), uniformBuffer, descriptorSet);
+		renderer.setDualModel(*currentDualModel);
 		auto last = std::chrono::high_resolution_clock::now();
 		float totalRotation = 0.0f;
 
@@ -167,10 +168,11 @@ int main() {
 				transform.setRot(glm::vec3(0.0f, totalRotation, 0.0f));
 			}
 
-			ui.beginFrame(currentModel, device, renderer, transform);
+			ui.beginFrame(currentDualModel, device, renderer, transform);
 
 			try {
-				renderer.drawFrame(camera, transform, ui);
+				//renderer.drawFrame(camera, transform, ui);
+				renderer.drawSplitScreen(camera, transform, ui);
 			}
 			catch (const vk::OutOfDateKHRError&) {
 				renderer.recreateSwapchain();

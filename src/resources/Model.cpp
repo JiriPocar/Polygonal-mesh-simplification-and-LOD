@@ -59,6 +59,9 @@ Mesh::Mesh(const Device& device, const tinygltf::Model& model, const tinygltf::P
 	loadVertices(model, primitive, vertices);
 	loadIndices(model, primitive, indices);
 
+	this->vertices = vertices;
+	this->indices = indices;
+
 	calculateMeshBounds(vertices);
 
 	createVertexBuffer(vertices);
@@ -75,6 +78,28 @@ Mesh::Mesh(const Device& device, const tinygltf::Model& model, const tinygltf::P
 		std::cout << "(" << minPos.x << "," << minPos.y << "," << minPos.z << ") to "
 			<< "(" << maxPos.x << "," << maxPos.y << "," << maxPos.z << ")" << std::endl;
 	}
+}
+
+Mesh::Mesh(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+	: dev(device),
+	  indexCount(static_cast<uint32_t>(indices.size())),
+	  vertexCount(static_cast<uint32_t>(vertices.size())),
+	  vertices(vertices),
+	  indices(indices)
+{
+	calculateMeshBounds(vertices);
+	createVertexBuffer(vertices);
+	createIndexBuffer(indices);
+}
+
+std::vector<Vertex> Mesh::extractVertices() const
+{
+	return vertices;
+}
+
+std::vector<uint32_t> Mesh::extractIndices() const
+{
+	return indices;
 }
 
 void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<Vertex>& vertices)
@@ -265,6 +290,20 @@ Model::Model(const Device& device, const std::string& modelPath)
 	loadModel(modelPath);
 }
 
+Model::Model(const Model& other) : dev(other.dev), indexCount(other.indexCount), vertexCount(other.vertexCount)
+{
+	auto vertices = other.extractVertices();
+	auto indices = other.extractIndices();
+
+	createFromData(vertices, indices);
+}
+
+Model::Model(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+	: dev(device), vertexCount(vertices.size()), indexCount(indices.size())
+{
+	createFromData(vertices, indices);
+}
+
 void Model::loadModel(const std::string& modelPath)
 {
 
@@ -339,4 +378,53 @@ float Model::getScaleIndex() const
 	float scaleCoordinate = glm::max(size.x, glm::max(size.y, size.z));
 
 	return 10.0f / scaleCoordinate;
+}
+
+void Model::createFromData(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+{
+	if (vertices.empty() || indices.empty())
+	{
+		throw std::runtime_error("Vertices or indices are empty.");
+	}
+
+	meshes.clear();
+	meshes.push_back(std::make_unique<Mesh>(dev, vertices, indices));
+}
+
+std::vector<Vertex> Model::extractVertices() const
+{
+	std::vector<Vertex> allVertices;
+
+	for (const auto& mesh : meshes)
+	{
+		auto meshVertices = mesh->extractVertices();
+		allVertices.insert(allVertices.end(), meshVertices.begin(), meshVertices.end());
+	}
+
+	return allVertices;
+}
+
+std::vector<uint32_t> Model::extractIndices() const
+{
+	std::vector<uint32_t> allIndices;
+
+	// ! due to multiple meshes, we need to offset the indices
+	// the lantern X fox models incident
+	uint32_t vertexOffset = 0;
+
+	for (const auto& mesh : meshes)
+	{
+		auto meshIndices = mesh->extractIndices();
+
+		for (auto& index : meshIndices)
+		{
+			index += vertexOffset;
+		}
+
+		allIndices.insert(allIndices.end(), meshIndices.begin(), meshIndices.end());
+
+		vertexOffset += mesh->getVertexCount();
+	}
+
+	return allIndices;
 }

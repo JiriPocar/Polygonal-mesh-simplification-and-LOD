@@ -7,6 +7,9 @@
 #include <glm/glm.hpp>
 #include "../../external/tinygltf/tiny_gltf.h"
 
+#define LEFT 0
+#define RIGHT 1
+
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec3 normal;
@@ -23,10 +26,13 @@ struct Vertex {
 class Mesh {
 public:
 	Mesh(const Device& device, const tinygltf::Model& model, const tinygltf::Primitive& primitive);
+	Mesh(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	void draw(vk::CommandBuffer commandBuffer) const;
 
 	uint32_t getVertexCount() const { return vertexCount; }
 	uint32_t getIndexCount() const { return indexCount; }
+	std::vector<Vertex> extractVertices() const;
+	std::vector<uint32_t> extractIndices() const;
 	void getBounds(glm::vec3& minBound, glm::vec3& maxBound) const;
 
 private:
@@ -44,12 +50,27 @@ private:
 	std::unique_ptr<Buffer> indexBuffer;
 	uint32_t indexCount;
 	uint32_t vertexCount;
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
 };
 
 class Model {
 public:
 	Model(const Device& device, const std::string& modelPath);
+
+	// copy constructor
+	Model(const Model& other);
+
+	// data constructor
+	Model(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	
 	~Model() = default;
+
+	std::vector<Vertex> extractVertices() const;
+	std::vector<uint32_t> extractIndices() const;
+
+	uint32_t getVertexCount() const { return vertexCount; };
+	uint32_t getIndexCount() const { return indexCount; };
 
 	void draw(vk::CommandBuffer commandBuffer) const;
 	float getScaleIndex() const;
@@ -57,7 +78,10 @@ public:
 private:
 	void loadModel(const std::string& modelPath);
 	void processMesh(const tinygltf::Mesh& mesh);
+	void createFromData(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 
+	uint32_t indexCount;
+	uint32_t vertexCount;
 	const Device& dev;
 	tinygltf::Model model;
 	std::vector<std::unique_ptr<Mesh>> meshes;

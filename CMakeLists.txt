@@ -92,6 +92,7 @@ add_executable(${APP_NAME}
     "external/tinygltf/tiny_gltf.h"
     "src/resources/Buffer.cpp"
     "src/rendering/UniformBuffer.cpp"
+    "src/resources/DualModel.cpp"
     "src/scene/Transform.cpp"
     "src/ui/ui.cpp"
  "external/glfw/include/GLFW/glfw3native.h")

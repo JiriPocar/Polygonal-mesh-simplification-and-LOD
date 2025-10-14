@@ -53,9 +53,9 @@
 - [x] Dynamic model loading via ```ImGui```
 - [x] Bounding box compute (autoscaling of a model)
 - [x] Connect mouse movement to camera rotation
+- [x] Implement split-screen render for original and simplified model  
 - [ ] Setup data structures for LOD manipulation
 - [ ] Simplification algorithms for LOD generation
-	- [ ] Side by side comparison with original model 
 	- [ ] Quadric Error Metrics
 	- [ ] Edge Collapse
 	- [ ] Vertex Clustering
