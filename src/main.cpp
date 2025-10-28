@@ -86,7 +86,7 @@ int main() {
 
 		std::cout << "\nLoading model..." << std::endl;
 		//std::unique_ptr<Model> currentModel = std::make_unique<Model>(device, "../../../assets/Lantern.gltf");
-		std::unique_ptr<DualModel> currentDualModel = std::make_unique<DualModel>(device, "../../../assets/Sponza.gltf");
+		std::unique_ptr<DualModel> currentDualModel = std::make_unique<DualModel>(device, "../../../assets/Fox.gltf");
 		std::cout << "Model loaded successfully!" << std::endl;
 
 		std::cout << "\nUI initialization" << std::endl;

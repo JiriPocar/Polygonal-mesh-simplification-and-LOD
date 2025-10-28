@@ -23,6 +23,7 @@
 #include "../scene/Transform.hpp"
 #include "../resources/Model.hpp"
 #include "../resources/DualModel.hpp"
+#include "../simplification/Simplificator.hpp"
 
 class Renderer;
 
@@ -46,6 +47,7 @@ private:
 	void scanModels();
 	void showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& devices, Renderer& renderer, Transform& transform);
 	void showStatistics();
+	void showSimplificationControls(std::unique_ptr<DualModel>& currentDualModel, Device& device);
 
 	Instance& uiInstance;
 	Device& uiDevice;
@@ -54,6 +56,7 @@ private:
 	Window& uiWindow;
 	CommandManager& uiCmdManager;
 	vk::UniqueDescriptorPool descriptorPool;
+	Simplificator simplificator;
 };
 
 /* End of the ui.hpp file */

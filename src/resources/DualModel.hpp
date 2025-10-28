@@ -15,10 +15,13 @@ public:
 
 	void revertSimplification();
 	void simplifyModel(const std::vector<Vertex>& newVertices, const std::vector<uint32_t>& newIndices);
+	bool wasModelSimplified() const { return wasSimplified; }
 
 private:
 	void createSimplifiedCopy();
 
+	Device& dev;
 	std::unique_ptr<Model> originalModel;
 	std::unique_ptr<Model> simplifiedModel;
+	bool wasSimplified = false;
 };

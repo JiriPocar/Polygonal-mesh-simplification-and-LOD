@@ -1,10 +1,11 @@
 #include "ui.hpp"
 #include <filesystem>
 #include <iostream>
+#include <chrono>
 #include "../rendering/Renderer.hpp"
 
 UserInterface::UserInterface(Instance &instance, Device& dev, Swapchain& swapchain, RenderPass& renderPass, Window& window, CommandManager& cmdManager)
-	: uiDevice(dev), uiInstance(instance), uiSwapchain(swapchain), uiRenderPass(renderPass), uiWindow(window), uiCmdManager(cmdManager)
+	: uiDevice(dev), uiInstance(instance), uiSwapchain(swapchain), uiRenderPass(renderPass), uiWindow(window), uiCmdManager(cmdManager), simplificator()
 {
 	scanModels();
 	init();
@@ -76,6 +77,7 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 
 	showStatistics();
 	showModelMenu(currentDualModel, device, renderer, transform);
+	showSimplificationControls(currentDualModel, device);
 }
 
 void UserInterface::scanModels()
@@ -174,6 +176,62 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 		}  
 	}  
 	ImGui::End();  
+}
+
+void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& currentDualModel, Device& device)
+{
+	if (!currentDualModel)
+	{
+		ImGui::Begin("Simplification");
+		ImGui::Text("No model loaded.");
+		ImGui::End();
+		return;
+	}
+
+	ImGui::Begin("Simplification");
+
+	// static here, so the value persists between frames
+	static float ratio = 0.5f;
+	Algorithm currentAlgorithm = simplificator.getCurrentAlgorithm();
+
+	// provisional solution, TODO: make this quite more elegant
+	const char* algorithms[] = { "QEM", "Edge Collapse", "Vertex Clustering", "Naive" };
+	if (ImGui::BeginCombo("Algorithm", algorithms[static_cast<int>(currentAlgorithm)])) {
+		for (int i = 0; i < 4; i++) {
+			if (ImGui::Selectable(algorithms[i], currentAlgorithm == static_cast<Algorithm>(i))) {
+				currentAlgorithm = static_cast<Algorithm>(i);
+				simplificator.setCurrentAlgorithm(currentAlgorithm);
+			}
+		}
+		ImGui::EndCombo();
+	}
+
+	ImGui::SliderFloat("Reduction Ratio", &ratio, 0.1f, 0.9f, "%.2f");
+
+	auto& originalModel = currentDualModel->getOriginalModel();
+	
+	if (ImGui::Button("Apply"))
+	{
+		try {
+			auto result = simplificator.simplify(originalModel, ratio);
+			currentDualModel->simplifyModel(result.vertices, result.indices);
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << "Simplification failed: " << e.what() << std::endl;
+			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Simplification failed: %s", e.what());
+		}
+	}
+
+	if (currentDualModel->wasModelSimplified())
+	{
+		if (ImGui::Button("Revert"))
+		{
+			currentDualModel->revertSimplification();
+		}
+	}
+
+	ImGui::End();
 }
 
 void UserInterface::handleMouseMove(double x, double y)
