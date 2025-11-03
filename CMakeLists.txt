@@ -95,7 +95,7 @@ add_executable(${APP_NAME}
     "src/resources/DualModel.cpp"
     "src/scene/Transform.cpp"
     "src/ui/ui.cpp"
- "external/glfw/include/GLFW/glfw3native.h" "src/simplification/Simplificator.cpp")
+ "external/glfw/include/GLFW/glfw3native.h" "src/simplification/Simplificator.cpp" "src/simplification/simplificationUtil.cpp")
 
 if(EXISTS "${GLSL_VALIDATOR}")
     add_dependencies(${APP_NAME} CompileShaders)

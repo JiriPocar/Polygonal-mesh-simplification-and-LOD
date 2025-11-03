@@ -27,7 +27,7 @@ public:
 	void setCurrentAlgorithm(Algorithm algorithm);
 	Algorithm getCurrentAlgorithm() const { return currentAlgorithm; };
 
-	SimplificatorResult simplify(const Model& model, size_t targetFaceCount);
+	SimplificatorResult simplify(const Model& model, float targetFaceCountRatio);
 
 private:
 	Algorithm currentAlgorithm;
