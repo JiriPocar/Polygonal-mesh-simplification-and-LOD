@@ -192,6 +192,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 
 	// static here, so the value persists between frames
 	static float ratio = 0.5f;
+	static int cellsPerAxis = 10;
 	Algorithm currentAlgorithm = simplificator.getCurrentAlgorithm();
 
 	// provisional solution, TODO: make this quite more elegant
@@ -206,14 +207,27 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		ImGui::EndCombo();
 	}
 
-	ImGui::SliderFloat("Reduction Ratio", &ratio, 0.1f, 0.9f, "%.2f");
+	currentAlgorithm = simplificator.getCurrentAlgorithm();
+	float parameterValue = 0.0f;
+	if (currentAlgorithm != Algorithm::VertexClustering)
+	{
+		ImGui::SliderFloat("Reduction Ratio", &ratio, 0.1f, 0.9f, "%.2f");
+		parameterValue = ratio;
+	}
+	else
+	{
+		// slider for number of cells per axis
+		ImGui::SliderInt("Cells Per Axis", &cellsPerAxis, 2, 100);
+		parameterValue = static_cast<float>(cellsPerAxis);
+	}
+	
 
 	auto& originalModel = currentDualModel->getOriginalModel();
 	
 	if (ImGui::Button("Apply"))
 	{
 		try {
-			auto result = simplificator.simplify(originalModel, ratio);
+			auto result = simplificator.simplify(originalModel, parameterValue);
 			currentDualModel->simplifyModel(result.vertices, result.indices);
 		}
 		catch (const std::exception& e)

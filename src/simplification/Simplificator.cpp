@@ -13,24 +13,58 @@ void Simplificator::setCurrentAlgorithm(Algorithm algorithm)
 	currentAlgorithm = algorithm;
 }
 
+void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float threshold = 0.0001f)
+{
+	// build index map, each vertex points to its representative
+	// if vertex is duplicate, then map to the first occurrence
+	std::vector<uint32_t> indexMap(vertices.size());
+
+	for (uint32_t i = 0; i < vertices.size(); i++) {
+		indexMap[i] = i;
+
+		// find duplicate vertex
+		for (uint32_t j = 0; j < i; j++) {
+			if (glm::length(vertices[i].pos - vertices[j].pos) < threshold) {
+				indexMap[i] = indexMap[j]; // rewrite as duplicate
+				break;
+			}
+		}
+	}
+
+	// remap indexes
+	for (auto& idx : indices) {
+		idx = indexMap[idx];
+	}
+
+	// remove degenerated triangles
+	SimplificationUtil::removeDegeneratedTriangles(indices);
+}
+
 SimplificatorResult Simplificator::simplify(const Model& model, float targetFaceCountRatio)
 {
 	SimplificatorResult result;
 	auto start = std::chrono::high_resolution_clock::now();
 
 	auto originalFaceCount = model.extractIndices().size() / 3;
-	uint32_t targetFaceCount = originalFaceCount * targetFaceCountRatio;
+	uint32_t targetFaceCount;
+
+	std::cout << "Simplify called with parameter: " << targetFaceCountRatio << std::endl;
+
 	switch (currentAlgorithm) {
 		case Algorithm::QEM:
+			targetFaceCount = originalFaceCount * targetFaceCountRatio;
 			result = simplifyQEM(model, targetFaceCount);
 			break;
 		case Algorithm::EdgeCollapse:
+			targetFaceCount = originalFaceCount * targetFaceCountRatio;
 			result = simplifyEdgeCollapse(model, targetFaceCount);
 			break;
 		case Algorithm::VertexClustering:
+			targetFaceCount = targetFaceCountRatio;
 			result = simplifyVertexClustering(model, targetFaceCount);
 			break;
 		case Algorithm::Naive:
+			targetFaceCount = originalFaceCount * targetFaceCountRatio;
 			result = simplifyNaive(model, targetFaceCount);
 			break;
 	}
@@ -61,39 +95,52 @@ SimplificatorResult Simplificator::simplifyEdgeCollapse(const Model& model, size
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyVertexClustering(const Model& model, size_t targetFaceCount)
+SimplificatorResult Simplificator::simplifyVertexClustering(const Model& model, size_t cellsPerAxis)
 {
 	SimplificatorResult result;
-	result.vertices = model.extractVertices();
-	result.indices = model.extractIndices();
-	return result;
-}
+	auto vertices = model.extractVertices();
+	auto indices = model.extractIndices();
 
-void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float threshold = 0.0001f)
-{
-	// build index map, each vertex points to its representative
-	// if vertex is duplicate, then map to the first occurrence
-	std::vector<uint32_t> indexMap(vertices.size());
+	mergeCloseVertices(vertices, indices);
+	size_t currentFaceCount = indices.size() / 3;
 
-	for (uint32_t i = 0; i < vertices.size(); i++) {
-		indexMap[i] = i;
+	std::cout << "=== Vertex Clustering Debug ===" << std::endl;
+	std::cout << "Input vertices: " << vertices.size() << std::endl;
+	std::cout << "Input faces: " << currentFaceCount << std::endl;
+	std::cout << "Cells per axis: " << cellsPerAxis << std::endl;
 
-		// find duplicate vertex
-		for (uint32_t j = 0; j < i; j++) {
-			if (glm::length(vertices[i].pos - vertices[j].pos) < threshold) {
-				indexMap[i] = indexMap[j]; // rewrite as duplicate
-				break;
+	float gridSize = SimplificationUtil::computeGridCellSize(vertices, cellsPerAxis);
+
+	auto grid = SimplificationUtil::createGrid(vertices, gridSize);
+	std::cout << "Grid dimensions: " << grid.sizeX << "x"
+		<< grid.sizeY << "x" << grid.sizeZ << std::endl;
+
+	SimplificationUtil::fillGrid(grid, vertices);
+	int cellsWithMultipleVertices = 0;
+	int totalClustered = 0;
+	for (int x = 0; x < grid.sizeX; x++) {
+		for (int y = 0; y < grid.sizeY; y++) {
+			for (int z = 0; z < grid.sizeZ; z++) {
+				if (grid.cells[x][y][z].size() > 1) {
+					cellsWithMultipleVertices++;
+					totalClustered += grid.cells[x][y][z].size();
+				}
 			}
 		}
 	}
 
-	// remap indexes
-	for (auto& idx : indices) {
-		idx = indexMap[idx];
-	}
+	auto indexMap = SimplificationUtil::computeClusterCentroids(grid, vertices);
 
-	// remove degenerated triangles
+	SimplificationUtil::remapIndices(indices, indexMap);
+
 	SimplificationUtil::removeDegeneratedTriangles(indices);
+	size_t finalFaceCount = indices.size() / 3;
+	std::cout << "Final faces: " << finalFaceCount << std::endl;
+	std::cout << "Reduction: " << currentFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / currentFaceCount) << "%)" << std::endl;
+
+	result.vertices = vertices;
+	result.indices = indices;
+	return result;
 }
 
 SimplificatorResult Simplificator::simplifyNaive(const Model& model, size_t targetFaceCount)
@@ -114,6 +161,10 @@ SimplificatorResult Simplificator::simplifyNaive(const Model& model, size_t targ
 		SimplificationUtil::collapseEdge(vertices, indices, edgeToCollapse);
 		currentFaceCount = indices.size() / 3;
 	}
+
+	size_t finalFaceCount = indices.size() / 3;
+	std::cout << "Final faces: " << finalFaceCount << std::endl;
+	std::cout << "Reduction: " << currentFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / currentFaceCount) << "%)" << std::endl;
 
 	result.vertices = vertices;
 	result.indices = indices;

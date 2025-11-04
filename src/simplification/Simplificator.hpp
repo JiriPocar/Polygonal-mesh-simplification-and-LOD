@@ -34,7 +34,7 @@ private:
 
 	SimplificatorResult simplifyQEM(const Model& model, size_t targetFaceCount);
 	SimplificatorResult simplifyEdgeCollapse(const Model& model, size_t targetFaceCount);
-	SimplificatorResult simplifyVertexClustering(const Model& model, size_t targetFaceCount);
+	SimplificatorResult simplifyVertexClustering(const Model& model, size_t cellsPerAxis);
 	SimplificatorResult simplifyNaive(const Model& model, size_t targetFaceCount);
 
 	size_t computeTargetFaceCount(const Model& model, float ratio);
