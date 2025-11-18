@@ -82,8 +82,45 @@ SimplificatorResult Simplificator::simplify(const Model& model, float targetFace
 SimplificatorResult Simplificator::simplifyQEM(const Model& model, size_t targetFaceCount)
 {
 	SimplificatorResult result;
-	result.vertices = model.extractVertices();
-	result.indices = model.extractIndices();
+	auto vertices = model.extractVertices();
+	auto indices = model.extractIndices();
+
+	mergeCloseVertices(vertices, indices);
+	size_t currentFaceCount = indices.size() / 3;
+	size_t resultCompareFaceCount = currentFaceCount;
+
+	std::cout << "=== QEM Simplification ===" << std::endl;
+	std::cout << "Input: " << vertices.size() << " vertices, "
+		<< currentFaceCount << " faces" << std::endl;
+	std::cout << "Target: " << targetFaceCount << " faces" << std::endl;
+
+	if (currentFaceCount <= targetFaceCount)
+	{
+		result.vertices = vertices;
+		result.indices = indices;
+		return result;
+	}
+
+	// init quadrics
+	auto quadrics = SimplificationUtil::initQuadrics(vertices, indices);
+
+	// create Qedges
+	auto qedges = SimplificationUtil::createQedges(vertices, indices, quadrics);
+
+	while (currentFaceCount > targetFaceCount && !qedges.empty())
+	{
+		auto minEdge = SimplificationUtil::findMinErr(qedges);
+		SimplificationUtil::collapseQedge(vertices, indices, quadrics, minEdge);
+		SimplificationUtil::updateAfterCollapse(qedges, minEdge.v2, minEdge.v1, vertices, quadrics);
+		currentFaceCount = indices.size() / 3;
+	}
+
+	size_t finalFaceCount = indices.size() / 3;
+	std::cout << "Final faces: " << finalFaceCount << std::endl;
+	std::cout << "Reduction: " << resultCompareFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / resultCompareFaceCount) << "%)" << std::endl;
+
+	result.vertices = vertices;
+	result.indices = indices;
 	return result;
 }
 
@@ -116,21 +153,8 @@ SimplificatorResult Simplificator::simplifyVertexClustering(const Model& model, 
 		<< grid.sizeY << "x" << grid.sizeZ << std::endl;
 
 	SimplificationUtil::fillGrid(grid, vertices);
-	int cellsWithMultipleVertices = 0;
-	int totalClustered = 0;
-	for (int x = 0; x < grid.sizeX; x++) {
-		for (int y = 0; y < grid.sizeY; y++) {
-			for (int z = 0; z < grid.sizeZ; z++) {
-				if (grid.cells[x][y][z].size() > 1) {
-					cellsWithMultipleVertices++;
-					totalClustered += grid.cells[x][y][z].size();
-				}
-			}
-		}
-	}
 
 	auto indexMap = SimplificationUtil::computeClusterCentroids(grid, vertices);
-
 	SimplificationUtil::remapIndices(indices, indexMap);
 
 	SimplificationUtil::removeDegeneratedTriangles(indices);

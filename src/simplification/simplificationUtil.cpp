@@ -1,6 +1,7 @@
 #include "simplificationUtil.hpp"
 #include <algorithm>
 #include <cmath>
+#include <set>
 #include <iostream>
 
 namespace SimplificationUtil {
@@ -229,5 +230,204 @@ namespace SimplificationUtil {
 		float maxAxisLen = std::max({size.x, size.y, size.z});
 
 		return maxAxisLen / (float)cellsPerAxis;
+	}
+
+	Quadric Quadric::operator+(const Quadric& other)
+	{
+		Quadric result;
+		result.q11 = q11 + other.q11;
+		result.q12 = q12 + other.q12;
+		result.q13 = q13 + other.q13;
+		result.q14 = q14 + other.q14;
+		result.q22 = q22 + other.q22;
+		result.q23 = q23 + other.q23;
+		result.q24 = q24 + other.q24;
+		result.q33 = q33 + other.q33;
+		result.q34 = q34 + other.q34;
+		result.q44 = q44 + other.q44;
+		return result;
+	}
+
+	double Quadric::evalError(const glm::vec3& v)
+	{
+		double x = v.x;
+		double y = v.y;
+		double z = v.z;
+
+		// evaluate v^T * Q * v
+		// via https://www.cs.cmu.edu/~garland/Papers/quadrics.pdf [page 3 footnote]
+		double error = q11 * x * x + 2 * q12 * x * y + 2 * q13 * x * z + 2 * q14 * x +
+										 q22 * y * y + 2 * q23 * y * z + 2 * q24 * y +
+														   q33 * z * z + 2 * q34 * z +
+																			 q44;
+
+		return error;
+	}
+
+	Quadric createQuadricFromTriangle(glm::vec3& v1, glm::vec3& v2, glm::vec3& v3)
+	{
+		// get plane normal
+		glm::vec3 n = glm::normalize(glm::cross(v2 - v1, v3 - v1));
+		double a = n.x, b = n.y, c = n.z;
+		double d = -glm::dot(n, v1);
+
+		Quadric q;
+		q.q11 = a * a;	q.q12 = a * b;	q.q13 = a * c;	q.q14 = a * d;
+						q.q22 = b * b;	q.q23 = b * c;	q.q24 = b * d;
+										q.q33 = c * c;	q.q34 = c * d;
+														q.q44 = d * d;
+
+		return q;
+	}
+
+	std::vector<Quadric> initQuadrics(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	{
+		std::vector<Quadric> quadrics(vertices.size());
+
+		// for each triangle
+		for (int i = 0; i < indices.size(); i += 3)
+		{
+			uint32_t i1 = indices[i];
+			uint32_t i2 = indices[i + 1];
+			uint32_t i3 = indices[i + 2];
+
+			glm::vec3& v1 = vertices[i1].pos;
+			glm::vec3& v2 = vertices[i2].pos;
+			glm::vec3& v3 = vertices[i3].pos;
+
+			Quadric q = createQuadricFromTriangle(v1, v2, v3);
+
+			quadrics[i1] = quadrics[i1] + q;
+			quadrics[i2] = quadrics[i2] + q;
+			quadrics[i3] = quadrics[i3] + q;
+		}
+
+		return quadrics;
+	}
+
+	glm::vec3 computeOptPos(Quadric& q1, Quadric& q2, glm::vec3& v1, glm::vec3& v2, double& outErr)
+	{
+		Quadric q = q1 + q2;
+
+		// for now lets only choose between v1, v2 and midpoint
+		// TODO: definitely add more candidates OR compute exact optimal pos
+		glm::vec3 middle = 0.5f * (v1 + v2);
+
+		double v1Err = q.evalError(v1);
+		double v2Err = q.evalError(v2);
+		double midErr = q.evalError(middle);
+
+		if (v1Err <= v2Err && v1Err <= midErr)
+		{
+			outErr = v1Err;
+			return v1;
+		}
+		else if (v2Err <= v1Err && v2Err <= midErr)
+		{
+			outErr = v2Err;
+			return v2;
+		}
+		else
+		{
+			outErr = midErr;
+			return middle;
+		}
+	}
+
+	std::vector<Qedge> createQedges(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics)
+	{
+		std::set<std::pair<uint32_t, uint32_t>> uniqueEdges;
+
+		// find unique edges
+		for (int i = 0; i < indices.size(); i += 3)
+		{
+			uint32_t idxTriplet[3] = { indices[i], indices[i + 1], indices[i + 2] };
+
+			for (int j = 0; j < 3; j++)
+			{
+				uint32_t v1 = idxTriplet[j];
+				uint32_t v2 = idxTriplet[(j + 1) % 3];
+
+				auto edge = std::minmax(v1, v2);
+				uniqueEdges.insert(edge);
+			}
+		}
+
+		// create Qedges
+		std::vector<Qedge> qedges;
+		qedges.reserve(uniqueEdges.size());
+
+		for (auto& [v1, v2] : uniqueEdges)
+		{
+			Qedge qe;
+			qe.v1 = v1;
+			qe.v2 = v2;
+
+			qe.optimalPos = computeOptPos(quadrics[v1], quadrics[v2], vertices[v1].pos, vertices[v2].pos, qe.error);
+			qedges.push_back(qe);
+		}
+
+		return qedges;
+	}
+
+	Qedge findMinErr(std::vector<Qedge>& edges)
+	{
+		if (edges.empty())
+		{
+			throw std::runtime_error("No edges to find minimum from.");
+		}
+
+		auto minIt = std::min_element(edges.begin(), edges.end(),
+			[](const Qedge& a, const Qedge& b) {
+				return a.error < b.error;
+			});
+
+		return *minIt;
+	}
+
+	void collapseQedge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics, Qedge& edge)
+	{
+		uint32_t keepIdx = edge.v1;
+		uint32_t removeIdx = edge.v2;
+
+		// update vertex position with optimal position
+		vertices[keepIdx].pos = edge.optimalPos;
+
+		// update quadric
+		quadrics[keepIdx] = quadrics[keepIdx] + quadrics[removeIdx];
+
+		// remap indices
+		for (auto& idx : indices)
+		{
+			if (idx == removeIdx) {
+				idx = keepIdx;
+			}
+		}
+
+		// at last, remove degenerated triangles
+		removeDegeneratedTriangles(indices);
+	}
+
+	void updateAfterCollapse(std::vector<Qedge>& edges, uint32_t idxToRemove, uint32_t idxToKeep, std::vector<Vertex>& vertices, std::vector<Quadric>& quadrics)
+	{
+		// delete edges that involved idxToRemove or are now degenerated
+		edges.erase(
+			std::remove_if(edges.begin(), edges.end(),
+				[idxToRemove, idxToKeep](const Qedge& e) {
+					return e.v1 == idxToRemove || e.v2 == idxToRemove ||
+						(e.v1 == idxToKeep && e.v2 == idxToKeep);
+				}),
+			edges.end()
+		);
+
+		// recompute edges involving idxToKeep
+		for (auto& edge : edges)
+		{
+			if (edge.v1 == idxToKeep || edge.v2 == idxToKeep)
+			{
+				uint32_t otherIdx = (edge.v1 == idxToKeep) ? edge.v2 : edge.v1;
+				edge.optimalPos = computeOptPos(quadrics[idxToKeep], quadrics[otherIdx], vertices[idxToKeep].pos, vertices[otherIdx].pos, edge.error);
+			}
+		}
 	}
 }

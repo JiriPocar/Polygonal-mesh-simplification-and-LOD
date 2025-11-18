@@ -38,6 +38,41 @@ namespace SimplificationUtil {
 	float computeGridCellSize(std::vector<Vertex>& vertices, size_t cellsPerAxis);
 	// End of Vertex Clustering utilities
 
+	// QEM utilities
+	struct Quadric {
+		double q11, q12, q13, q14;
+		double      q22, q23, q24;
+		double           q33, q34;
+		double                q44;
+		
+		Quadric() : q11(0), q12(0), q13(0), q14(0),
+							q22(0), q23(0), q24(0),
+									q33(0), q34(0),
+											q44(1){}
+
+		Quadric operator+(const Quadric& other);
+		double evalError(const glm::vec3& v);
+	};
+
+	struct Qedge {
+		uint32_t v1, v2;
+		glm::vec3 optimalPos;
+		double error;
+
+		bool operator>(const Qedge& other) const {
+			return error > other.error;
+		}
+	};
+
+	std::vector<Quadric> initQuadrics(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
+	Quadric createQuadricFromTriangle(glm::vec3& v1, glm::vec3& v2, glm::vec3& v3);
+	glm::vec3 computeOptPos(Quadric& q1, Quadric& q2, glm::vec3& v1, glm::vec3& v2, double& outErr);
+	std::vector<Qedge> createQedges(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics);
+	Qedge findMinErr(std::vector<Qedge>& edges);
+	void collapseQedge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics, Qedge& edge);
+	void updateAfterCollapse(std::vector<Qedge>& edges, uint32_t idxToRemove, uint32_t idxToKeep, std::vector<Vertex>& vertices, std::vector<Quadric>& quadrics);
+	// End of QEM utilities
+
 	void collapseEdge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Edge& edgeToCollapse);
 	void remapIndices(std::vector<uint32_t>& indices, uint32_t oldIdx, uint32_t newIdx);
 	void remapIndices(std::vector<uint32_t>& indices, std::unordered_map<uint32_t, uint32_t>& indexMap);
