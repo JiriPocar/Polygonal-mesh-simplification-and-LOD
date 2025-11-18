@@ -25,12 +25,17 @@
 │   │   │   ├── UniformBuffer.hpp/cpp
 │   │   ├── resources
 │   │   │   ├── Buffer.hpp/cpp
-│   │   │   ├── Mesh.hpp/cpp
+│   │   │   ├── DualModel.hpp/cpp
 │   │   │   ├── Model.hpp/cpp
 │   │   ├── scene
 │   │   │   ├── Camera.hpp/cpp
 │   │   │   ├── Scene.hpp/cpp
-│   │   │   ├── Transform.hpp/cpp
+│   │   │   └── Transform.hpp/cpp
+│   │   ├── simplification
+│   │   │   ├── Simplificator.hpp/cpp
+│   │   │   └── simplificationUtil.hpp/cpp
+│   │   ├── ui
+│   │   │   └── ui.hpp/cpp
 │   │   ├── shaders
 │   │   │   ├── shader.vert
 │   │   │   └── shader.frag
@@ -54,11 +59,15 @@
 - [x] Bounding box compute (autoscaling of a model)
 - [x] Connect mouse movement to camera rotation
 - [x] Implement split-screen render for original and simplified model  
-- [ ] Setup data structures for LOD manipulation
+- [x] Setup data structures for LOD manipulation
 - [ ] Simplification algorithms for LOD generation
-	- [ ] Quadric Error Metrics
+	- [x] Quadric Error Metrics
+		- [ ] TODO: add more vertex candidates OR compute optimal position 
 	- [ ] Edge Collapse
-	- [ ] Vertex Clustering
+	- [x] Vertex Clustering
+		- [ ] TODO: can be optimized 
+	- [x] Naive simplification
+		- [ ] TODO: optimize this 
 	- [ ] Progressive Meshes
 	- [ ] Own implementation of simplification algorithms
 - [ ] Demo application / applications
