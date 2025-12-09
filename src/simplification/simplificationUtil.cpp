@@ -410,12 +410,19 @@ namespace SimplificationUtil {
 
 	void updateAfterCollapse(std::vector<Qedge>& edges, uint32_t idxToRemove, uint32_t idxToKeep, std::vector<Vertex>& vertices, std::vector<Quadric>& quadrics)
 	{
+		// remap edges
+		for (auto& edge : edges)
+		{
+			if (edge.v1 == idxToRemove) edge.v1 = idxToKeep;
+			if (edge.v2 == idxToRemove) edge.v2 = idxToKeep;
+		}
+
 		// delete edges that involved idxToRemove or are now degenerated
 		edges.erase(
 			std::remove_if(edges.begin(), edges.end(),
-				[idxToRemove, idxToKeep](const Qedge& e) {
-					return e.v1 == idxToRemove || e.v2 == idxToRemove ||
-						(e.v1 == idxToKeep && e.v2 == idxToKeep);
+				[idxToKeep](const Qedge& e) {
+					// delete edge if it is degenerated
+					return e.v1 == idxToKeep && e.v2 == idxToKeep;
 				}),
 			edges.end()
 		);

@@ -211,7 +211,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	float parameterValue = 0.0f;
 	if (currentAlgorithm != Algorithm::VertexClustering)
 	{
-		ImGui::SliderFloat("Reduction Ratio", &ratio, 0.1f, 0.9f, "%.2f");
+		ImGui::SliderFloat("Reduction Ratio", &ratio, 0.01f, 0.9f, "%.2f");
 		parameterValue = ratio;
 	}
 	else
