@@ -1,36 +1,17 @@
 ﻿cmake_minimum_required(VERSION 3.10.2)
+project(BP)
 
-set(APP_NAME BP)
-project(${APP_NAME})
-
-set(APP_SOURCES
-    "src/main.cpp"
-    "src/window.cpp"
-    "src/window.h"
-)
-
-# Set path to Vulkan SDK
+# PATH CONFIG
 set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.313.0")
 set(GLSL_VALIDATOR "${VULKAN_SDK_PATH}/Bin/glslangValidator.exe")
 
-# Check for glslangValidator
-if(NOT EXISTS "${GLSL_VALIDATOR}")
-    message(WARNING "glslangValidator not found at: ${GLSL_VALIDATOR}")
-    message("Shader compilation will be skipped")
-endif()
+# SHADERS COMPILATION
+set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/common/shaders")
+set(VERTEX_SHADER "${SHADER_DIR}/shader.vert")
+set(FRAGMENT_SHADER "${SHADER_DIR}/shader.frag")
+set(VERTEX_SPV "${SHADER_DIR}/shader.vert.spv")
+set(FRAGMENT_SPV "${SHADER_DIR}/shader.frag.spv")
 
-set(APP_INCLUDES
-)
-
-# Shader files
-set(VERTEX_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.vert")
-set(FRAGMENT_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.frag")
-
-# Output SPIR-V files
-set(VERTEX_SPV "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.vert.spv")
-set(FRAGMENT_SPV "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/shader.frag.spv")
-
-# Shader compilation
 if(EXISTS "${GLSL_VALIDATOR}")
     add_custom_command(
         OUTPUT ${VERTEX_SPV}
@@ -38,26 +19,42 @@ if(EXISTS "${GLSL_VALIDATOR}")
         DEPENDS ${VERTEX_SHADER}
         COMMENT "Compiling vertex shader"
     )
-
     add_custom_command(
         OUTPUT ${FRAGMENT_SPV}
         COMMAND ${GLSL_VALIDATOR} -V ${FRAGMENT_SHADER} -o ${FRAGMENT_SPV}
         DEPENDS ${FRAGMENT_SHADER}
         COMMENT "Compiling fragment shader"
     )
-
     add_custom_target(CompileShaders ALL DEPENDS ${VERTEX_SPV} ${FRAGMENT_SPV})
-    
-    set(APP_SOURCES ${APP_SOURCES} ${VERTEX_SPV} ${FRAGMENT_SPV})
-else()
-    message(WARNING "Shader compilation disabled - glslangValidator not found")
 endif()
 
-# Dependencies
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/;${CMAKE_MODULE_PATH}")
+# DEPENDENCIES
 find_package(Vulkan REQUIRED)
 
-set(IMGUI_SOURCES
+# SOURCE FILES
+set(ENGINE_SOURCES
+    "src/common/window.cpp"
+    "src/common/window.h"
+    "src/common/core/Device.cpp"
+    "src/common/core/Instance.cpp"
+    "src/common/core/Pipeline.cpp"
+    "src/common/core/Swapchain.cpp"
+    "src/common/rendering/Renderer.cpp"
+    "src/common/rendering/RenderPass.cpp"
+    "src/common/rendering/Descriptors.cpp"
+    "src/common/rendering/CommandManager.cpp"
+    "src/common/rendering/FrameBuffer.cpp"
+    "src/common/rendering/UniformBuffer.cpp"
+    "src/common/resources/Buffer.cpp"
+    "src/common/resources/Model.cpp"
+    "src/common/resources/DualModel.cpp"
+    "src/common/scene/Camera.cpp"
+    "src/common/scene/Transform.cpp"
+    "src/common/scene/Scene.cpp"
+    "src/common/simplification/Simplificator.cpp"
+    "src/common/simplification/simplificationUtil.cpp"
+    "src/common/ui/ui.cpp"
+    # ImGui
     "external/imgui/imgui.cpp"
     "external/imgui/imgui_draw.cpp"
     "external/imgui/imgui_tables.cpp"
@@ -66,72 +63,31 @@ set(IMGUI_SOURCES
     "external/imgui/backends/imgui_impl_vulkan.cpp"
 )
 
+# CREATE STATIC LIBRARY FOR ENGINE
+add_library(BPEngine STATIC ${ENGINE_SOURCES})
 
-# Executable
-add_executable(${APP_NAME}
-    ${APP_SOURCES}
-    ${APP_SHADERS}
-    ${IMGUI_SOURCES}
-    "src/core/Device.cpp"
-    "src/core/Instance.cpp"
-    "src/core/Pipeline.cpp"
-    "src/core/Swapchain.cpp"
-    "src/rendering/Renderer.cpp"
-    "src/rendering/RenderPass.cpp"
-    "src/rendering/Descriptors.cpp"
-    "src/rendering/CommandManager.cpp"
-    "src/resources/Textures.cpp"
-    "src/resources/Model.cpp"
-    
-    "src/scene/Camera.cpp"
-    
-    "src/scene/Scene.cpp"
-    "src/rendering/FrameBuffer.cpp"
-    "external/tinygltf/stb_image.h"
-    "external/tinygltf/stb_image_write.h"
-    "external/tinygltf/tiny_gltf.h"
-    "src/resources/Buffer.cpp"
-    "src/rendering/UniformBuffer.cpp"
-    "src/resources/DualModel.cpp"
-    "src/scene/Transform.cpp"
-    "src/ui/ui.cpp"
- "external/glfw/include/GLFW/glfw3native.h" "src/simplification/Simplificator.cpp" "src/simplification/simplificationUtil.cpp")
+target_compile_features(BPEngine PUBLIC cxx_std_17)
 
-if(EXISTS "${GLSL_VALIDATOR}")
-    add_dependencies(${APP_NAME} CompileShaders)
-endif()
-
-# Include directories
-target_include_directories(${APP_NAME} PRIVATE 
-    ${CMAKE_CURRENT_BINARY_DIR}
+# COMMON INCLUDE DIRECTORIES
+target_include_directories(BPEngine PUBLIC 
+    src/common
+    external
     external/glfw/include
     external/tinygltf
     external/imgui
     external/imgui/backends
 )
 
-# Link directories
-target_link_directories(${APP_NAME} PRIVATE external/glfw/lib)
+# LIBRARY LINKING
+target_link_directories(BPEngine PUBLIC external/glfw/lib)
+target_link_libraries(BPEngine PUBLIC Vulkan::Vulkan glfw3.lib)
 
-# Link libraries
-target_link_libraries(${APP_NAME} PRIVATE 
-    Vulkan::Vulkan
-    glfw3.lib
-)
-
-# C++ standard
-set_target_properties(${APP_NAME} PROPERTIES
+# C++ STANDARD
+set_target_properties(BPEngine PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
 
-# Copy shaders to output directory
-add_custom_command(TARGET ${APP_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory 
-        ${CMAKE_CURRENT_BINARY_DIR}/shaders
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${VERTEX_SHADER} ${CMAKE_CURRENT_BINARY_DIR}/shaders/
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${FRAGMENT_SHADER} ${CMAKE_CURRENT_BINARY_DIR}/shaders/
-    COMMENT "Copying shaders to output directory"
-)
+# DEMO APPLICATIONS
+add_subdirectory(src/apps/simplificator)
+add_subdirectory(src/apps/demo)
