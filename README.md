@@ -11,36 +11,43 @@
 |   |── assets
 │   ├── external
 │   ├── src
-│   │   ├── core
-│   │   │   ├── Device.hpp/cpp
-│   │   │   ├── Instance.hpp/cpp
-│   │   │   ├── Pipeline.hpp/cpp
-│   │   │   ├── Swapchain.hpp/cpp
-│   │   ├── rendering
-│   │   │   ├── CommandManager.hpp/cpp
-│   │   │   ├── Descriptors.hpp/cpp
-│   │   │   ├── FrameBuffer.hpp/cpp
-│   │   │   ├── Renderer.hpp/cpp
-│   │   │   ├── RenderPass.hpp/cpp
-│   │   │   ├── UniformBuffer.hpp/cpp
-│   │   ├── resources
-│   │   │   ├── Buffer.hpp/cpp
-│   │   │   ├── DualModel.hpp/cpp
-│   │   │   ├── Model.hpp/cpp
-│   │   ├── scene
-│   │   │   ├── Camera.hpp/cpp
-│   │   │   ├── Scene.hpp/cpp
-│   │   │   └── Transform.hpp/cpp
-│   │   ├── simplification
-│   │   │   ├── Simplificator.hpp/cpp
-│   │   │   └── simplificationUtil.hpp/cpp
-│   │   ├── ui
-│   │   │   └── ui.hpp/cpp
-│   │   ├── shaders
-│   │   │   ├── shader.vert
-│   │   │   └── shader.frag
-│   │   ├── main.cpp
-│   │   └── window.h/cpp
+│   │   ├── common
+│	│   │   ├── core
+│	│   │   │   ├── Device.hpp/cpp
+│	│   │   │   ├── Instance.hpp/cpp
+│	│   │   │   ├── Pipeline.hpp/cpp
+│	│   │   │   ├── Swapchain.hpp/cpp
+│	│   │   ├── rendering
+│	│   │   │   ├── CommandManager.hpp/cpp
+│	│   │   │   ├── Descriptors.hpp/cpp
+│	│   │   │   ├── FrameBuffer.hpp/cpp
+│	│   │   │   ├── Renderer.hpp/cpp
+│	│   │   │   ├── RenderPass.hpp/cpp
+│	│   │   │   ├── UniformBuffer.hpp/cpp
+│	│   │   ├── resources
+│	│   │   │   ├── Buffer.hpp/cpp
+│	│   │   │   ├── DualModel.hpp/cpp
+│	│   │   │   ├── Model.hpp/cpp
+│	│   │   ├── scene
+│	│   │   │   ├── Camera.hpp/cpp
+│	│   │   │   ├── Scene.hpp/cpp
+│	│   │   │   └── Transform.hpp/cpp
+│	│   │   ├── simplification
+│	│   │   │   ├── Simplificator.hpp/cpp
+│	│   │   │   └── simplificationUtil.hpp/cpp
+│	│   │   ├── ui
+│	│   │   │   └── ui.hpp/cpp
+│	│   │   ├── shaders
+│	│   │   │   ├── shader.vert
+│	│   │   │   └── shader.frag
+│	│   │   └── window.h/cpp
+│   │   ├── apps
+│   │   │   │── demo
+│   │   │   │   ├── main.cpp
+│   │   │   │   └── CMakeLists.txt
+│   │   │   └── simplificator
+│   │   │       ├── main.cpp
+│   │   │       └── CMakeLists.txt
 ├── CMakeLists.txt
 ├── LICENSE.txt
 └── README.md
@@ -71,11 +78,19 @@
 	- [ ] Progressive Meshes
 	- [ ] Own implementation of simplification algorithms
 - [ ] Demo application / applications
-	- [ ] LOD switching
-		- [ ] Setup secondary static camera close to the model
+	- [x] Remake project structure for multiple demo apps support 
+	- [x] LOD switching
+		- [x] Setup secondary static camera close to the model
 		- [ ] Switch LOD levels based on distance from the main camera
 	- [ ] Performance comparison
 		- [ ] Save performance statistics to file
 		- [ ] Create graphs using ```python```, ```matplotlib```, ...
 	- [ ] Visual comparison
 	- [ ] Moving scene(s) with dynamic LOD adjustment
+		- [ ] Street tiles with multiple models
+		- [ ] Clock scene with moving parts
+		- [ ] Ant in a maze
+
+# Known issues
+
+- On first run, the application might crash when loading a model. Restarting the application resolves the issue.
