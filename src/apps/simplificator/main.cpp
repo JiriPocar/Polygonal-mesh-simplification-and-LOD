@@ -84,7 +84,7 @@ int main() {
 		commandManager.createCommandBuffers(static_cast<uint32_t>(swapchain.getImages().size()));
 		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
 
-		std::cout << "\nLoading model..." << std::endl;
+		std::cout << "\nLoading initial model..." << std::endl;
 		//std::unique_ptr<Model> currentModel = std::make_unique<Model>(device, "../../../assets/Lantern.gltf");
 		std::unique_ptr<DualModel> currentDualModel = std::make_unique<DualModel>(device, "assets/Fox.gltf");
 		std::cout << "Model loaded successfully!" << std::endl;

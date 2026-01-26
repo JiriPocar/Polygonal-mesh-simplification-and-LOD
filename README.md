@@ -79,8 +79,7 @@
 	- [ ] Own implementation of simplification algorithms
 - [ ] Demo application / applications
 	- [x] Remake project structure for multiple demo apps support 
-	- [x] LOD switching
-		- [x] Setup secondary static camera close to the model
+	- [ ] LOD switching
 		- [ ] Switch LOD levels based on distance from the main camera
 	- [ ] Performance comparison
 		- [ ] Save performance statistics to file

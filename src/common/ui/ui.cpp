@@ -156,7 +156,8 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 			for (const auto& modelPath : menuModels)  
 			{  
 				if (ImGui::Selectable(modelPath.c_str())) {  
-					try {  
+					try {
+						device.operator*().waitIdle(); // wait for device to be idle before loading new model
 						currentDualModel = std::make_unique<DualModel>(device, modelPath);  
 						float setScale = currentDualModel->getOriginalModel().getScaleIndex();
 						transform.setScale(glm::vec3(setScale, setScale, setScale));
@@ -229,6 +230,8 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	{
 		try {
 			auto result = simplificator.simplify(originalModel, parameterValue);
+
+			device.operator*().waitIdle(); // wait for device to be idle before applying simplification
 			currentDualModel->simplifyModel(result.vertices, result.indices);
 		}
 		catch (const std::exception& e)
@@ -242,6 +245,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	{
 		if (ImGui::Button("Revert"))
 		{
+			device.operator*().waitIdle(); // wait for device to be idle before reverting
 			currentDualModel->revertSimplification();
 		}
 	}
