@@ -18,6 +18,8 @@ public:
 	glm::mat4 getProjectionMatrix() const { return projectionMatrix; };
 	glm::vec3 getPosition() const { return position; };
 
+	void setPosition(const glm::vec3& pos) { position = pos; };
+
 	void processMouseMovement(float xOffset, float yOffset, bool conPitch = true);
 	void setMouseSens(float sens) { mouseSens = sens; };
 
