@@ -78,6 +78,7 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	showStatistics();
 	showModelMenu(currentDualModel, device, renderer, transform);
 	showSimplificationControls(currentDualModel, device);
+	showModelPerspectiveControls(transform);
 }
 
 void UserInterface::scanModels()
@@ -251,6 +252,49 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	}
 
 	ImGui::End();
+}
+
+void UserInterface::showModelPerspectiveControls(Transform& transform)
+{
+	ImGui::Begin("Model Transform");
+	glm::vec3 position = transform.getPos();
+	glm::vec3 rotation = transform.getRot();
+	glm::vec3 scale = transform.getScale();
+	if (ImGui::DragFloat3("Position", &position.x, 0.1f))
+	{
+		uiTransform.setPos(position);
+	}
+	if (ImGui::DragFloat3("Rotation", &rotation.x, 1.0f))
+	{
+		uiTransform.setRot(rotation);
+	}
+	if (ImGui::DragFloat3("Scale", &scale.x, 0.01f))
+	{
+		uiTransform.setScale(scale);
+	}
+
+	// checkboxes for rotation by axis
+	ImGui::Checkbox("X", &rotateByX);
+	ImGui::Checkbox("Y", &rotateByY);
+	ImGui::Checkbox("Z", &rotateByZ);
+
+	// reset transform
+	if (ImGui::Button("Reset Transform"))
+	{
+		uiTransform = Transform();
+	}
+
+	ImGui::End();
+}
+
+Transform UserInterface::fetchTransform()
+{
+	return uiTransform;
+}
+
+void UserInterface::setTransform(const Transform& transform)
+{
+	uiTransform = transform;
 }
 
 void UserInterface::handleMouseMove(double x, double y)

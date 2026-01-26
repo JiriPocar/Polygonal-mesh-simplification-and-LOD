@@ -3,32 +3,32 @@
     {
       "bufferView": 2,
       "componentType": 5126,
-      "count": 9322,
+      "count": 9746,
       "max": [
-        0.1584150493144989,
-        0.17020313441753387,
-        0.4326893091201782
+        0.14886942505836487,
+        0.14459645748138428,
+        0.5150194764137268
       ],
       "min": [
-        -0.147944837808609,
-        -0.11054600775241852,
-        -0.00031755436793901026
+        -0.12288019061088562,
+        -0.1551171988248825,
+        7.629208266735077e-05
       ],
       "type": "VEC3"
     },
     {
       "bufferView": 2,
-      "byteOffset": 111864,
+      "byteOffset": 116952,
       "componentType": 5126,
-      "count": 9322,
+      "count": 9746,
       "max": [
-        0.9999493956565857,
-        0.9998852014541626,
-        1.0
+        0.9996763467788696,
+        0.9999817609786987,
+        0.9999997019767761
       ],
       "min": [
-        -0.9996777772903442,
-        -0.9997276067733765,
+        -0.9999157190322876,
+        -0.9998970627784729,
         -1.0
       ],
       "type": "VEC3"
@@ -36,17 +36,17 @@
     {
       "bufferView": 3,
       "componentType": 5126,
-      "count": 9322,
+      "count": 9746,
       "max": [
-        0.9998123645782471,
-        0.9996069073677063,
-        0.9999951720237732,
+        0.9999212026596069,
+        0.9999721050262451,
+        0.9999589323997498,
         1.0
       ],
       "min": [
-        -0.9999966025352478,
-        -0.9999963641166687,
-        -0.9987401366233826,
+        -0.9999013543128967,
+        -0.999730110168457,
+        -1.0,
         -1.0
       ],
       "type": "VEC4"
@@ -54,36 +54,36 @@
     {
       "bufferView": 1,
       "componentType": 5126,
-      "count": 9322,
+      "count": 9746,
       "max": [
-        0.9956621527671814,
-        0.9950465559959412
+        0.9975011348724365,
+        0.9837855100631714
       ],
       "min": [
-        0.00434792460873723,
-        0.004344645421952009
+        0.002502043731510639,
+        0.0009995251893997192
       ],
       "type": "VEC2"
     },
     {
       "bufferView": 1,
-      "byteOffset": 74576,
+      "byteOffset": 77968,
       "componentType": 5126,
-      "count": 9322,
+      "count": 9746,
       "max": [
-        0.9956621527671814,
-        0.9950465559959412
+        0.9975011348724365,
+        0.9837855100631714
       ],
       "min": [
-        0.00434792460873723,
-        0.004344645421952009
+        0.002502043731510639,
+        0.0009995251893997192
       ],
       "type": "VEC2"
     },
     {
       "bufferView": 0,
       "componentType": 5125,
-      "count": 51444,
+      "count": 52368,
       "type": "SCALAR"
     }
   ],
@@ -91,39 +91,39 @@
     "extras": {
       "author": "Prince Obrymec (https://sketchfab.com/prince-obrymec)",
       "license": "SKETCHFAB Standard (https://sketchfab.com/licenses)",
-      "source": "https://sketchfab.com/3d-models/bull-head-a0b8f7eed4c64e47a03898956631d9ac",
-      "title": "Bull Head"
+      "source": "https://sketchfab.com/3d-models/marble-bust-543f15fd467b4d0ca28d2e40a0ba0ad1",
+      "title": "Marble Bust"
     },
-    "generator": "Sketchfab-16.95.0",
+    "generator": "Sketchfab-16.99.0",
     "version": "2.0"
   },
   "bufferViews": [
     {
       "buffer": 0,
-      "byteLength": 205776,
+      "byteLength": 209472,
       "name": "floatBufferViews",
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteLength": 149152,
-      "byteOffset": 205776,
+      "byteLength": 155936,
+      "byteOffset": 209472,
       "byteStride": 8,
       "name": "floatBufferViews",
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteLength": 223728,
-      "byteOffset": 354928,
+      "byteLength": 233904,
+      "byteOffset": 365408,
       "byteStride": 12,
       "name": "floatBufferViews",
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteLength": 149152,
-      "byteOffset": 578656,
+      "byteLength": 155936,
+      "byteOffset": 599312,
       "byteStride": 16,
       "name": "floatBufferViews",
       "target": 34962
@@ -131,30 +131,27 @@
   ],
   "buffers": [
     {
-      "byteLength": 727808,
+      "byteLength": 755248,
       "uri": "scene.bin"
     }
   ],
   "images": [
     {
-      "uri": "textures/bull_head_baseColor.jpeg"
+      "uri": "textures/marble_bust_baseColor.jpeg"
     },
     {
-      "uri": "textures/bull_head_metallicRoughness.png"
+      "uri": "textures/marble_bust_metallicRoughness.png"
     },
     {
-      "uri": "textures/bull_head_normal.png"
+      "uri": "textures/marble_bust_normal.png"
     }
   ],
   "materials": [
     {
       "doubleSided": true,
-      "name": "bull_head",
+      "name": "marble_bust",
       "normalTexture": {
         "index": 2
-      },
-      "occlusionTexture": {
-        "index": 1
       },
       "pbrMetallicRoughness": {
         "baseColorTexture": {
@@ -162,14 +159,13 @@
         },
         "metallicRoughnessTexture": {
           "index": 1
-        },
-        "roughnessFactor": 0.5
+        }
       }
     }
   ],
   "meshes": [
     {
-      "name": "bull_head_bull_head_0",
+      "name": "marble_bust_marble_bust_0",
       "primitives": [
         {
           "attributes": {
@@ -233,7 +229,7 @@
         0.0,
         1.0
       ],
-      "name": "4dc0478c8e11479f805836ad8b90e5b0.fbx"
+      "name": "800a440c7b50433a83d20a85b0814228.fbx"
     },
     {
       "children": [
@@ -263,11 +259,11 @@
         0.0,
         1.0
       ],
-      "name": "bull_head"
+      "name": "marble_bust"
     },
     {
       "mesh": 0,
-      "name": "bull_head_bull_head_0"
+      "name": "marble_bust_marble_bust_0"
     }
   ],
   "samplers": [

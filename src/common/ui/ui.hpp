@@ -12,6 +12,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 #include <deque>
+#include <vector>
 
 #include "../window.h"
 #include "../core/Device.hpp"
@@ -37,6 +38,12 @@ public:
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);
 
+	Transform fetchTransform();
+	void setTransform(const Transform& transform);
+	std::vector<bool> getRotationAxes() const {
+		return { rotateByX, rotateByY, rotateByZ };
+	}
+
 private:
 	void createDescriptorPool();
 	void cleanUp();
@@ -48,6 +55,7 @@ private:
 	void showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& devices, Renderer& renderer, Transform& transform);
 	void showStatistics();
 	void showSimplificationControls(std::unique_ptr<DualModel>& currentDualModel, Device& device);
+	void showModelPerspectiveControls(Transform& transform);
 
 	Instance& uiInstance;
 	Device& uiDevice;
@@ -57,6 +65,11 @@ private:
 	CommandManager& uiCmdManager;
 	vk::UniqueDescriptorPool descriptorPool;
 	Simplificator simplificator;
+
+	Transform uiTransform;
+	bool rotateByX = false;
+	bool rotateByY = true;
+	bool rotateByZ = false;
 };
 
 /* End of the ui.hpp file */

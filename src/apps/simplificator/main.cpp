@@ -108,7 +108,9 @@ int main() {
 						  framebuffer, commandManager, window, surface.get(), currentDualModel->getOriginalModel(), uniformBuffer, descriptorSet);
 		renderer.setDualModel(*currentDualModel);
 		auto last = std::chrono::high_resolution_clock::now();
-		float totalRotation = 0.0f;
+		float xRotation = 0.0f;
+		float yRotation = 0.0f;
+		float zRotation = 0.0f;
 
 		// fps camera movement
 		bool cameraActive = false;
@@ -150,23 +152,40 @@ int main() {
 				camera.resetMouse();
 			}
 
-			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_R) == GLFW_PRESS)
-			{
-				rotate = true;
-			}
-
-			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_T) == GLFW_PRESS)
-			{
-				rotate = false;
-			}
-
 			camera.handleInput(window.getGLFWWindow(), delta);
+
+			Transform t = ui.fetchTransform();
+			xRotation = t.getRot().x;
+			yRotation = t.getRot().y;
+			zRotation = t.getRot().z;
+
+			auto rotationAxes = ui.getRotationAxes();
+
+			rotate = (rotationAxes[0] || rotationAxes[1] || rotationAxes[2]);
 
 			if (rotate)
 			{
-				totalRotation += 50.0f * delta; // rotate 50 degrees per second
-				transform.setRot(glm::vec3(0.0f, totalRotation, 0.0f));
+				if (rotationAxes[0] == true)
+				{
+					xRotation += 50.0f * delta;
+					if (xRotation >= 360.0f) xRotation -= 360.0f;
+				}
+
+				if (rotationAxes[1] == true)
+				{
+					yRotation += 50.0f * delta;
+					if (yRotation >= 360.0f) yRotation -= 360.0f;
+				}
+
+				if (rotationAxes[2] == true)
+				{
+					zRotation += 50.0f * delta;
+					if (zRotation >= 360.0f) zRotation -= 360.0f;
+				}
 			}
+
+			transform.setRot(glm::vec3(xRotation, yRotation, zRotation));
+			ui.setTransform(transform);
 
 			ui.beginFrame(currentDualModel, device, renderer, transform);
 
