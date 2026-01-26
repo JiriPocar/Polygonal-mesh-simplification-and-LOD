@@ -2,31 +2,13 @@
 project(BP)
 
 # PATH CONFIG
-set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.313.0")
-set(GLSL_VALIDATOR "${VULKAN_SDK_PATH}/Bin/glslangValidator.exe")
-
-# SHADERS COMPILATION
-set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/common/shaders")
-set(VERTEX_SHADER "${SHADER_DIR}/shader.vert")
-set(FRAGMENT_SHADER "${SHADER_DIR}/shader.frag")
-set(VERTEX_SPV "${SHADER_DIR}/shader.vert.spv")
-set(FRAGMENT_SPV "${SHADER_DIR}/shader.frag.spv")
-
-if(EXISTS "${GLSL_VALIDATOR}")
-    add_custom_command(
-        OUTPUT ${VERTEX_SPV}
-        COMMAND ${GLSL_VALIDATOR} -V ${VERTEX_SHADER} -o ${VERTEX_SPV}
-        DEPENDS ${VERTEX_SHADER}
-        COMMENT "Compiling vertex shader"
-    )
-    add_custom_command(
-        OUTPUT ${FRAGMENT_SPV}
-        COMMAND ${GLSL_VALIDATOR} -V ${FRAGMENT_SHADER} -o ${FRAGMENT_SPV}
-        DEPENDS ${FRAGMENT_SHADER}
-        COMMENT "Compiling fragment shader"
-    )
-    add_custom_target(CompileShaders ALL DEPENDS ${VERTEX_SPV} ${FRAGMENT_SPV})
+if(DEFINED ENV{VULKAN_SDK})
+    set(VULKAN_SDK_PATH "$ENV{VULKAN_SDK}")
+    message(STATUS "Vulkan SDK found at: ${VULKAN_SDK_PATH}")
+else()
+    set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.313.0") 
 endif()
+set(GLSL_VALIDATOR "${VULKAN_SDK_PATH}/Bin/glslangValidator.exe" CACHE INTERNAL "Path to glslangValidator")
 
 # DEPENDENCIES
 find_package(Vulkan REQUIRED)
