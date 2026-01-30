@@ -29,6 +29,8 @@ public:
 	Mesh(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	void draw(vk::CommandBuffer commandBuffer) const;
 
+	vk::Buffer getVertexBuffer() const { return vertexBuffer->getBuffer(); }
+	vk::Buffer getIndexBuffer() const { return indexBuffer->getBuffer(); }
 	uint32_t getVertexCount() const { return vertexCount; }
 	uint32_t getIndexCount() const { return indexCount; }
 	std::vector<Vertex> extractVertices() const;
@@ -65,6 +67,16 @@ public:
 	Model(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	
 	~Model() = default;
+
+	vk::Buffer getVertexBuffer() const {
+		if (meshes.empty()) throw std::runtime_error("Model has no meshes");
+		return meshes[0]->getVertexBuffer();
+	}
+
+	vk::Buffer getIndexBuffer() const {
+		if (meshes.empty()) throw std::runtime_error("Model has no meshes");
+		return meshes[0]->getIndexBuffer();
+	}
 
 	std::vector<Vertex> extractVertices() const;
 	std::vector<uint32_t> extractIndices() const;

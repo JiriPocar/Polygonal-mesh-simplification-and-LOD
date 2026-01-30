@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../resources/Model.hpp"
 
 enum class Algorithm {

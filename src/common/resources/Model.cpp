@@ -288,6 +288,12 @@ Model::Model(const Device& device, const std::string& modelPath)
 	: dev(device)
 {
 	loadModel(modelPath);
+
+	// set vertex and index count
+	auto v = extractVertices();
+	auto i = extractIndices();
+	vertexCount = static_cast<uint32_t>(v.size());
+	indexCount = static_cast<uint32_t>(i.size());
 }
 
 Model::Model(const Model& other) : dev(other.dev), indexCount(other.indexCount), vertexCount(other.vertexCount)
@@ -389,6 +395,9 @@ void Model::createFromData(const std::vector<Vertex>& vertices, const std::vecto
 
 	meshes.clear();
 	meshes.push_back(std::make_unique<Mesh>(dev, vertices, indices));
+
+	vertexCount = static_cast<uint32_t>(vertices.size());
+	indexCount = static_cast<uint32_t>(indices.size());
 }
 
 std::vector<Vertex> Model::extractVertices() const

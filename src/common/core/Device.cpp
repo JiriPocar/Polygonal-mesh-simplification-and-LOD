@@ -159,4 +159,26 @@ Device::QueueFamilyIndices Device::findQueueFamilies(vk::PhysicalDevice device, 
 	return indices;
 }
 
+uint32_t Device::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const
+{
+	// find available memory information on the GPU
+	vk::PhysicalDeviceMemoryProperties memProps = physicalDevice.getMemoryProperties();
+
+	for (int i = 0; i < memProps.memoryTypeCount; i++)
+	{
+		// check if the memory type is suitable
+		bool typeSupported = typeFilter & (1 << i);
+
+		// check if the memory type has the required properties
+		bool hasRequiredProps = (memProps.memoryTypes[i].propertyFlags & properties) == properties;
+
+		if (typeSupported && hasRequiredProps)
+		{
+			return i; // found
+		}
+	}
+
+	throw std::runtime_error("Failed to find suitable memory type.");
+}
+
 /* End of the Device.cpp file */

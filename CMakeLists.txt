@@ -46,7 +46,7 @@ set(ENGINE_SOURCES
 )
 
 # CREATE STATIC LIBRARY FOR ENGINE
-add_library(BPEngine STATIC ${ENGINE_SOURCES})
+add_library(BPEngine STATIC ${ENGINE_SOURCES} "src/common/scene/SpiralScene.cpp" "src/common/core/SpiralPipeline.cpp" "src/common/rendering/SpiralRenderer.cpp")
 
 target_compile_features(BPEngine PUBLIC cxx_std_17)
 

@@ -45,6 +45,16 @@ public:
 	}
 
 	/**
+	 * @brief Finds a suitable memory type based on requirements.
+	 *
+	 * @param typeFilter Memory type bits to consider.
+	 * @param properties Desired memory properties.
+	 * 
+	 * @return vk::Device - member variable 'device'.
+	 */
+	uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const;
+
+	/**
 	 * @brief Returns the graphics queue.
 	 * 
 	 * @return vk::Queue - member variable 'graphicsQueue'.

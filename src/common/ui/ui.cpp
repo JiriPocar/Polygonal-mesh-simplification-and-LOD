@@ -81,6 +81,15 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	showModelPerspectiveControls(transform);
 }
 
+void UserInterface::beginFrame2()
+{
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	showStatistics();
+}
+
 void UserInterface::scanModels()
 {
 	menuModels.clear();
