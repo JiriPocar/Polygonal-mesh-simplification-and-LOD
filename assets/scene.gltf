@@ -3,179 +3,336 @@
     {
       "bufferView": 2,
       "componentType": 5126,
-      "count": 9746,
+      "count": 65533,
       "max": [
-        0.14886942505836487,
-        0.14459645748138428,
-        0.5150194764137268
+        76.34939575195313,
+        138.13609313964844,
+        16.2430419921875
       ],
       "min": [
-        -0.12288019061088562,
-        -0.1551171988248825,
-        7.629208266735077e-05
+        -89.97993469238281,
+        10.746487617492676,
+        -99.5679931640625
       ],
       "type": "VEC3"
     },
     {
       "bufferView": 2,
-      "byteOffset": 116952,
+      "byteOffset": 786396,
       "componentType": 5126,
-      "count": 9746,
+      "count": 65533,
       "max": [
-        0.9996763467788696,
-        0.9999817609786987,
-        0.9999997019767761
+        1.0,
+        1.0,
+        1.0
       ],
       "min": [
-        -0.9999157190322876,
-        -0.9998970627784729,
+        -1.0,
+        -0.9999692440032959,
         -1.0
       ],
       "type": "VEC3"
     },
     {
-      "bufferView": 3,
-      "componentType": 5126,
-      "count": 9746,
-      "max": [
-        0.9999212026596069,
-        0.9999721050262451,
-        0.9999589323997498,
-        1.0
-      ],
-      "min": [
-        -0.9999013543128967,
-        -0.999730110168457,
-        -1.0,
-        -1.0
-      ],
-      "type": "VEC4"
-    },
-    {
       "bufferView": 1,
       "componentType": 5126,
-      "count": 9746,
+      "count": 65533,
       "max": [
-        0.9975011348724365,
-        0.9837855100631714
+        0.9983346462249756,
+        0.88946533203125
       ],
       "min": [
-        0.002502043731510639,
-        0.0009995251893997192
-      ],
-      "type": "VEC2"
-    },
-    {
-      "bufferView": 1,
-      "byteOffset": 77968,
-      "componentType": 5126,
-      "count": 9746,
-      "max": [
-        0.9975011348724365,
-        0.9837855100631714
-      ],
-      "min": [
-        0.002502043731510639,
-        0.0009995251893997192
+        0.00115966796875,
+        0.023052453994750977
       ],
       "type": "VEC2"
     },
     {
       "bufferView": 0,
       "componentType": 5125,
-      "count": 52368,
+      "count": 68520,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1572792,
+      "componentType": 5126,
+      "count": 65532,
+      "max": [
+        76.41973876953125,
+        94.10381317138672,
+        54.52745056152344
+      ],
+      "min": [
+        -117.13336944580078,
+        11.167524337768555,
+        -61.469749450683594
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 2359176,
+      "componentType": 5126,
+      "count": 65532,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -0.9999908208847046,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 524264,
+      "componentType": 5126,
+      "count": 65532,
+      "max": [
+        0.9983346462249756,
+        0.99932861328125
+      ],
+      "min": [
+        0.0011596530675888062,
+        0.02697455883026123
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 274080,
+      "componentType": 5125,
+      "count": 68775,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 3145560,
+      "componentType": 5126,
+      "count": 65534,
+      "max": [
+        28.013214111328125,
+        36.5939826965332,
+        54.2366943359375
+      ],
+      "min": [
+        -117.43224334716797,
+        -3.158449649810791,
+        -99.16047668457031
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 3931968,
+      "componentType": 5126,
+      "count": 65534,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 1048520,
+      "componentType": 5126,
+      "count": 65534,
+      "max": [
+        0.9983346462249756,
+        0.99932861328125
+      ],
+      "min": [
+        0.0011596381664276123,
+        0.02720707654953003
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 549180,
+      "componentType": 5125,
+      "count": 69171,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 4718376,
+      "componentType": 5126,
+      "count": 54572,
+      "max": [
+        27.703903198242188,
+        57.68688201904297,
+        16.20849609375
+      ],
+      "min": [
+        -117.26359558105469,
+        10.286872863769531,
+        -99.24391174316406
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 5373240,
+      "componentType": 5126,
+      "count": 54572,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -0.999995231628418,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 1572792,
+      "componentType": 5126,
+      "count": 54572,
+      "max": [
+        0.9983357191085815,
+        0.99932861328125
+      ],
+      "min": [
+        0.0006713569164276123,
+        0.027079224586486816
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 825864,
+      "componentType": 5125,
+      "count": 58458,
       "type": "SCALAR"
     }
   ],
   "asset": {
     "extras": {
-      "author": "Prince Obrymec (https://sketchfab.com/prince-obrymec)",
+      "author": "PeeJaa (https://sketchfab.com/PeeJaa)",
       "license": "SKETCHFAB Standard (https://sketchfab.com/licenses)",
-      "source": "https://sketchfab.com/3d-models/marble-bust-543f15fd467b4d0ca28d2e40a0ba0ad1",
-      "title": "Marble Bust"
+      "source": "https://sketchfab.com/3d-models/salisbury-cathedral-4ee2b0807c734d09a8c7f2c00e7956ce",
+      "title": "SALISBURY CATHEDRAL"
     },
-    "generator": "Sketchfab-16.99.0",
+    "generator": "Sketchfab-15.68.0",
     "version": "2.0"
   },
   "bufferViews": [
     {
       "buffer": 0,
-      "byteLength": 209472,
+      "byteLength": 1059696,
       "name": "floatBufferViews",
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteLength": 155936,
-      "byteOffset": 209472,
+      "byteLength": 2009368,
+      "byteOffset": 1059696,
       "byteStride": 8,
       "name": "floatBufferViews",
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteLength": 233904,
-      "byteOffset": 365408,
+      "byteLength": 6028104,
+      "byteOffset": 3069064,
       "byteStride": 12,
-      "name": "floatBufferViews",
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteLength": 155936,
-      "byteOffset": 599312,
-      "byteStride": 16,
       "name": "floatBufferViews",
       "target": 34962
     }
   ],
   "buffers": [
     {
-      "byteLength": 755248,
+      "byteLength": 9097168,
       "uri": "scene.bin"
     }
   ],
   "images": [
     {
-      "uri": "textures/marble_bust_baseColor.jpeg"
-    },
-    {
-      "uri": "textures/marble_bust_metallicRoughness.png"
-    },
-    {
-      "uri": "textures/marble_bust_normal.png"
+      "uri": "textures/SimplygonCastMaterial_baseColor.png"
     }
   ],
   "materials": [
     {
-      "doubleSided": true,
-      "name": "marble_bust",
-      "normalTexture": {
-        "index": 2
-      },
+      "name": "SimplygonCastMaterial",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
           "index": 0
-        },
-        "metallicRoughnessTexture": {
-          "index": 1
         }
       }
     }
   ],
   "meshes": [
     {
-      "name": "marble_bust_marble_bust_0",
+      "name": "Object_0",
       "primitives": [
         {
           "attributes": {
             "NORMAL": 1,
             "POSITION": 0,
-            "TANGENT": 2,
-            "TEXCOORD_0": 3,
-            "TEXCOORD_1": 4
+            "TEXCOORD_0": 2
           },
-          "indices": 5,
+          "indices": 3,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Object_1",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 5,
+            "POSITION": 4,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Object_2",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 9,
+            "POSITION": 8,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Object_3",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 13,
+            "POSITION": 12,
+            "TEXCOORD_0": 14
+          },
+          "indices": 15,
           "material": 0,
           "mode": 4
         }
@@ -211,59 +368,56 @@
       "children": [
         2
       ],
-      "matrix": [
-        0.009999999776482582,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.009999999776482582,
-        0.0,
-        0.0,
-        -0.009999999776482582,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0
-      ],
-      "name": "800a440c7b50433a83d20a85b0814228.fbx"
+      "name": "root"
     },
     {
       "children": [
         3
       ],
-      "name": "RootNode"
-    },
-    {
-      "children": [
-        4
-      ],
       "matrix": [
-        100.0,
+        1.0,
         0.0,
         0.0,
         0.0,
         0.0,
-        -4.371139006309477e-06,
-        -99.9999999999999,
+        2.220446049250313e-16,
+        1.0,
         0.0,
         0.0,
-        99.9999999999999,
-        -4.371139006309477e-06,
+        -1.0,
+        2.220446049250313e-16,
         0.0,
         0.0,
         0.0,
         0.0,
         1.0
       ],
-      "name": "marble_bust"
+      "name": "GLTF_SceneRootNode"
+    },
+    {
+      "children": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "name": "ProcessedMeshNode_LOD1_0"
     },
     {
       "mesh": 0,
-      "name": "marble_bust_marble_bust_0"
+      "name": "Object_4"
+    },
+    {
+      "mesh": 1,
+      "name": "Object_5"
+    },
+    {
+      "mesh": 2,
+      "name": "Object_6"
+    },
+    {
+      "mesh": 3,
+      "name": "Object_7"
     }
   ],
   "samplers": [
@@ -287,14 +441,6 @@
     {
       "sampler": 0,
       "source": 0
-    },
-    {
-      "sampler": 0,
-      "source": 1
-    },
-    {
-      "sampler": 0,
-      "source": 2
     }
   ]
 }

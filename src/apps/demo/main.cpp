@@ -23,7 +23,7 @@ int main()
 {
 	try
 	{
-		Window window(1400, 800, "TIME SPIRAL");
+		Window window(1820, 980, "TIME SPIRAL");
 		Instance instance(true);
 		auto surface = window.createSurface(instance);
 		Device device(instance, *surface);
@@ -40,10 +40,9 @@ int main()
 		CommandManager commandManager(device);
 		commandManager.createCommandBuffers(static_cast<uint32_t>(swapchain.getImages().size()));
 
-		uint32_t instanceCount = 100;
 		std::string modelPath = "assets/Duck.gltf";
 
-		SpiralScene spiralScene(device, instanceCount, modelPath);
+		SpiralScene spiralScene(device, modelPath);
 		UserInterface ui(instance, device, swapchain, renderPass, window, commandManager);
 
 		Camera camera;
@@ -51,14 +50,16 @@ int main()
 			60.0f,
 			static_cast<float>(swapchain.getExtent().width) / static_cast<float>(swapchain.getExtent().height),
 			0.1f,
-			500.0f
+			50000.0f
 		);
 
 		camera.setView(
-			glm::vec3(10.0f, 10.0f, 20.0f),
-			glm::vec3(0.0f, 20.0f, 0.0f),
+			glm::vec3(0.0f, 0.0f, 0.0f),
+			glm::vec3(0.0f, 0.0f, 155.0f),
 			glm::vec3(0.0f, 1.0f, 0.0f)
 		);
+
+		camera.setPosition(glm::vec3(0.0f, 0.0f, 155.0f));
 
 		SpiralRenderer renderer(
 			device,
@@ -115,8 +116,8 @@ int main()
 			}
 
 			camera.handleInput(window.getGLFWWindow(), delta);
-			spiralScene.updatePositions(delta);
-			ui.beginFrame2();
+			spiralScene.updateSpiralPositions(delta);
+			ui.beginFrame2(spiralScene);
 
 			try
 			{
@@ -137,7 +138,7 @@ int main()
 					60.0f,
 					swapchain.getExtent().width / (float)swapchain.getExtent().height,
 					0.1f,
-					1000.0f
+					20000.0f
 				);
 			}
 		}

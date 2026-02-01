@@ -154,7 +154,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 	vk::DeviceSize instanceOffsets[] = { 0 };
 	cmdBuffer.bindVertexBuffers(1, 1, instanceBuffer, instanceOffsets);
 
-	uint32_t totalInstances = m_spiralScene.getInstanceCount();
+	uint32_t totalInstances = m_spiralScene.config.instanceCount;
 
 	for (int lod = 0; lod < 4; lod++)
 	{

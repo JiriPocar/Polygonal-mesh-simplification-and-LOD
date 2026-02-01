@@ -3,8 +3,8 @@
 #include <iostream>
 #include <chrono>
 
-SpiralScene::SpiralScene(Device& dev, uint32_t instanceCount, const std::string& modelPath)
-	: dev(dev), instanceCount(instanceCount)
+SpiralScene::SpiralScene(Device& dev, const std::string& modelPath)
+	: dev(dev)
 {
 	generateSpiralPositions();
 	generateLODVersions(modelPath);
@@ -15,28 +15,37 @@ SpiralScene::SpiralScene(Device& dev, uint32_t instanceCount, const std::string&
 void SpiralScene::generateSpiralPositions()
 {
 	positions.clear();
-	positions.reserve(instanceCount);
-	instanceData.resize(instanceCount);
+	positions.reserve(MAX_INSTANCE_COUNT);
+	instanceData.resize(MAX_INSTANCE_COUNT);
 
-	for (int i = 0; i < instanceCount; i++)
+	float spacing = 2.0f;
+	int numArms = 5;
+	float minRadius = 10.0f;
+	float coneFactor = 0.5f;
+	float twistSpeed = 0.02f;
+
+	float totalLength = config.instanceCount * spacing;
+
+	for (int i = 0; i < config.instanceCount; i++)
 	{
-		// spiral parameter
-		float t = i * 0.8f;
-
-		float radius = t * 0.8f;
-		float angle = t * 0.5f;
+		float linearPos = (float)i * spacing;
+		float distance = fmod(linearPos, totalLength);
+		float currentZ = -distance;
+		float baseArmAngle = (i % numArms) * (6.28318f / numArms);
+		float twistAngle = abs(currentZ) * twistSpeed;
+		float finalAngle = baseArmAngle + twistAngle;
+		float currentRadius = minRadius + (abs(currentZ) * coneFactor);
 
 		glm::vec3 pos = glm::vec3(
-			radius * cos(angle),
-			0.4f * t, // upward movement
-			radius * sin(angle)
+			currentRadius * cos(finalAngle),
+			currentRadius * sin(finalAngle),
+			currentZ
 		);
 
 		positions.push_back(pos);
-
 		instanceData[i].pos = pos;
-		instanceData[i].modelTypeIndex = 0; // so far only one model type
-		instanceData[i].lodLevel = 0; // default LOD level
+		instanceData[i].modelTypeIndex = 0;
+		instanceData[i].lodLevel = 0;
 	}
 }
 
@@ -60,7 +69,7 @@ void SpiralScene::generateLODVersions(const std::string& modelPath)
 
 void SpiralScene::createInstanceBuffer()
 {
-	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * instanceCount;
+	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * instanceData.size();
 
 	vk::BufferCreateInfo bufferInfo{};
 	bufferInfo.size = bufferSize;
@@ -94,7 +103,7 @@ void SpiralScene::updateLODs(const glm::vec3& cameraPos)
 
 void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos)
 {
-	for (int i = 0; i < instanceCount; i++)
+	for (int i = 0; i < config.instanceCount; i++)
 	{
 		float dist = glm::distance(cameraPos, positions[i]);
 
@@ -116,31 +125,45 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos)
 		}
 	}
 
-	memcpy(mappedMemory, instanceData.data(), sizeof(SpiralInstanceData) * instanceCount);
+	memcpy(mappedMemory, instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
 }
 
-void SpiralScene::updatePositions(float deltaTime)
+void SpiralScene::updateSpiralPositions(float deltaTime)
 {
-	animationTime += deltaTime * animationSpeed;
+	animationTime += deltaTime * config.speed;
+	float totalLength = config.instanceCount * config.spacing;
 
-	for (int i = 0; i < instanceCount; i++)
+	for (uint32_t i = 0; i < config.instanceCount; i++)
 	{
-		float t = (i * 0.5f) + animationTime;
+		// depth
+		float linearPos = (i * config.spacing) + animationTime;
+		float distance = fmod(linearPos, totalLength);
+		float currentZ = -distance;
 
-		float radius = t * 0.8f;
-		float angle = t * 0.5f;
+		// base angle of the arm
+		// (i % numArms) ensures that instance 0 goes to arm 0, instance 1 to arm 1...
+		float baseArmAngle = (i % config.numArms) * (6.28318f / config.numArms);
+
+		// angle twist based on depth
+		float twistAngle = abs(currentZ) * config.twistSpeed;
+
+		// final angle
+		float finalAngle = baseArmAngle + twistAngle;
+
+		// radius
+		float currentRadius = config.minRadius + (abs(currentZ) * config.coneFactor);
 
 		glm::vec3 pos = glm::vec3(
-			radius * cos(angle),
-			0.4f * t, // upward movement
-			radius * sin(angle)
+			currentRadius * cos(finalAngle),
+			currentRadius * sin(finalAngle),
+			currentZ
 		);
 
 		positions[i] = pos;
 		instanceData[i].pos = pos;
 	}
 
-	memcpy(mappedMemory, instanceData.data(), sizeof(SpiralInstanceData) * instanceCount);
+	memcpy(mappedMemory, instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
 }
 
 void SpiralScene::addModelType(const std::string& modelPath)

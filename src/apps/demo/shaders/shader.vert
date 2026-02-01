@@ -39,7 +39,16 @@ void main()
 	mat4 instanceModel = mat4(1.0);
 	instanceModel[3] = vec4(instancePosition, 1.0);
 
-	
+	// scale down large models
+	float s = 0.1;
+	mat4 scaleMat = mat4(
+		vec4(s, 0.0, 0.0, 0.0),
+		vec4(0.0, s, 0.0, 0.0),
+		vec4(0.0, 0.0, s, 0.0),
+		vec4(0.0, 0.0, 0.0, 1.0)
+	);
+
+	instanceModel = instanceModel * scaleMat;
 
 	// transform vertex position
 	gl_Position = ubo.proj * ubo.view * instanceModel * vec4(inPosition, 1.0);

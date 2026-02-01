@@ -6,12 +6,25 @@
 #include "resources/Model.hpp"
 #include "../simplification/Simplificator.hpp"
 
+const uint32_t MAX_INSTANCE_COUNT = 1000000;
+
 struct SpiralInstanceData {
 	glm::vec3 pos;
 	float padding1;
 	uint32_t modelTypeIndex;
 	uint32_t lodLevel;
 	glm::vec2 padding2;
+};
+
+struct SpiralConfig {
+	uint32_t instanceCount = 10000;
+	float spacing = 2.0f;
+	float speed = 30.0f;
+	int numArms = 5;
+	float minRadius = 10.0f;
+	float coneFactor = 0.5f;
+	float twistSpeed = 0.02f;
+	float armSpread = 0.6f;
 };
 
 struct ModelLODSet {
@@ -41,20 +54,23 @@ struct ModelLODSet {
 
 class SpiralScene {
 public:
-	SpiralScene(Device& dev, uint32_t instanceCount, const std::string& modelPath);
+	SpiralScene(Device& dev, const std::string& modelPath);
 	~SpiralScene() = default;
 
 	void updateLODs(const glm::vec3& cameraPos);
-	void updatePositions(float deltaTime);
+	void updateSpiralPositions(float deltaTime);
 
 	vk::Buffer getInstanceBuffer() const { return instanceBuffer; }
-	uint32_t getInstanceCount() const { return instanceCount; }
+	uint32_t getMaxInstanceCount() const { return MAX_INSTANCE_COUNT; }
 
 	ModelLODSet& getModelLODSet(uint32_t index = 0) { return modelLODSets[index]; }
 	const std::vector<SpiralInstanceData>& getInstanceData() const { return instanceData; }
 
 	void addModelType(const std::string& modelPath);
 	uint32_t getModelTypeCount() const { return static_cast<uint32_t>(modelLODSets.size()); }
+
+	void resetAnimation() { animationTime = 0.0f; }
+	SpiralConfig config;
 
 private:
 	void generateSpiralPositions();
@@ -63,7 +79,6 @@ private:
 	void updateInstancesCPU(const glm::vec3& cameraPos);
 
 	Device& dev;
-	uint32_t instanceCount;
 
 	std::vector<glm::vec3> positions;
 	std::vector<SpiralInstanceData> instanceData;
@@ -73,9 +88,8 @@ private:
 	vk::DeviceMemory instanceBufferMemory;
 	void* mappedMemory;
 
-	float lodDistances[4] = { 30.0f, 70.0f, 150.0f, 300.0f};
+	float lodDistances[4] = { 400.0f, 1200.0f, 3000.0f, 8000.0f};
 	float animationTime = 0.0f;
-	float animationSpeed = 1.0f;
 
 	Simplificator simplificator;
 };

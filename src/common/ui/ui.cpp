@@ -3,6 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include "../rendering/Renderer.hpp"
+#include "../scene/SpiralScene.hpp"
 
 UserInterface::UserInterface(Instance &instance, Device& dev, Swapchain& swapchain, RenderPass& renderPass, Window& window, CommandManager& cmdManager)
 	: uiDevice(dev), uiInstance(instance), uiSwapchain(swapchain), uiRenderPass(renderPass), uiWindow(window), uiCmdManager(cmdManager), simplificator()
@@ -81,13 +82,15 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	showModelPerspectiveControls(transform);
 }
 
-void UserInterface::beginFrame2()
+void UserInterface::beginFrame2(SpiralScene& spiral)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
 	showStatistics();
+	showSpiralControls(spiral);
+	showGeneralControls(spiral);
 }
 
 void UserInterface::scanModels()
@@ -304,6 +307,62 @@ Transform UserInterface::fetchTransform()
 void UserInterface::setTransform(const Transform& transform)
 {
 	uiTransform = transform;
+}
+
+void UserInterface::showGeneralControls(SpiralScene& scene)
+{
+	ImGui::SetNextWindowPos(ImVec2(10, 300));
+	ImGui::SetNextWindowSize(ImVec2(200, 250));
+
+	ImGui::Begin("General Settings");
+	static int selectedInstanceCount = scene.config.instanceCount;
+	ImGui::InputInt("Count", &selectedInstanceCount, 100, 1000);
+	if (ImGui::Button("Apply"))
+	{
+		if (selectedInstanceCount < 0) selectedInstanceCount = 0;
+
+		if (selectedInstanceCount > static_cast<int>(scene.getMaxInstanceCount()))
+			selectedInstanceCount = scene.getMaxInstanceCount();
+
+		scene.config.instanceCount = static_cast<uint32_t>(selectedInstanceCount);
+		scene.updateSpiralPositions(0.0f); // reset positions
+	}
+
+	ImGui::End();
+}
+
+void UserInterface::showSpiralControls(SpiralScene& scene)
+{
+	ImGui::SetNextWindowPos(ImVec2(10, 660));
+	ImGui::SetNextWindowSize(ImVec2(400, 300));
+
+	ImGui::Begin("Spiral settings");
+
+	// shape
+	ImGui::Text("Shape Parameters");
+	ImGui::SliderFloat("Spacing", &scene.config.spacing, 0.5f, 20.0f);
+	ImGui::SliderInt("Arms (Num)", &scene.config.numArms, 1, 12);
+	ImGui::SliderFloat("Min Radius", &scene.config.minRadius, 0.0f, 100.0f);
+	ImGui::SliderFloat("Cone Factor", &scene.config.coneFactor, 0.0f, 2.0f);
+	ImGui::Separator();
+
+	// animation
+	ImGui::Text("Animation Parameters");
+	ImGui::SliderFloat("Speed", &scene.config.speed, 0.0f, 500.0f);
+	ImGui::SliderFloat("Twist Speed", &scene.config.twistSpeed, 0.0f, 0.2f);
+	ImGui::SliderFloat("Arm Rotation", &scene.config.armSpread, 0.0f, 6.28f);
+	ImGui::Separator();
+
+	// reset
+	if (ImGui::Button("Reset Animation Time")) {
+		scene.resetAnimation();
+	}
+
+	// debug
+	ImGui::Text("Instance Count: %d", scene.config.instanceCount);
+	ImGui::Text("Total Length: %.2f", scene.config.instanceCount * scene.config.spacing);
+
+	ImGui::End();
 }
 
 void UserInterface::handleMouseMove(double x, double y)
