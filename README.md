@@ -77,18 +77,26 @@
 		- [ ] TODO: optimize this 
 	- [ ] Progressive Meshes
 	- [ ] Own implementation of simplification algorithms
-- [ ] Demo application / applications
+- [ ] Demo application
 	- [x] Remake project structure for multiple demo apps support 
-	- [ ] LOD switching
-		- [ ] Switch LOD levels based on distance from the main camera
+	- [x] CPU LOD switching
+		- [x] Switch LOD levels based on distance from the main camera
+		- [ ] Switch LOD levels based on screen size of the model
+	- [ ] GPU LOD switching
+		- [ ] Switch LOD levels based on distance from the main camera 
+	- [ ] Implement popping effect reduction techniques
+		- [ ] Cross fading
 	- [ ] Performance comparison
 		- [ ] Save performance statistics to file
 		- [ ] Create graphs using ```python```, ```matplotlib```, ...
 	- [ ] Visual comparison
 	- [ ] Moving scene(s) with dynamic LOD adjustment
-		- [ ] Street tiles with multiple models
-		- [ ] Clock scene with moving parts
-		- [ ] Ant in a maze
+		- [ ] (optional) Street tiles with multiple models
+		- [x] Spiral scene with moving parts
+		- [ ] (optional) Ant in a maze
+		
+- [ ] General TODO's
+	- [ ] Texture loading and simplification integration of textures
 
 # Known issues
 

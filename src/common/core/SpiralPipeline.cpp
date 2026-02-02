@@ -91,19 +91,19 @@ void SpiralPipeline::createPipeline(const RenderPass& renderPass,
 	auto vertexAttributes = Vertex::getAttributeDesc();
     std::array<vk::VertexInputAttributeDescription, 3> instanceAttributes{};
 
-    // location 3
+	// location 3, instance position
     instanceAttributes[0].binding = 1;
 	instanceAttributes[0].location = 3;
 	instanceAttributes[0].format = vk::Format::eR32G32B32Sfloat;
 	instanceAttributes[0].offset = 0;
 
-	// location 4
+	// location 4, instance model type
 	instanceAttributes[1].binding = 1;
 	instanceAttributes[1].location = 4;
 	instanceAttributes[1].format = vk::Format::eR32Uint;
 	instanceAttributes[1].offset = 16;
 
-	// location 5
+	// location 5, instance LOD level
 	instanceAttributes[2].binding = 1;
 	instanceAttributes[2].location = 5;
 	instanceAttributes[2].format = vk::Format::eR32Uint;
@@ -149,15 +149,15 @@ void SpiralPipeline::createPipeline(const RenderPass& renderPass,
 
 	// rasterizer
 	vk::PipelineRasterizationStateCreateInfo rasterizer(
-		{},							// flags
-		VK_FALSE,					// depth clamp
-		VK_FALSE,					// rasterizer discard
-		vk::PolygonMode::eLine,		// fill polygons
-		vk::CullModeFlagBits::eFront,
-		vk::FrontFace::eClockwise,
-		VK_FALSE,					// depth bias
-		0.0f, 0.0f, 0.0f,			// depth bias params
-		1.0f						// line width
+		{},								// flags
+		VK_FALSE,						// depth clamp
+		VK_FALSE,						// rasterizer discard
+		vk::PolygonMode::eLine,			// polygon mode
+		vk::CullModeFlagBits::eFront,	// cull front faces
+		vk::FrontFace::eClockwise,		// front faces clockwise
+		VK_FALSE,						// depth bias
+		0.0f, 0.0f, 0.0f,				// depth bias params
+		1.0f							// line width
 	);
 
 	// multisampling
@@ -209,10 +209,15 @@ void SpiralPipeline::createPipeline(const RenderPass& renderPass,
 
 	vk::PipelineDepthStencilStateCreateInfo depthStencil(
 		{},
-		VK_FALSE,              // depthTestEnable - ZAPNOUT
-		VK_FALSE,              // depthWriteEnable - ZAPNOUT
-		vk::CompareOp::eLess, // eLess je standard
-		VK_FALSE, VK_FALSE, {}, {}, 0.0f, 1.0f
+		VK_TRUE,				// depthTestEnable
+		VK_TRUE,				// depthWriteEnable
+		vk::CompareOp::eLess,	// depthCompareOp
+		VK_FALSE,				// depthBoundsTestEnable
+		VK_FALSE,				// stencilTestEnable
+		{},
+		{},
+		0.0f,	
+		1.0f
 	);
 
 	// create the graphics pipeline

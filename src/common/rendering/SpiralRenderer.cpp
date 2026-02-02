@@ -156,7 +156,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 
 	uint32_t totalInstances = m_spiralScene.config.instanceCount;
 
-	for (int lod = 0; lod < 4; lod++)
+	for (int lod = 3; lod >= 0; lod--)
 	{
 		// get model for the LOD
 		Model& lodModel = m_spiralScene.getModelLODSet(0).getLOD(lod);
