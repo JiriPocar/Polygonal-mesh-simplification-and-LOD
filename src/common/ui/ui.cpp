@@ -269,20 +269,10 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 void UserInterface::showModelPerspectiveControls(Transform& transform)
 {
 	ImGui::Begin("Model Transform");
-	glm::vec3 position = transform.getPos();
 	glm::vec3 rotation = transform.getRot();
-	glm::vec3 scale = transform.getScale();
-	if (ImGui::DragFloat3("Position", &position.x, 0.1f))
-	{
-		uiTransform.setPos(position);
-	}
 	if (ImGui::DragFloat3("Rotation", &rotation.x, 1.0f))
 	{
 		uiTransform.setRot(rotation);
-	}
-	if (ImGui::DragFloat3("Scale", &scale.x, 0.01f))
-	{
-		uiTransform.setScale(scale);
 	}
 
 	// checkboxes for rotation by axis
