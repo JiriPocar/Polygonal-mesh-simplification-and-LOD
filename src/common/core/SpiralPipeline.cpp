@@ -190,19 +190,13 @@ void SpiralPipeline::createPipeline(const RenderPass& renderPass,
 		&colorBlendingAttach // attachment states
 	);
 
-	vk::PushConstantRange pushConstantsRange(
-		vk::ShaderStageFlagBits::eVertex,
-		0,
-		sizeof(uint32_t)
-	);
-
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo(
 		{},						// flags
 		1,						// set layouts
 		&descSetLayout,			// descriptor sets
-		1,
-		&pushConstantsRange		// push constants
+		0,
+		nullptr		// push constants
 	);
 
 	pipelineLayout = pipelineDevice.operator*().createPipelineLayoutUnique(pipelineLayoutInfo);

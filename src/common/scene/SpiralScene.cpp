@@ -69,63 +69,102 @@ void SpiralScene::generateLODVersions(const std::string& modelPath)
 
 void SpiralScene::createInstanceBuffer()
 {
+	int frameCount = 2;
+	instanceBuffers.resize(frameCount);
+	instanceBufferMemory.resize(frameCount);
+	mappedMemory.resize(frameCount);
+
 	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * instanceData.size();
 
-	vk::BufferCreateInfo bufferInfo{};
-	bufferInfo.size = bufferSize;
-	bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eStorageBuffer;
-	bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+	for (int i = 0; i < frameCount; i++)
+	{
+		vk::BufferCreateInfo bufferInfo{};
+		bufferInfo.size = bufferSize;
+		bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eStorageBuffer;
+		bufferInfo.sharingMode = vk::SharingMode::eExclusive;
 
-	instanceBuffer = dev.operator*().createBuffer(bufferInfo);
+		instanceBuffers[i] = dev.operator*().createBuffer(bufferInfo);
 
-	vk::MemoryRequirements memReq = dev.operator*().getBufferMemoryRequirements(instanceBuffer);
+		vk::MemoryRequirements memReq = dev.operator*().getBufferMemoryRequirements(instanceBuffers[i]);
 
-	vk::MemoryAllocateInfo allocInfo{};
-	allocInfo.allocationSize = memReq.size;
-	allocInfo.memoryTypeIndex = dev.findMemoryType(memReq.memoryTypeBits,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+		vk::MemoryAllocateInfo allocInfo{};
+		allocInfo.allocationSize = memReq.size;
+		allocInfo.memoryTypeIndex = dev.findMemoryType(memReq.memoryTypeBits,
+			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
-	instanceBufferMemory = dev.operator*().allocateMemory(allocInfo);
-	dev.operator*().bindBufferMemory(instanceBuffer, instanceBufferMemory, 0);
+		instanceBufferMemory[i] = dev.operator*().allocateMemory(allocInfo);
+		dev.operator*().bindBufferMemory(instanceBuffers[i], instanceBufferMemory[i], 0);
 
-	mappedMemory = dev.operator*().mapMemory(
-		instanceBufferMemory,
-		0,
-		VK_WHOLE_SIZE,
-		vk::MemoryMapFlags{}
-	);
+		mappedMemory[i] = dev.operator*().mapMemory(
+			instanceBufferMemory[i],
+			0,
+			VK_WHOLE_SIZE,
+			vk::MemoryMapFlags{}
+		);
+	}
+	
 }
 
-void SpiralScene::updateLODs(const glm::vec3& cameraPos)
+void SpiralScene::updateLODs(const glm::vec3& cameraPos, uint32_t currentFrame)
 {
-	updateInstancesCPU(cameraPos);
+	updateInstancesCPU(cameraPos, currentFrame);
 }
 
-void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos)
+void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t currentFrame)
 {
-	for (int i = 0; i < config.instanceCount; i++)
+	// we are gonna want to have instances sorted by LOD level here for better GPU performance
+	// using compute sort, we can achieve time complexity of O(n)
+	// reference: https://www.geeksforgeeks.org/dsa/counting-sort/
+	lodCounts = { 0, 0, 0, 0 };
+	std::vector<uint8_t> instanceLODs(config.instanceCount);
+
+	// histogram
+	for (uint32_t i = 0; i < config.instanceCount; i++)
 	{
 		float dist = glm::distance(cameraPos, positions[i]);
+		uint8_t lod = 0;
 
 		if (dist < lodDistances[0])
 		{
-			instanceData[i].lodLevel = 0;
+			lod = 0;
 		}
 		else if (dist < lodDistances[1])
 		{
-			instanceData[i].lodLevel = 1;
+			lod = 1;
 		}
 		else if (dist < lodDistances[2])
 		{
-			instanceData[i].lodLevel = 2;
+			lod = 2;
 		}
 		else
 		{
-			instanceData[i].lodLevel = 3;
+			lod = 3;
 		}
+
+		instanceLODs[i] = lod;
+		lodCounts[lod]++;
 	}
 
-	memcpy(mappedMemory, instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
+	// prefix sum to get offsets
+	lodOffsets[0] = 0;
+	lodOffsets[1] = lodCounts[0];
+	lodOffsets[2] = lodOffsets[1] + lodCounts[1];
+	lodOffsets[3] = lodOffsets[2] + lodCounts[2];
+
+	std::array<uint32_t, 4> currentOffsets = lodOffsets;
+
+	// sorting to buffer in LOD order
+	for (uint32_t i = 0; i < config.instanceCount; i++)
+	{
+		uint8_t lod = instanceLODs[i];
+		uint32_t targetIdx = currentOffsets[lod]++;
+
+		instanceData[targetIdx].pos = positions[i];
+		instanceData[targetIdx].modelTypeIndex = 0; // single model type for now
+		instanceData[targetIdx].lodLevel = lod;
+	}
+
+	memcpy(mappedMemory[currentFrame], instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
 }
 
 void SpiralScene::updateSpiralPositions(float deltaTime)
@@ -160,10 +199,8 @@ void SpiralScene::updateSpiralPositions(float deltaTime)
 		);
 
 		positions[i] = pos;
-		instanceData[i].pos = pos;
 	}
 
-	memcpy(mappedMemory, instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
 }
 
 void SpiralScene::addModelType(const std::string& modelPath)

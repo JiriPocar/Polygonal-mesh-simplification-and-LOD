@@ -57,18 +57,18 @@ public:
 	SpiralScene(Device& dev, const std::string& modelPath);
 	~SpiralScene() = default;
 
-	void updateLODs(const glm::vec3& cameraPos);
+	void updateLODs(const glm::vec3& cameraPos, uint32_t currentFrame);
 	void updateSpiralPositions(float deltaTime);
 
-	vk::Buffer getInstanceBuffer() const { return instanceBuffer; }
+	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return instanceBuffers[currentFrame]; }
 	uint32_t getMaxInstanceCount() const { return MAX_INSTANCE_COUNT; }
-
+	uint32_t getLODCount(uint32_t lodLevel) const { return lodCounts[lodLevel]; }
+	uint32_t getLODOffset(uint32_t lodLevel) const { return lodOffsets[lodLevel]; }
 	ModelLODSet& getModelLODSet(uint32_t index = 0) { return modelLODSets[index]; }
 	const std::vector<SpiralInstanceData>& getInstanceData() const { return instanceData; }
-
-	void addModelType(const std::string& modelPath);
 	uint32_t getModelTypeCount() const { return static_cast<uint32_t>(modelLODSets.size()); }
 
+	void addModelType(const std::string& modelPath);
 	void resetAnimation() { animationTime = 0.0f; }
 	SpiralConfig config;
 
@@ -76,7 +76,7 @@ private:
 	void generateSpiralPositions();
 	void generateLODVersions(const std::string& modelPath);
 	void createInstanceBuffer();
-	void updateInstancesCPU(const glm::vec3& cameraPos);
+	void updateInstancesCPU(const glm::vec3& cameraPos, uint32_t currentFrame);
 
 	Device& dev;
 
@@ -84,12 +84,15 @@ private:
 	std::vector<SpiralInstanceData> instanceData;
 	std::vector<ModelLODSet> modelLODSets;
 
-	vk::Buffer instanceBuffer;
-	vk::DeviceMemory instanceBufferMemory;
-	void* mappedMemory;
+	std::vector<vk::Buffer> instanceBuffers;
+	std::vector<vk::DeviceMemory> instanceBufferMemory;
+	std::vector<void*> mappedMemory;
 
 	float lodDistances[4] = { 400.0f, 1200.0f, 3000.0f, 8000.0f};
 	float animationTime = 0.0f;
+
+	std::array<uint32_t, 4> lodCounts = { 0, 0, 0, 0 };
+	std::array<uint32_t, 4> lodOffsets = { 0, 0, 0, 0 };
 
 	Simplificator simplificator;
 };

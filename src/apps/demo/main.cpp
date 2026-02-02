@@ -24,7 +24,7 @@ int main()
 	try
 	{
 		Window window(1820, 980, "TIME SPIRAL");
-		Instance instance(true);
+		Instance instance(false);
 		auto surface = window.createSurface(instance);
 		Device device(instance, *surface);
 		Swapchain swapchain(device, *surface, window.getWidth(), window.getHeight());

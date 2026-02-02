@@ -21,20 +21,8 @@ layout(binding = 0) uniform UBO {
 	mat4 proj;
 } ubo;
 
-// push constants (LOD to draw)
-layout(push_constant) uniform PushConstants {
-	uint currentLOD;
-} push;
-
 void main()
 {
-	// filter out instances with different LOD than current
-	if(instanceLodLevel != push.currentLOD)
-	{
-		gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-		return;
-	}
-
 	// create model matrix from instance positions
 	mat4 instanceModel = mat4(1.0);
 	instanceModel[3] = vec4(instancePosition, 1.0);

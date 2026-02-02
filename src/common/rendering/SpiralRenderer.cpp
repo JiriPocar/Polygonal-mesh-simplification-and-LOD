@@ -90,7 +90,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 	);
 
 	// update lods
-	m_spiralScene.updateLODs(camera.getPosition());
+	m_spiralScene.updateLODs(camera.getPosition(), currentFrame);
 
 	// get next image from swapchain
 	uint32_t imgIdx = m_swapchain.acquireNextImage(*imageAvailableSemaphores[currentFrame]);
@@ -150,43 +150,34 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 		0,
 		nullptr);
 
-	vk::Buffer instanceBuffer[] = { m_spiralScene.getInstanceBuffer() };
+	vk::Buffer instanceBuffer[] = { m_spiralScene.getInstanceBuffer(currentFrame) };
 	vk::DeviceSize instanceOffsets[] = { 0 };
 	cmdBuffer.bindVertexBuffers(1, 1, instanceBuffer, instanceOffsets);
 
 	uint32_t totalInstances = m_spiralScene.config.instanceCount;
 
-	for (int lod = 3; lod >= 0; lod--)
+	for (int lod = 3; lod >= 0; lod--) // for now hotfixed since depth buffering is absent
 	{
-		// get model for the LOD
+		uint32_t instanceCount = m_spiralScene.getLODCount(lod);
+		uint32_t firstInstance = m_spiralScene.getLODOffset(lod);
+
+		// skip if there are no instances for this LOD
+		if (instanceCount == 0) continue;
+
 		Model& lodModel = m_spiralScene.getModelLODSet(0).getLOD(lod);
 
-		// bind vertex buffer for this LOD
 		vk::Buffer vertexBuffers[] = { lodModel.getVertexBuffer() };
 		vk::DeviceSize offsets[] = { 0 };
 		cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
 
-		// bind index buffer
 		cmdBuffer.bindIndexBuffer(lodModel.getIndexBuffer(), 0, vk::IndexType::eUint32);
 
-		// push const - tell shader which LOD to render
-		uint32_t currentLOD = lod;
-		cmdBuffer.pushConstants(
-			m_pipeline.getLayout(),
-			vk::ShaderStageFlagBits::eVertex,
-			0,
-			sizeof(uint32_t),
-			&currentLOD
-		);
-
-		// instanced draw
-		// we draw all instances, but the shader will discard those not matching the LOD
 		cmdBuffer.drawIndexed(
-			lodModel.getIndexCount(),	// index number
-			totalInstances,				// instance count
-			0,							// first index	
-			0,							// vertex offset
-			0							// first instance
+			lodModel.getIndexCount(),
+			instanceCount,
+			0,
+			0,
+			firstInstance
 		);
 	}
 
