@@ -23,15 +23,16 @@ void FrameBuffer::createFramebuffers(const RenderPass& renderPass, const Swapcha
 	for (size_t i = 0; i < imageViews.size(); i++)
 	{
 		// for each image view create a framebuffer
-		vk::ImageView attachments[] = {
-			*imageViews[i]
+		std::array<vk::ImageView, 2> attachments = {
+			*imageViews[i],
+			swapchain.getDepthImageView()
 		};
 
 		vk::FramebufferCreateInfo fbInfo(
 			{},					// flags
 			renderPass.get(),	// render pass
-			1,					// attachment count
-			attachments,		// attachment array
+			attachments.size(),	// attachment count
+			attachments.data(),	// attachment array
 			extent.width,		// width
 			extent.height,	    // height
 			1					// layers	

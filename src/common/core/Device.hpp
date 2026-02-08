@@ -55,6 +55,24 @@ public:
 	uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const;
 
 	/**
+	 * @brief Finds a supported format from a list of candidates.
+	 *
+	 * @param candidates List of candidate formats.
+	 * @param tiling Desired image tiling (optimal, linear).
+	 * @param features Format features (depth stencil attachment).
+	 *
+	 * @return vk::Format - a supported format that meets the criteria.
+	 */
+	vk::Format findSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);
+
+	/**
+	 * @brief Finds a suitable depth format for depth buffering.
+	 *
+	 * @return vk::Format - a supported depth format that can be used for depth buffering.
+	*/
+	vk::Format findDepthFormat();
+
+	/**
 	 * @brief Returns the graphics queue.
 	 * 
 	 * @return vk::Queue - member variable 'graphicsQueue'.

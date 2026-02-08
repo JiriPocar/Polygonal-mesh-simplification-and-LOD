@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 
-RenderPass::RenderPass(const Device& device, vk::Format swapchainImageFormat)
+RenderPass::RenderPass(Device& device, vk::Format swapchainImageFormat)
 	: renderPassDevice(device), format(swapchainImageFormat)
 {
 	createRenderpass(swapchainImageFormat);
@@ -28,6 +28,25 @@ void RenderPass::createRenderpass(vk::Format swapchainImageFormat)
 		vk::ImageLayout::eColorAttachmentOptimal
 	);
 
+	vk::Format depthFormat = renderPassDevice.findDepthFormat();
+
+	vk::AttachmentDescription depthAttachment(
+		{},									// flags
+		depthFormat,						// format
+		vk::SampleCountFlagBits::e1,		// no multisampling
+		vk::AttachmentLoadOp::eClear,		// clear before render
+		vk::AttachmentStoreOp::eDontCare,	// no need to store depth data
+		vk::AttachmentLoadOp::eDontCare,	// no stencil
+		vk::AttachmentStoreOp::eDontCare,	// no stencil
+		vk::ImageLayout::eUndefined,		// before render
+		vk::ImageLayout::eDepthStencilAttachmentOptimal	// after render
+	);
+
+	vk::AttachmentReference depthAttachmentRef(
+		1,
+		vk::ImageLayout::eDepthStencilAttachmentOptimal
+	);
+
 	// subpass with the color attachment
 	vk::SubpassDescription subpass(
 		{},									// flags
@@ -35,7 +54,7 @@ void RenderPass::createRenderpass(vk::Format swapchainImageFormat)
 		0, nullptr,							// input attachments
 		1, &colorAttachmentRef,			    // color attachments
 		nullptr,							// no resolve attachments
-		nullptr,							// no depth/stencil attachment
+		&depthAttachmentRef,				// no depth/stencil attachment
 		0, nullptr							// no preserve attachments
 	);
 
@@ -49,11 +68,14 @@ void RenderPass::createRenderpass(vk::Format swapchainImageFormat)
 		{}													// no dependency flags
 	);
 
+	std::array<vk::AttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+
 	vk::RenderPassCreateInfo renderPassInfo(
-		{},							// flags
-		1, &colorAttachment,		// attachments
-		1, &subpass,				// subpasses
-		1, &dependency				// dependencies
+		{},											// flags
+		attachments.size(),							// attachments
+		attachments.data(),							// attachments
+		1, &subpass,								// subpasses
+		1, &dependency								// dependencies
 	);
 
 	renderPass = renderPassDevice.operator*().createRenderPassUnique(renderPassInfo);
