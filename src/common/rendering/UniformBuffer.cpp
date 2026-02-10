@@ -1,18 +1,23 @@
 #include "UniformBuffer.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
-UniformBuffer::UniformBuffer(const Device& device)
+UniformBuffer::UniformBuffer(Device& device, uint32_t maxFrames)
 	: dev(device)
 {
-	buffer = std::make_unique<Buffer>(
-		device,
-		sizeof(UniformBufferObject),
-		vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
-	);
+	buffers.resize(maxFrames);
+
+	for (int i = 0; i < maxFrames; i++)
+	{
+		buffers[i] = std::make_unique<Buffer>(
+			device,
+			sizeof(UniformBufferObject),
+			vk::BufferUsageFlagBits::eUniformBuffer,
+			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		);
+	}
 }
 
-void UniformBuffer::update(const UniformBufferObject& ubo)
+void UniformBuffer::update(UniformBufferObject& ubo, uint32_t currentFrame)
 {
-	buffer->copyData(&ubo, sizeof(ubo));
+	buffers[currentFrame]->copyData(&ubo, sizeof(ubo));
 }

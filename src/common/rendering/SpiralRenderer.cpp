@@ -124,7 +124,14 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 	ubo.model = glm::mat4(1.0f); // wont be used
 	ubo.view = camera.getViewMatrix();
 	ubo.proj = camera.getProjectionMatrix();
-	m_uniformBuffer.update(ubo);
+	m_uniformBuffer.update(ubo, currentFrame);
+
+	Texture* texture = m_spiralScene.getModelLODSet(0).getLOD(0).getTexture();
+
+	if (texture)
+	{
+		m_descriptor.updateTexture(currentFrame, *texture);
+	}
 
 	// render pass
 	std::array<vk::ClearValue, 2> clearValues = {};
@@ -142,14 +149,22 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
 	// bind pipeline
-	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+	if (showWireframe && m_wireframePipeline != nullptr)
+	{
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_wireframePipeline->get());
+	}
+	else
+	{
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+	}
+
 
 	// bind descriptor sets
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
 		m_pipeline.getLayout(),
 		0,
 		1,
-		&m_descriptor.get(),
+		&m_descriptor.get(currentFrame),
 		0,
 		nullptr);
 

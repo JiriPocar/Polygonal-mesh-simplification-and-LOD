@@ -106,6 +106,7 @@ void Device::createLogicalDevice(vk::SurfaceKHR surface)
 
 	// specify device features
 	vk::PhysicalDeviceFeatures deviceFeatures = {};
+	deviceFeatures.fillModeNonSolid = VK_TRUE; // wireframe support
 
 	// specify device extensions
 	std::vector<const char*> extensions = {

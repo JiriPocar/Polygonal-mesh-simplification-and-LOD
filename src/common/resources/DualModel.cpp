@@ -1,9 +1,10 @@
 #include "DualModel.hpp"
 #include <iostream>
 
-DualModel::DualModel(const Device& device, const std::string& modelPath) : dev(const_cast<Device&>(device))
+DualModel::DualModel(Device& device, CommandManager& cmd, const std::string& modelPath)
+	: dev(const_cast<Device&>(device))
 {
-	originalModel = std::make_unique<Model>(device, modelPath);
+	originalModel = std::make_unique<Model>(device, cmd, modelPath);
 	createSimplifiedCopy();
 }
 

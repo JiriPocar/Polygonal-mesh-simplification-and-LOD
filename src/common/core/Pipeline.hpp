@@ -17,7 +17,11 @@
 
 class Pipeline {
 public:
-	Pipeline(const Device& device, const RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout);
+	Pipeline(Device& device,
+		RenderPass& renderPass,
+		vk::Extent2D swapchainExtent,
+		vk::DescriptorSetLayout descriptorSetLayout,
+		vk::PolygonMode polygonMode = vk::PolygonMode::eFill);
 	~Pipeline() = default;
 
 	vk::Pipeline get() const { return graphicsPipeline.operator*(); }
@@ -25,10 +29,10 @@ public:
 	vk::DescriptorSetLayout getDescriptorSetLayout() const { return *descriptorSetLayout; }
 
 private:
-	void createPipeline(const RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout);
+	void createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout, vk::PolygonMode polygonMode);
 	vk::UniqueShaderModule createShaderModule(const std::vector<char>& inputCode);
 
-	const Device& pipelineDevice;
+	Device& pipelineDevice;
 	vk::UniquePipelineLayout pipelineLayout;
 	vk::UniquePipeline graphicsPipeline;
 	vk::UniqueDescriptorSetLayout descriptorSetLayout;

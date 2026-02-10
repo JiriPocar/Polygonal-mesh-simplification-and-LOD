@@ -7,47 +7,50 @@
 ## Project structure
 
 ```
-── BP Pocarovsky
-|   |── assets
-│   ├── external
-│   ├── src
-│   │   ├── common
-│	│   │   ├── core
-│	│   │   │   ├── Device.hpp/cpp
-│	│   │   │   ├── Instance.hpp/cpp
-│	│   │   │   ├── Pipeline.hpp/cpp
-│	│   │   │   ├── Swapchain.hpp/cpp
-│	│   │   ├── rendering
-│	│   │   │   ├── CommandManager.hpp/cpp
-│	│   │   │   ├── Descriptors.hpp/cpp
-│	│   │   │   ├── FrameBuffer.hpp/cpp
-│	│   │   │   ├── Renderer.hpp/cpp
-│	│   │   │   ├── RenderPass.hpp/cpp
-│	│   │   │   ├── UniformBuffer.hpp/cpp
-│	│   │   ├── resources
-│	│   │   │   ├── Buffer.hpp/cpp
-│	│   │   │   ├── DualModel.hpp/cpp
-│	│   │   │   ├── Model.hpp/cpp
-│	│   │   ├── scene
-│	│   │   │   ├── Camera.hpp/cpp
-│	│   │   │   ├── Scene.hpp/cpp
-│	│   │   │   └── Transform.hpp/cpp
-│	│   │   ├── simplification
-│	│   │   │   ├── Simplificator.hpp/cpp
-│	│   │   │   └── simplificationUtil.hpp/cpp
-│	│   │   ├── ui
-│	│   │   │   └── ui.hpp/cpp
-│	│   │   ├── shaders
-│	│   │   │   ├── shader.vert
-│	│   │   │   └── shader.frag
-│	│   │   └── window.h/cpp
-│   │   ├── apps
-│   │   │   │── demo
-│   │   │   │   ├── main.cpp
-│   │   │   │   └── CMakeLists.txt
-│   │   │   └── simplificator
-│   │   │       ├── main.cpp
-│   │   │       └── CMakeLists.txt
+BP Pocarovsky
+├── assets
+├── external
+├── src
+│   ├── common
+│   │   ├── core
+│   │   │   ├── Device.hpp/cpp
+│   │   │   ├── Instance.hpp/cpp
+│   │   │   ├── Pipeline.hpp/cpp
+│   │   │   └── Swapchain.hpp/cpp
+│   │   ├── rendering
+│   │   │   ├── CommandManager.hpp/cpp
+│   │   │   ├── Descriptors.hpp/cpp
+│   │   │   ├── FrameBuffer.hpp/cpp
+│   │   │   ├── Renderer.hpp/cpp
+│   │   │   ├── RenderPass.hpp/cpp
+│   │   │   └── UniformBuffer.hpp/cpp
+│   │   ├── resources
+│   │   │   ├── Buffer.hpp/cpp
+│   │   │   ├── DualModel.hpp/cpp
+│   │   │   └── Model.hpp/cpp
+│   │   ├── scene
+│   │   │   ├── Camera.hpp/cpp
+│   │   │   ├── Scene.hpp/cpp
+│   │   │   └── Transform.hpp/cpp
+│   │   ├── simplification
+│   │   │   ├── Simplificator.hpp/cpp
+│   │   │   └── simplificationUtil.hpp/cpp
+│   │   ├── ui
+│   │   │   └── ui.hpp/cpp
+│   │   └── window.h/cpp
+│   └── apps
+│       ├── demo
+│       │   ├── shaders
+│       │   │   ├── frag.spv
+│       │   │   └── vert.spv
+│       │   ├── CMakeLists.txt
+│       │   └── main.cpp
+│       └── simplificator
+│           ├── shaders
+│           │   ├── frag.spv
+│           │   └── vert.spv
+│           ├── CMakeLists.txt
+│           └── main.cpp
 ├── CMakeLists.txt
 ├── LICENSE.txt
 └── README.md
@@ -91,13 +94,20 @@
 		- [ ] Create graphs using ```python```, ```matplotlib```, ...
 	- [ ] Visual comparison
 	- [ ] Moving scene(s) with dynamic LOD adjustment
-		- [ ] (optional) Street tiles with multiple models
 		- [x] Spiral scene with moving parts
-		- [ ] (optional) Ant in a maze
+		- [ ] Simple scene with car driving through "mountains"
 		
 - [ ] General TODO's
-	- [ ] Texture loading and simplification integration of textures
+	- [x] Texture loading
+	- [ ] UV interpolation for texture coordinates in simplified models
 
 # Known issues
 
 - On first run, the application might crash when loading a model. Restarting the application resolves the issue.
+
+# Assets table
+
+| Asset  | Source |
+| ------------- | ------------- |
+| Duck  | [Khronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Duck/glTF)  |
+| x | y |

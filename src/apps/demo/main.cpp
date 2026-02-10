@@ -23,7 +23,7 @@ int main()
 {
 	try
 	{
-		Window window(1820, 980, "TIME SPIRAL");
+		Window window(1820, 980, "SPIRAL BENCHMARK");
 		Instance instance(false);
 		auto surface = window.createSurface(instance);
 		Device device(instance, *surface);
@@ -34,6 +34,7 @@ int main()
 
 
 		SpiralPipeline pipeline(device, renderPass, swapchain.getExtent(), descriptor.getLayout());
+		SpiralPipeline wireframePipeline(device, renderPass, swapchain.getExtent(), descriptor.getLayout(), vk::PolygonMode::eLine);
 
 		FrameBuffer frameBuffer(device, renderPass, swapchain);
 
@@ -42,7 +43,7 @@ int main()
 
 		std::string modelPath = "assets/Duck.gltf";
 
-		SpiralScene spiralScene(device, modelPath);
+		SpiralScene spiralScene(device, commandManager, modelPath);
 		UserInterface ui(instance, device, swapchain, renderPass, window, commandManager);
 
 		Camera camera;
@@ -74,6 +75,7 @@ int main()
 			uniformBuffer,
 			descriptor
 		);
+		renderer.setWireframePipeline(wireframePipeline);
 
 		bool cameraActive = false;
 		window.setMouseCallback([&](double xPos, double yPos)
@@ -117,7 +119,7 @@ int main()
 
 			camera.handleInput(window.getGLFWWindow(), delta);
 			spiralScene.updateSpiralPositions(delta);
-			ui.beginFrame2(spiralScene);
+			ui.beginFrame2(spiralScene, renderer);
 
 			try
 			{

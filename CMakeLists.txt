@@ -30,6 +30,7 @@ set(ENGINE_SOURCES
     "src/common/resources/Buffer.cpp"
     "src/common/resources/Model.cpp"
     "src/common/resources/DualModel.cpp"
+    "src/common/resources/Textures.cpp"
     "src/common/scene/Camera.cpp"
     "src/common/scene/Transform.cpp"
     "src/common/scene/Scene.cpp"

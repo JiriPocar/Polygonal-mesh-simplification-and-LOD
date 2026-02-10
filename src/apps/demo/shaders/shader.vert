@@ -53,7 +53,6 @@ void main()
     );
 
 	vec3 baseColor = lodColors[instanceLodLevel];
-	fragColor = baseColor * diff;
-
+	fragColor = inNormal;
 	fragTexCoord = inTexCoord;
 }

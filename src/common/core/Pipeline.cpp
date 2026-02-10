@@ -37,10 +37,10 @@ static std::vector<char> readFile(const std::string& filename)
 	return buffer;
 }
 
-Pipeline::Pipeline(const Device& device, const RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout)
+Pipeline::Pipeline(Device& device, RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout, vk::PolygonMode polygonMode)
 	: pipelineDevice(device)
 {
-	createPipeline(renderPass, swapchainExtent, descriptorSetLayout);
+	createPipeline(renderPass, swapchainExtent, descriptorSetLayout, polygonMode);
 }
 
 vk::UniqueShaderModule Pipeline::createShaderModule(const std::vector<char>& inputCode)
@@ -54,7 +54,7 @@ vk::UniqueShaderModule Pipeline::createShaderModule(const std::vector<char>& inp
 	return pipelineDevice.operator*().createShaderModuleUnique(createInfo);
 }
 
-void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout)
+void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout, vk::PolygonMode polygonMode)
 {
 	// load shaders
 	auto vert = readFile("shader.vert.spv");
@@ -120,7 +120,7 @@ void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapcha
 		{},							// flags
 		VK_FALSE,					// depth clamp
 		VK_FALSE,					// rasterizer discard
-		vk::PolygonMode::eLine,		// fill polygons
+		polygonMode,				// polygon mode
 		vk::CullModeFlagBits::eFront,
 		vk::FrontFace::eClockwise,
 		VK_FALSE,					// depth bias
@@ -169,6 +169,19 @@ void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapcha
 
 	pipelineLayout = pipelineDevice.operator*().createPipelineLayoutUnique(pipelineLayoutInfo);
 
+	vk::PipelineDepthStencilStateCreateInfo depthStencil(
+		{},
+		VK_TRUE,				// depthTestEnable
+		VK_TRUE,				// depthWriteEnable
+		vk::CompareOp::eLess,	// depthCompareOp
+		VK_FALSE,				// depthBoundsTestEnable
+		VK_FALSE,				// stencilTestEnable
+		{},
+		{},
+		0.0f,
+		1.0f
+	);
+
 	// create the graphics pipeline
 	vk::GraphicsPipelineCreateInfo pipelineInfo(
 		{},						// flags
@@ -179,7 +192,7 @@ void Pipeline::createPipeline(const RenderPass& renderPass, vk::Extent2D swapcha
 		&viewportState,			// viewport state
 		&rasterizer,			// rasterizer
 		&multisampling,			// multisampling
-		nullptr,				// depth stencil
+		&depthStencil,			// depth stencil
 		&colorBlending,			// color blending
 		nullptr,				// dynamic state
 		*pipelineLayout,		// pipeline layout

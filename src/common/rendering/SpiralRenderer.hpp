@@ -15,8 +15,6 @@
 #include "../scene/Camera.hpp"
 #include "../scene/SpiralScene.hpp"
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
-
 class UserInterface;
 
 class SpiralRenderer {
@@ -39,6 +37,10 @@ public:
 
     void drawFrame(const Camera& camera, UserInterface& ui);
     void recreateSwapchain();
+	void setWireframePipeline(SpiralPipeline& pipeline) { m_wireframePipeline = &pipeline; }
+	void setShowWireframe(bool show) { showWireframe = show; }
+
+    static const int MAX_FRAMES_IN_FLIGHT = 2;
 
 private:
     void createSyncObjects();
@@ -49,6 +51,7 @@ private:
     Swapchain& m_swapchain;
     RenderPass& m_renderPass;
     SpiralPipeline& m_pipeline;
+    SpiralPipeline* m_wireframePipeline = nullptr;
     FrameBuffer& m_framebuffer;
     CommandManager& m_commandManager;
     Window& m_window;
@@ -61,6 +64,8 @@ private:
     std::vector<vk::UniqueSemaphore> renderFinishedSemaphores;
     std::vector<vk::UniqueFence> inFlightFence;
     std::vector<vk::Fence> imagesInFlight;
+
+    bool showWireframe = false;
 
 	// swaps between 0/1 to track current frame in flight
     uint32_t currentFrame = 0;

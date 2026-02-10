@@ -5,21 +5,25 @@
 #include "UniformBuffer.hpp"
 #include "../core/Device.hpp"
 
+class Texture;
+
 class Descriptor {
 public:
-	Descriptor(const Device& device, const UniformBuffer& uniformBuffer);
+	Descriptor(Device& device, UniformBuffer& uniformBuffer, uint32_t maxFrames = 2);
 	~Descriptor() = default;
 
-	vk::DescriptorSet get() const { return *descriptorSet; }
+	vk::DescriptorSet get(uint32_t frame) const { return *descriptorSets[frame]; }
 	vk::DescriptorSetLayout getLayout() const { return *descriptorSetLayout; }
+
+	void updateTexture(uint32_t frame, Texture& texture);
 
 private:
 	void createDescriptorSetLayout();
-	void createDescriptorPool();
-	void createDescriptorSet(const UniformBuffer& uniformBuffer);
+	void createDescriptorPool(uint32_t maxFrames);
+	void createDescriptorSets(UniformBuffer& uniformBuffer, uint32_t maxFrames);
 
-	const Device& dev;
+	Device& dev;
 	vk::UniqueDescriptorSetLayout descriptorSetLayout;
 	vk::UniqueDescriptorPool descriptorPool;
-	vk::UniqueDescriptorSet descriptorSet;
+	std::vector<vk::UniqueDescriptorSet> descriptorSets; // per frame
 };
