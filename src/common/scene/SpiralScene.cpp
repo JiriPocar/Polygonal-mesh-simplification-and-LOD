@@ -3,11 +3,11 @@
 #include <iostream>
 #include <chrono>
 
-SpiralScene::SpiralScene(Device& dev, const std::string& modelPath)
+SpiralScene::SpiralScene(Device& dev, CommandManager& cmd, const std::string& modelPath)
 	: dev(dev)
 {
 	generateSpiralPositions();
-	generateLODVersions(modelPath);
+	generateLODVersions(modelPath, cmd);
 	createInstanceBuffer();
 	std::cout << "SpiralScene created" << std::endl;
 }
@@ -49,12 +49,12 @@ void SpiralScene::generateSpiralPositions()
 	}
 }
 
-void SpiralScene::generateLODVersions(const std::string& modelPath)
+void SpiralScene::generateLODVersions(const std::string& modelPath, CommandManager& cmd)
 {
 	ModelLODSet lodSet;
 	lodSet.name = modelPath;
 
-	lodSet.lod0 = std::make_unique<Model>(dev, modelPath); // Original model
+	lodSet.lod0 = std::make_unique<Model>(dev, cmd, modelPath); // Original model
 
 	simplificator.setCurrentAlgorithm(Algorithm::QEM);
 	auto result1 = simplificator.simplify(*lodSet.lod0, 0.75f); // 75% faces
@@ -209,7 +209,7 @@ void SpiralScene::updateSpiralPositions(float deltaTime)
 
 }
 
-void SpiralScene::addModelType(const std::string& modelPath)
+void SpiralScene::addModelType(const std::string& modelPath, CommandManager& cmd)
 {
-	generateLODVersions(modelPath);
+	generateLODVersions(modelPath, cmd);
 }

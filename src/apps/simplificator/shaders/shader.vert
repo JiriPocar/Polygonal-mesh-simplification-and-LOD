@@ -17,9 +17,9 @@ void main()
 {
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
     
-    // Osvìtlení zùstává
     vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
     float diff = max(dot(inNormal, lightDir), 0.2);
-    fragColor = vec3(diff);
+
+    fragColor = inNormal;
     fragTexCoord = inTexCoord;
 }

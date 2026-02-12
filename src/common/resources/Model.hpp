@@ -6,6 +6,9 @@
 #include <string>
 #include <glm/glm.hpp>
 #include "../../external/tinygltf/tiny_gltf.h"
+#include "../common/resources/Textures.hpp"
+
+class CommandManager;
 
 #define LEFT 0
 #define RIGHT 1
@@ -25,8 +28,8 @@ struct Vertex {
 
 class Mesh {
 public:
-	Mesh(const Device& device, const tinygltf::Model& model, const tinygltf::Primitive& primitive);
-	Mesh(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	Mesh(Device& device, const tinygltf::Model& model, const tinygltf::Primitive& primitive);
+	Mesh(Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	void draw(vk::CommandBuffer commandBuffer) const;
 
 	vk::Buffer getVertexBuffer() const { return vertexBuffer->getBuffer(); }
@@ -47,7 +50,7 @@ private:
 	glm::vec3 minBound;
 	glm::vec3 maxBound;
 
-	const Device& dev;
+	Device& dev;
 	std::unique_ptr<Buffer> vertexBuffer;
 	std::unique_ptr<Buffer> indexBuffer;
 	uint32_t indexCount;
@@ -58,13 +61,13 @@ private:
 
 class Model {
 public:
-	Model(const Device& device, const std::string& modelPath);
+	Model(Device& device, CommandManager& cmd, const std::string& modelPath);
 
 	// copy constructor
 	Model(const Model& other);
 
 	// data constructor
-	Model(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	Model(Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	
 	~Model() = default;
 
@@ -78,6 +81,9 @@ public:
 		return meshes[0]->getIndexBuffer();
 	}
 
+	Texture* getTexture() const { return texture.get(); }
+	bool hasTexture() const { return texture != nullptr; }
+
 	std::vector<Vertex> extractVertices() const;
 	std::vector<uint32_t> extractIndices() const;
 
@@ -88,13 +94,14 @@ public:
 	float getScaleIndex() const;
 
 private:
-	void loadModel(const std::string& modelPath);
+	void loadModel(const std::string& modelPath, CommandManager& cmd);
 	void processMesh(const tinygltf::Mesh& mesh);
 	void createFromData(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 
 	uint32_t indexCount;
 	uint32_t vertexCount;
-	const Device& dev;
+	Device& dev;
 	tinygltf::Model model;
 	std::vector<std::unique_ptr<Mesh>> meshes;
+	std::unique_ptr<Texture> texture;
 };

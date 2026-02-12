@@ -1,7 +1,9 @@
 #include "Model.hpp"
+#include "../rendering/CommandManager.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -50,7 +52,7 @@ std::array<vk::VertexInputAttributeDescription, 3> Vertex::getAttributeDesc()
 	return attributeDescs;
 }
 
-Mesh::Mesh(const Device& device, const tinygltf::Model& model, const tinygltf::Primitive& primitive)
+Mesh::Mesh(Device& device, const tinygltf::Model& model, const tinygltf::Primitive& primitive)
 	: dev(device), indexCount(0), vertexCount(0)
 {
 	std::vector<Vertex> vertices;
@@ -80,7 +82,7 @@ Mesh::Mesh(const Device& device, const tinygltf::Model& model, const tinygltf::P
 	}
 }
 
-Mesh::Mesh(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+Mesh::Mesh(Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 	: dev(device),
 	  indexCount(static_cast<uint32_t>(indices.size())),
 	  vertexCount(static_cast<uint32_t>(vertices.size())),
@@ -229,6 +231,11 @@ void Mesh::loadIndices(const tinygltf::Model& model, const tinygltf::Primitive& 
 
 void Mesh::createVertexBuffer(const std::vector<Vertex>& vertices)
 {
+	if (vertices.empty())
+	{
+		throw std::runtime_error("Cannot create vertex buffer with empty vertex data.");
+	}
+
 	vk::DeviceSize bufferSize = sizeof(Vertex) * vertices.size();
 
 	vertexBuffer = std::make_unique<Buffer>(
@@ -243,6 +250,11 @@ void Mesh::createVertexBuffer(const std::vector<Vertex>& vertices)
 
 void Mesh::createIndexBuffer(const std::vector<uint32_t>& indices)
 {
+	if (indices.empty())
+	{
+		return;
+	}
+
 	vk::DeviceSize bufferSize = sizeof(uint32_t) * indices.size();
 
 	indexBuffer = std::make_unique<Buffer>(
@@ -257,6 +269,8 @@ void Mesh::createIndexBuffer(const std::vector<uint32_t>& indices)
 
 void Mesh::draw(vk::CommandBuffer commandBuffer) const
 {
+	if (!vertexBuffer) return;
+
 	vk::Buffer vertexBuffers[] = { vertexBuffer->getBuffer() };
 	vk::DeviceSize offsets[] = { 0 };
 
@@ -284,10 +298,10 @@ void Mesh::getBounds(glm::vec3& minBound, glm::vec3& maxBound) const
 	maxBound = this->maxBound;
 }
 
-Model::Model(const Device& device, const std::string& modelPath)
+Model::Model(Device& device, CommandManager& cmd, const std::string& modelPath)
 	: dev(device)
 {
-	loadModel(modelPath);
+	loadModel(modelPath, cmd);
 
 	// set vertex and index count
 	auto v = extractVertices();
@@ -304,13 +318,13 @@ Model::Model(const Model& other) : dev(other.dev), indexCount(other.indexCount),
 	createFromData(vertices, indices);
 }
 
-Model::Model(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+Model::Model(Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 	: dev(device), vertexCount(vertices.size()), indexCount(indices.size())
 {
 	createFromData(vertices, indices);
 }
 
-void Model::loadModel(const std::string& modelPath)
+void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 {
 
 	std::ifstream testFile(modelPath);
@@ -339,6 +353,58 @@ void Model::loadModel(const std::string& modelPath)
 
 	for (const auto& mesh : model.meshes) {
 		processMesh(mesh);
+	}
+
+	std::filesystem::path path(modelPath);
+	std::string baseDir = path.parent_path().string();
+	if (!baseDir.empty()) baseDir += "/";
+
+	std::cout << "loading texture.." << std::endl;
+	if (!model.materials.empty())
+	{
+		std::cout << "has materials" << std::endl;
+		auto& material = model.materials[0];
+
+		auto it = material.values.find("baseColorTexture");
+		if (it != material.values.end())
+		{
+			std::cout << "color texture" << std::endl;
+			int textureIndex = it->second.TextureIndex();
+
+			if (textureIndex >= 0 && textureIndex < model.textures.size())
+			{
+				int imgIdx = model.textures[textureIndex].source;
+
+				if (imgIdx >= 0 && imgIdx < model.images.size())
+				{
+					std::string imageUri = model.images[imgIdx].uri;
+					std::string imagePath = baseDir + imageUri;
+					std::cout << "Loading texture from: " << imagePath << std::endl;
+
+					try {
+						texture = std::make_unique<Texture>(dev, cmd, imagePath);
+						std::cout << "Loaded texture.." << std::endl;
+					}
+					catch (const std::exception& e) {
+						std::cerr << "Failed to load texture: " << e.what() << std::endl;
+					}
+				}
+			}
+		}
+	}
+
+	if (!texture)
+	{
+		std::cout << "Model has no texture, setting fallback texture." << std::endl;
+		try
+		{
+			std::string fallbackPath = "assets/fallback.png";
+			texture = std::make_unique<Texture>(dev, cmd, fallbackPath);
+		}
+		catch (...)
+		{
+			std::cerr << "Failed to load fallback texture: " << std::endl;
+		}
 	}
 
 	std::cout << "Loaded GLTF model: " << modelPath << std::endl;

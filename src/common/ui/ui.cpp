@@ -3,6 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include "../rendering/Renderer.hpp"
+#include "../rendering/SpiralRenderer.hpp"
 #include "../scene/SpiralScene.hpp"
 
 UserInterface::UserInterface(Instance &instance, Device& dev, Swapchain& swapchain, RenderPass& renderPass, Window& window, CommandManager& cmdManager)
@@ -80,9 +81,10 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	showModelMenu(currentDualModel, device, renderer, transform);
 	showSimplificationControls(currentDualModel, device);
 	showModelPerspectiveControls(transform);
+	showWireframeControls(renderer);
 }
 
-void UserInterface::beginFrame2(SpiralScene& spiral)
+void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -91,6 +93,7 @@ void UserInterface::beginFrame2(SpiralScene& spiral)
 	showStatistics();
 	showSpiralControls(spiral);
 	showGeneralControls(spiral);
+	showWireframeControls2(renderer);
 }
 
 void UserInterface::scanModels()
@@ -171,7 +174,7 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 				if (ImGui::Selectable(modelPath.c_str())) {  
 					try {
 						device.operator*().waitIdle(); // wait for device to be idle before loading new model
-						currentDualModel = std::make_unique<DualModel>(device, modelPath);  
+						currentDualModel = std::make_unique<DualModel>(device, uiCmdManager, modelPath);  
 						float setScale = currentDualModel->getOriginalModel().getScaleIndex();
 						transform.setScale(glm::vec3(setScale, setScale, setScale));
 						renderer.setDualModel(*currentDualModel);
@@ -202,6 +205,9 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		ImGui::End();
 		return;
 	}
+
+	ImGui::SetNextWindowPos(ImVec2(10, 770));
+	ImGui::SetNextWindowSize(ImVec2(300, 120));
 
 	ImGui::Begin("Simplification");
 
@@ -268,6 +274,10 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 
 void UserInterface::showModelPerspectiveControls(Transform& transform)
 {
+	ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(420, 10));
+	ImGui::SetNextWindowSize(ImVec2(180, 180));
+
 	ImGui::Begin("Model Transform");
 	glm::vec3 rotation = transform.getRot();
 	if (ImGui::DragFloat3("Rotation", &rotation.x, 1.0f))
@@ -297,6 +307,38 @@ Transform UserInterface::fetchTransform()
 void UserInterface::setTransform(const Transform& transform)
 {
 	uiTransform = transform;
+}
+
+void UserInterface::showWireframeControls(Renderer& renderer)
+{
+	static bool wireframe = false;
+	
+	ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(220, 10));
+	ImGui::SetNextWindowSize(ImVec2(180, 60));
+
+	ImGui::Begin("Wireframe");
+	if (ImGui::Checkbox("Show wireframe", &wireframe))
+	{
+		renderer.setShowWireframe(wireframe);
+	}
+	ImGui::End();
+}
+
+void UserInterface::showWireframeControls2(SpiralRenderer& renderer)
+{
+	static bool wireframe = false;
+
+	ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(220, 10));
+	ImGui::SetNextWindowSize(ImVec2(180, 60));
+
+	ImGui::Begin("Wireframe");
+	if (ImGui::Checkbox("Show wireframe", &wireframe))
+	{
+		renderer.setShowWireframe(wireframe);
+	}
+	ImGui::End();
 }
 
 void UserInterface::showGeneralControls(SpiralScene& scene)

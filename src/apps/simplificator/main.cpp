@@ -29,84 +29,42 @@
 int main() {
 	try
 	{
-		std::cout << "Starting Vulkan application...\n" << std::endl;
-
-		std::cout << "\nCreating window..." << std::endl;
-		Window window(1400, 800, "Vulkan Window");
-		std::cout << "Successfully created window!" << std::endl;
-
-		std::cout << "\nCreating instance..." << std::endl;
+		Window window(1800, 900, "Simplificator");
 		Instance instance(false);
-		std::cout << "Successfully created instance!" << std::endl;
-
-		std::cout << "\nGetting surface..." << std::endl;
 		auto surface = window.createSurface(instance);
-		std::cout << "Successfully got surface!" << std::endl;
-
-		std::cout << "\nCreating device..." << std::endl;
 		Device device(instance, *surface);
-		std::cout << "Successfully created device!" << std::endl;
-
-		std::cout << "\nCreating swapchain..." << std::endl;
-		Swapchain swapchain(device, *surface, 1200, 1000);
-
-		std::cout << "\nSwapchain created successfully!" << std::endl;
-		std::cout << "  - Image format: " << vk::to_string(swapchain.getImageFormat()) << std::endl;
-		std::cout << "  - Extent: " << swapchain.getExtent().width << "x" << swapchain.getExtent().height << std::endl;
-		std::cout << "  - Image count: " << swapchain.getImages().size() << std::endl;
-		std::cout << "  - Image views: " << swapchain.getImageViews().size() << std::endl;
-
+		Swapchain swapchain(device, *surface, window.getWidth(), window.getHeight());
 		RenderPass renderPass(device, swapchain.getImageFormat());
-		std::cout << "\nRenderPass format: " << vk::to_string(renderPass.getFormat()) << std::endl;
-
-		std::cout << "Creating uniform buffer..." << std::endl;
 		UniformBuffer uniformBuffer(device);
-		std::cout << "Uniform buffer created successfully!" << std::endl;
-
-		std::cout << "Creating descriptor set..." << std::endl;
 		Descriptor descriptorSet(device, uniformBuffer);
-		std::cout << "Descriptor set created successfully!" << std::endl;
 
 		Pipeline pipeline(device, renderPass, swapchain.getExtent(), descriptorSet.getLayout());
-		std::cout << "\nPipeline created successfully!" << std::endl;
-		std::cout << "  - Pipeline layout: " << (pipeline.getLayout() ? "VALID" : "INVALID") << std::endl;
-		std::cout << "  - Pipeline handle: " << (pipeline.get() ? "VALID" : "INVALID") << std::endl;
+		Pipeline wireframePipeline(device, renderPass, swapchain.getExtent(), descriptorSet.getLayout(), vk::PolygonMode::eLine);
 
 		FrameBuffer framebuffer(device, renderPass, swapchain);
-		std::cout << "\nFramebuffers created successfully!" << std::endl;
-		for (size_t i = 0; i < framebuffer.getFramebuffers().size(); i++) {
-			std::cout << "  - Framebuffer " << i << ": "
-				<< (framebuffer.getFrameBufferAt(i) ? "VALID" : "INVALID") << std::endl;
-		}
-
-		std::cout << "\nCreating command manager..." << std::endl;
 		CommandManager commandManager(device);
 		commandManager.createCommandBuffers(static_cast<uint32_t>(swapchain.getImages().size()));
-		std::cout << "Amount of command buffers: " << swapchain.getImages().size() << std::endl;
 
-		std::cout << "\nLoading initial model..." << std::endl;
-		//std::unique_ptr<Model> currentModel = std::make_unique<Model>(device, "../../../assets/Lantern.gltf");
-		std::unique_ptr<DualModel> currentDualModel = std::make_unique<DualModel>(device, "assets/Fox.gltf");
-		std::cout << "Model loaded successfully!" << std::endl;
-
-		std::cout << "\nUI initialization" << std::endl;
+		std::unique_ptr<DualModel> currentDualModel = std::make_unique<DualModel>(device, commandManager, "assets/Duck.gltf");
 		UserInterface ui(instance, device, swapchain, renderPass, window, commandManager);
-		std::cout << "UI initialized successfully!" << std::endl;
 
 		Camera camera;
 		camera.setPerspective(45.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 1000.0f);
 		camera.setView(glm::vec3(0.0f, 0.5f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		
 		Transform transform;
 		transform.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
 		transform.setRot(glm::vec3(0.0f, 0.0f, 0.0f));
+
 		// get model auto scale and apply
 		float modelScale = currentDualModel->getOriginalModel().getScaleIndex();
 		transform.setScale(glm::vec3(modelScale, modelScale, modelScale));
 
-		std::cout << "\nCreating renderer..." << std::endl;
 		Renderer renderer(device, swapchain, renderPass, pipeline,
 						  framebuffer, commandManager, window, surface.get(), currentDualModel->getOriginalModel(), uniformBuffer, descriptorSet);
 		renderer.setDualModel(*currentDualModel);
+		renderer.setWireframePipeline(wireframePipeline);
+
 		auto last = std::chrono::high_resolution_clock::now();
 		float xRotation = 0.0f;
 		float yRotation = 0.0f;

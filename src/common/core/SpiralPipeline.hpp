@@ -13,15 +13,17 @@ public:
 	SpiralPipeline(Device& device,
 				   RenderPass& renderPass,
 		           vk::Extent2D swapchainExtent,
-		           vk::DescriptorSetLayout descSetLayout);
+		           vk::DescriptorSetLayout descSetLayout,
+				   vk::PolygonMode polygonMode = vk::PolygonMode::eFill);
 	~SpiralPipeline() = default;
 
 	vk::Pipeline get() const { return graphicsPipeline.get(); }
 	vk::PipelineLayout getLayout() const { return pipelineLayout.get(); }
 private:
-	void createPipeline(const RenderPass& renderPass,
-		vk::Extent2D swapchainExtent,
-		vk::DescriptorSetLayout descSetLayout);
+	void createPipeline(RenderPass& renderPass,
+						vk::Extent2D swapchainExtent,
+						vk::DescriptorSetLayout descSetLayout,
+						vk::PolygonMode polygonMode);
 	vk::UniqueShaderModule createShaderModule(const std::vector<char>& code);
 
 	Device& pipelineDevice;

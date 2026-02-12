@@ -6,7 +6,7 @@ class Device;
 
 class RenderPass {
 public:
-	RenderPass(const Device& device, vk::Format swapchainImageFormat);
+	RenderPass(Device& device, vk::Format swapchainImageFormat);
 	~RenderPass() = default;
 
 	vk::RenderPass get() const { return renderPass.operator*(); }
@@ -17,5 +17,5 @@ private:
 
 	vk::Format format;
 	vk::UniqueRenderPass renderPass;
-	const Device& renderPassDevice;
+	Device& renderPassDevice;
 };

@@ -27,10 +27,11 @@ static std::vector<char> readFile(const std::string& filename)
 SpiralPipeline::SpiralPipeline(Device& device,
     RenderPass& renderPass,
     vk::Extent2D swapchainExtent,
-    vk::DescriptorSetLayout descriptorSetLayout)
+    vk::DescriptorSetLayout descriptorSetLayout,
+	vk::PolygonMode polygonMode)
     : pipelineDevice(device)
 {
-    createPipeline(renderPass, swapchainExtent, descriptorSetLayout);
+    createPipeline(renderPass, swapchainExtent, descriptorSetLayout, polygonMode);
 }
 
 vk::UniqueShaderModule SpiralPipeline::createShaderModule(const std::vector<char>& inputCode)
@@ -44,9 +45,8 @@ vk::UniqueShaderModule SpiralPipeline::createShaderModule(const std::vector<char
     return pipelineDevice.operator*().createShaderModuleUnique(createInfo);
 }
 
-void SpiralPipeline::createPipeline(const RenderPass& renderPass,
-    vk::Extent2D swapchainExtent,
-    vk::DescriptorSetLayout descSetLayout)
+void SpiralPipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExtent,
+									vk::DescriptorSetLayout descSetLayout, vk::PolygonMode polygonMode)
 {
     // load shaders
     auto vert = readFile("shader.vert.spv");
@@ -152,7 +152,7 @@ void SpiralPipeline::createPipeline(const RenderPass& renderPass,
 		{},								// flags
 		VK_FALSE,						// depth clamp
 		VK_FALSE,						// rasterizer discard
-		vk::PolygonMode::eLine,			// polygon mode
+		polygonMode,					// polygon mode
 		vk::CullModeFlagBits::eFront,	// cull front faces
 		vk::FrontFace::eClockwise,		// front faces clockwise
 		VK_FALSE,						// depth bias

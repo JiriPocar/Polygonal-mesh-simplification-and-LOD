@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.hpp>
 #include <glm/glm.hpp>
 #include <memory>
+#include <vector>
 #include "../resources/Buffer.hpp"
 #include "../core/Device.hpp"
 
@@ -13,14 +14,15 @@ struct UniformBufferObject {
 
 class UniformBuffer {
 public:
-	UniformBuffer(const Device& device);
+	UniformBuffer(Device& device, uint32_t maxFrames = 2);
 	~UniformBuffer() = default;
 
-	void update(const UniformBufferObject& ubo);
-	vk::Buffer getBuffer() const { return buffer->getBuffer(); }
+	void update(UniformBufferObject& ubo, uint32_t currentFrame);
+
+	vk::Buffer getBuffer(uint32_t currentFrame) const { return buffers[currentFrame]->getBuffer(); }
 
 private:
-	const Device& dev;
-	std::unique_ptr<Buffer> buffer;
+	Device& dev;
+	std::vector<std::unique_ptr<Buffer>> buffers;
 };
 

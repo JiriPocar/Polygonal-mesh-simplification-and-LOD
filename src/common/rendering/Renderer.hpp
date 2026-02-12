@@ -44,12 +44,16 @@ public:
 	void setModel(Model& newModel) { m_model = &newModel; }
 	void setDualModel(DualModel& newDualModel) { m_dualModel = &newDualModel; }
 
+	void setShowWireframe(bool show) { showWireframe = show; }
+	void setWireframePipeline(Pipeline& pipeline) { m_wireframePipeline = &pipeline; }
+
+	static const int MAX_FRAMES_IN_FLIGHT = 2;
+
 private:
 	void createSyncObjects();
 	void cleanupSyncObjects();
 	void recreateFramebuffers();
 
-	void drawDualModel(vk::CommandBuffer cmd, const Camera& camera, const Transform& transform, int side);
 	void setupViewportScissor(vk::CommandBuffer cmd, vk::Extent2D extent, uint32_t width, int side);
 
 	Device& m_device;
@@ -64,10 +68,14 @@ private:
 	UniformBuffer& m_uniformBuffer;
 	Descriptor& m_descriptor;
 	DualModel* m_dualModel;
+	Pipeline* m_wireframePipeline = nullptr;
 
 	vk::UniqueSemaphore imageAvailableSemaphores;
 	vk::UniqueSemaphore renderFinishedSemaphores;
 	vk::UniqueFence inFlightFence;
 
 	bool framebufferResized = false;
+	bool showWireframe = false;
+
+	uint32_t currentFrame = 0;
 };

@@ -27,6 +27,7 @@
 #include "../simplification/Simplificator.hpp"
 
 class Renderer;
+class SpiralRenderer;
 class SpiralScene;
 
 class UserInterface {
@@ -36,7 +37,7 @@ public:
 
 	void init();
 	void beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform);
-	void beginFrame2(SpiralScene& scene);
+	void beginFrame2(SpiralScene& scene, SpiralRenderer& renderer);
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);
 
@@ -59,10 +60,12 @@ private:
 	void showStatistics();
 	void showSimplificationControls(std::unique_ptr<DualModel>& currentDualModel, Device& device);
 	void showModelPerspectiveControls(Transform& transform);
+	void showWireframeControls(Renderer& renderer);
 
 	// spiral app interface
 	void showSpiralControls(SpiralScene& scene);
 	void UserInterface::showGeneralControls(SpiralScene& scene);
+	void UserInterface::showWireframeControls2(SpiralRenderer& renderer);
 
 	Instance& uiInstance;
 	Device& uiDevice;

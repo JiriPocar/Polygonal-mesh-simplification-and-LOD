@@ -2,6 +2,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <iostream>
+#include <array>
 #include "../ui/ui.hpp"
 
 Renderer::Renderer(Device& device, Swapchain& swapchain, RenderPass& renderPass,
@@ -94,13 +95,13 @@ void Renderer::drawFrame(const Camera& camera, const Transform& transform, UserI
 	ubo.view = camera.getViewMatrix();
 	ubo.proj = camera.getProjectionMatrix();
 
-	m_uniformBuffer.update(ubo);
+	m_uniformBuffer.update(ubo, 1);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
 								 m_pipeline.getLayout(),
 								 0,
 								 1,
-								 &m_descriptor.get(),
+								 &m_descriptor.get(1),
 								 0,
 								 nullptr);
 
@@ -170,28 +171,65 @@ void Renderer::drawSplitScreen(const Camera& camera, const Transform& transform,
 	cmdBuffer.begin(info);
 
 	// render pass
-	vk::ClearValue clearColor(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f));
+	std::array<vk::ClearValue, 2> clearValues = {};
+	clearValues[0].color = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f); // background color
+	clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0); // depth clear
 
 	vk::RenderPassBeginInfo renderPassInfo(
 		m_renderPass.get(),
 		m_framebuffer.getFrameBufferAt(imgIdx),
 		vk::Rect2D({ 0,0 }, m_swapchain.getExtent()),
-		1,
-		&clearColor
+		clearValues.size(),
+		clearValues.data()
 	);
 
 	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
-	// bind pipeline a draw call
-	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+	// decide which pipeline to use based on wireframe mode
+	if (showWireframe && m_wireframePipeline != nullptr)
+	{
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_wireframePipeline->get());
+	}
+	else
+	{
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+	}
+
+	Texture* sharedTexture = m_dualModel->getOriginalModel().getTexture();
+	if (sharedTexture)
+	{
+		m_descriptor.updateTexture(currentFrame, *sharedTexture);
+	}
+
+	auto extent = m_swapchain.getExtent();
+	float halfWidth = static_cast<float>(extent.width) / 2.0f;
+	float aspectRatio = halfWidth / static_cast<float>(extent.height);
+
+	UniformBufferObject ubo{};
+	ubo.model = transform.getModelMatrix();
+	ubo.view = camera.getViewMatrix();
+	ubo.proj = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
+	ubo.proj[1][1] *= -1;
+
+	m_uniformBuffer.update(ubo, currentFrame);
+
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics,
+		m_pipeline.getLayout(),
+		0,
+		1,
+		&m_descriptor.get(currentFrame),
+		0,
+		nullptr
+	);
 
 	// draw left side (original model)
 	setupViewportScissor(cmdBuffer, m_swapchain.getExtent(), m_swapchain.getExtent().width / 2, LEFT);
-	drawDualModel(cmdBuffer, camera, transform, LEFT);
+	m_dualModel->drawOriginalModel(cmdBuffer);
 
 	// draw right side (simplified model)
 	setupViewportScissor(cmdBuffer, m_swapchain.getExtent(), m_swapchain.getExtent().width / 2, RIGHT);
-	drawDualModel(cmdBuffer, camera, transform, RIGHT);
+	m_dualModel->drawSimplifiedModel(cmdBuffer);
 
 	// draw UI
 	ui.render(cmdBuffer);
@@ -228,6 +266,8 @@ void Renderer::drawSplitScreen(const Camera& camera, const Transform& transform,
 	);
 
 	m_device.getPresentQueue().presentKHR(presentInfo);
+
+	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void Renderer::setupViewportScissor(vk::CommandBuffer cmd, vk::Extent2D extent, uint32_t width, int side)
@@ -266,43 +306,6 @@ void Renderer::setupViewportScissor(vk::CommandBuffer cmd, vk::Extent2D extent, 
 
 	cmd.setViewport(0, 1, &viewport);
 	cmd.setScissor(0, 1, &scissor);
-}
-
-void Renderer::drawDualModel(vk::CommandBuffer cmd, const Camera& camera, const Transform& transform, int side)
-{
-	auto extent = m_swapchain.getExtent();
-	uint32_t halfWidth = extent.width / 2;
-
-	float aspectRatio = static_cast<float>(halfWidth) / static_cast<float>(extent.height);
-
-	UniformBufferObject ubo{};
-	ubo.model = transform.getModelMatrix();
-	ubo.view = camera.getViewMatrix();
-	ubo.proj = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
-	ubo.proj[1][1] *= -1;
-
-	m_uniformBuffer.update(ubo);
-
-	cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-		m_pipeline.getLayout(),
-		0,
-		1,
-		&m_descriptor.get(),
-		0,
-		nullptr);
-
-	if (side == LEFT)
-	{
-		m_dualModel->drawOriginalModel(cmd);
-	}
-	else if (side == RIGHT)
-	{
-		m_dualModel->drawSimplifiedModel(cmd);
-	}
-	else
-	{
-		throw std::runtime_error("Invalid side for drawing dual model.");
-	}
 }
 
 void Renderer::recreateSwapchain()

@@ -3,11 +3,12 @@
 #include <stdexcept>
 #include <iostream>
 
-Swapchain::Swapchain(const Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
+Swapchain::Swapchain(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
 	: swapchainDevice(device) // initialize the swapchain "device" variable with the provided device
 {
 	createSwapchain(surface, width, height);
 	createImageViews();
+	createDepthResources();
 }
 
 void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t height)
@@ -107,6 +108,49 @@ void Swapchain::createImageViews()
 	std::cout << "Created " << imageViews.size() << " image views for the swapchain images." << std::endl;
 }
 
+void Swapchain::createDepthResources()
+{
+	// find a supported depth format
+	depthFormat = swapchainDevice.findDepthFormat();
+
+	// create depth image
+	vk::ImageCreateInfo imageInfo(
+		{},													// flags
+		vk::ImageType::e2D,									// imageType
+		depthFormat,										// format
+		vk::Extent3D{ extent.width, extent.height, 1 },		// extent
+		1,													// mipLevels
+		1,													// arrayLayers
+		vk::SampleCountFlagBits::e1,						// samples
+		vk::ImageTiling::eOptimal,							// tiling
+		vk::ImageUsageFlagBits::eDepthStencilAttachment 	// usage
+	);
+	depthImage = swapchainDevice.operator*().createImageUnique(imageInfo);
+
+	// allocate memory for the depth image
+	vk::MemoryRequirements memRequirements = swapchainDevice.operator*().getImageMemoryRequirements(*depthImage);
+	vk::MemoryAllocateInfo allocInfo(
+		memRequirements.size,
+		swapchainDevice.findMemoryType(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal)
+	);
+	depthImageMemory = swapchainDevice.operator*().allocateMemoryUnique(allocInfo);
+	swapchainDevice.operator*().bindImageMemory(*depthImage, *depthImageMemory, 0);
+
+	// create image view for the depth image
+	vk::ImageViewCreateInfo viewInfo(
+		{},										// flags
+		*depthImage,							// image
+		vk::ImageViewType::e2D,					// viewType
+		depthFormat,							// format
+		{},										// components
+		vk::ImageSubresourceRange{				// subresourceRange
+			vk::ImageAspectFlagBits::eDepth,
+			0, 1, 0, 1
+		}
+	);
+	depthImageView = swapchainDevice.operator*().createImageViewUnique(viewInfo);
+}
+
 uint32_t Swapchain::acquireNextImage(vk::Semaphore signalSemaphore)
 {
 	auto result = swapchainDevice.operator*().acquireNextImageKHR(*swapchain, UINT64_MAX, signalSemaphore, nullptr);
@@ -146,6 +190,7 @@ void Swapchain::recreateOnResize(vk::SurfaceKHR surface, uint32_t width, uint32_
 	// create new swapchain
 	createSwapchain(surface, width, height);
 	createImageViews();
+	createDepthResources();
 }
 
 void Swapchain::cleanup()
@@ -153,4 +198,7 @@ void Swapchain::cleanup()
 	imageViews.clear();
 	swapchain.reset();
 	images.clear();
+	depthImageView.reset();
+	depthImage.reset();
+	depthImageMemory.reset();
 }

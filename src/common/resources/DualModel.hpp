@@ -2,9 +2,11 @@
 #include "Model.hpp"
 #include <memory>
 
+class CommandManager;
+
 class DualModel {
 public:
-	DualModel(const Device& device, const std::string& modelPath);
+	DualModel(Device& device, CommandManager& cmd, const std::string& modelPath);
 	~DualModel() = default;
 
 	Model& getOriginalModel() const { return *originalModel; }

@@ -5,6 +5,7 @@
 #include "core/Device.hpp"
 #include "resources/Model.hpp"
 #include "../simplification/Simplificator.hpp"
+#include "../rendering/CommandManager.hpp"
 
 const uint32_t MAX_INSTANCE_COUNT = 1000000;
 
@@ -54,7 +55,7 @@ struct ModelLODSet {
 
 class SpiralScene {
 public:
-	SpiralScene(Device& dev, const std::string& modelPath);
+	SpiralScene(Device& dev, CommandManager& cmd, const std::string& modelPath);
 	~SpiralScene() = default;
 
 	void updateLODs(const glm::vec3& cameraPos, uint32_t currentFrame);
@@ -68,13 +69,13 @@ public:
 	const std::vector<SpiralInstanceData>& getInstanceData() const { return instanceData; }
 	uint32_t getModelTypeCount() const { return static_cast<uint32_t>(modelLODSets.size()); }
 
-	void addModelType(const std::string& modelPath);
+	void addModelType(const std::string& modelPath, CommandManager& cmd);
 	void resetAnimation() { animationTime = 0.0f; }
 	SpiralConfig config;
 
 private:
 	void generateSpiralPositions();
-	void generateLODVersions(const std::string& modelPath);
+	void generateLODVersions(const std::string& modelPath, CommandManager& cmd);
 	void createInstanceBuffer();
 	void updateInstancesCPU(const glm::vec3& cameraPos, uint32_t currentFrame);
 

@@ -124,29 +124,47 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 	ubo.model = glm::mat4(1.0f); // wont be used
 	ubo.view = camera.getViewMatrix();
 	ubo.proj = camera.getProjectionMatrix();
-	m_uniformBuffer.update(ubo);
+	m_uniformBuffer.update(ubo, currentFrame);
+
+	Texture* texture = m_spiralScene.getModelLODSet(0).getLOD(0).getTexture();
+
+	if (texture)
+	{
+		m_descriptor.updateTexture(currentFrame, *texture);
+	}
 
 	// render pass
-	vk::ClearValue clearColor(vk::ClearColorValue(0.1f, 0.1f, 0.15f, 1.0f));
+	std::array<vk::ClearValue, 2> clearValues = {};
+	clearValues[0].color = vk::ClearColorValue(0.1f, 0.1f, 0.15f, 1.0f); // background color
+	clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);   // clear depth to far plane
+
 	vk::RenderPassBeginInfo renderPassInfo(
 		m_renderPass.get(),
 		m_framebuffer.getFrameBufferAt(imgIdx),
 		vk::Rect2D({ 0, 0 }, m_swapchain.getExtent()),
-		1,
-		&clearColor
+		clearValues.size(),
+		clearValues.data()
 	);
 
 	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
 	// bind pipeline
-	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+	if (showWireframe && m_wireframePipeline != nullptr)
+	{
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_wireframePipeline->get());
+	}
+	else
+	{
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+	}
+
 
 	// bind descriptor sets
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
 		m_pipeline.getLayout(),
 		0,
 		1,
-		&m_descriptor.get(),
+		&m_descriptor.get(currentFrame),
 		0,
 		nullptr);
 
@@ -156,7 +174,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 
 	uint32_t totalInstances = m_spiralScene.config.instanceCount;
 
-	for (int lod = 3; lod >= 0; lod--) // for now hotfixed since depth buffering is absent
+	for (int lod = 0; lod < 4; lod++)
 	{
 		uint32_t instanceCount = m_spiralScene.getLODCount(lod);
 		uint32_t firstInstance = m_spiralScene.getLODOffset(lod);

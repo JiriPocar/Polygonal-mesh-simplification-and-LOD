@@ -7,11 +7,12 @@ class Device;
 
 class Swapchain {
 public:
-	Swapchain(const Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height);
+	Swapchain(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height);
 	~Swapchain() = default;
 
 	const std::vector<vk::Image>& getImages() const { return images; }
 	const std::vector<vk::UniqueImageView>& getImageViews() const { return imageViews; }
+	vk::ImageView getDepthImageView() const { return depthImageView.get(); }
 	vk::Format getImageFormat() const { return imageFormat; }
 	vk::Extent2D getExtent() const { return extent; }
 	const vk::UniqueSwapchainKHR& get() const { return swapchain; }
@@ -29,13 +30,19 @@ private:
 		std::vector<vk::PresentModeKHR> presentModes;
 	};
 
-	const Device& swapchainDevice; // Reference to the device
-	vk::UniqueSwapchainKHR swapchain; // Unique handle to the swapchain
-	std::vector<vk::Image> images; // Images in the swapchain
-	std::vector<vk::UniqueImageView> imageViews; // Image views for the swapchain images
-	vk::Format imageFormat; // Format of the swapchain images
-	vk::Extent2D extent; // Extent (width and height) of the swapchain images
+	Device& swapchainDevice;
+	vk::UniqueSwapchainKHR swapchain;
+	std::vector<vk::Image> images;
+	std::vector<vk::UniqueImageView> imageViews;
+	vk::Format imageFormat;
+	vk::Extent2D extent;
+
+	vk::UniqueImage depthImage;
+	vk::UniqueDeviceMemory depthImageMemory;
+	vk::UniqueImageView depthImageView;
+	vk::Format depthFormat;
 
 	void createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t height);
 	void createImageViews();
+	void createDepthResources();
 };
