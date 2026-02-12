@@ -97,6 +97,7 @@
 		
 - [ ] General TODO's
 	- [ ] Texture loading and simplification integration of textures
+	- [ ] Depth buffering (viz https://vulkan-tutorial.com/Depth_buffering)
 
 # Known issues
 
