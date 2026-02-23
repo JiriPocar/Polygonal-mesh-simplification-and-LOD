@@ -2,6 +2,7 @@
 #include "simplificationUtil.hpp"
 #include <chrono>
 #include <iostream>
+#include <algorithm>
 
 Simplificator::Simplificator()
 {
@@ -24,8 +25,14 @@ void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& in
 
 		// find duplicate vertex
 		for (uint32_t j = 0; j < i; j++) {
-			if (glm::length(vertices[i].pos - vertices[j].pos) < threshold) {
-				indexMap[i] = indexMap[j]; // rewrite as duplicate
+			bool samePos = glm::length(vertices[i].pos - vertices[j].pos) < threshold;
+			if (!samePos) continue;
+
+			bool sameUV = glm::length(vertices[i].texCoord - vertices[j].texCoord) < 0.001f;
+
+			if (samePos && sameUV)
+			{
+				indexMap[i] = indexMap[j];
 				break;
 			}
 		}
@@ -101,17 +108,26 @@ SimplificatorResult Simplificator::simplifyQEM(const Model& model, size_t target
 		return result;
 	}
 
+	std::vector<bool> isBorderVertex = SimplificationUtil::findBorderVertices(vertices, indices);
+
 	// init quadrics
 	auto quadrics = SimplificationUtil::initQuadrics(vertices, indices);
 
 	// create Qedges
-	auto qedges = SimplificationUtil::createQedges(vertices, indices, quadrics);
+	auto qedges = SimplificationUtil::createQedges(vertices, indices, quadrics, isBorderVertex);
 
 	while (currentFaceCount > targetFaceCount && !qedges.empty())
 	{
-		auto minEdge = SimplificationUtil::findMinErr(qedges);
+		SimplificationUtil::Qedge minEdge;
+		bool canSimplifyFurther = SimplificationUtil::getValidMinEdge(qedges, vertices, indices, minEdge);
+		if (!canSimplifyFurther)
+		{
+			std::cout << "=== No valid edge found, stopping simplification. ===" << std::endl;
+			break;
+		}
+
 		SimplificationUtil::collapseQedge(vertices, indices, quadrics, minEdge);
-		SimplificationUtil::updateAfterCollapse(qedges, minEdge.v2, minEdge.v1, vertices, quadrics);
+		SimplificationUtil::updateAfterCollapse(qedges, minEdge.v2, minEdge.v1, vertices, quadrics, isBorderVertex);
 		currentFaceCount = indices.size() / 3;
 	}
 

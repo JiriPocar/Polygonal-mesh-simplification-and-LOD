@@ -172,7 +172,7 @@ void Renderer::drawSplitScreen(const Camera& camera, const Transform& transform,
 
 	// render pass
 	std::array<vk::ClearValue, 2> clearValues = {};
-	clearValues[0].color = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f); // background color
+	clearValues[0].color = vk::ClearColorValue(0.1f, 0.1f, 0.15f, 1.0f); // background color
 	clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0); // depth clear
 
 	vk::RenderPassBeginInfo renderPassInfo(

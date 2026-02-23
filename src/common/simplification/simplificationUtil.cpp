@@ -32,6 +32,145 @@ namespace SimplificationUtil {
 		}
 	}
 
+	std::vector<bool> findBorderVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	{
+		std::vector<bool> isBorderVertex(vertices.size(), false);
+
+		// { (v1, v2), number of faces sharing this edge }
+		std::map<std::pair<uint32_t, uint32_t>, int> edgeCount;
+
+		// fill edge count map
+		for (size_t i = 0; i < indices.size(); i += 3)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				uint32_t v1 = indices[i + j];
+				uint32_t v2 = indices[i + (j + 1) % 3];
+
+				std::pair<uint32_t, uint32_t> edge = std::minmax(v1, v2);
+
+				// at given edge, increment count of faces sharing it
+				edgeCount[edge]++;
+			}
+		}
+
+		// if edge is only shared by one face, then both vertices are border vertices
+		for (auto& pair : edgeCount)
+		{
+			if (pair.second == 1)
+			{
+				uint32_t v1 = pair.first.first;
+				uint32_t v2 = pair.first.second;
+
+				isBorderVertex[v1] = true;
+				isBorderVertex[v2] = true;
+			}
+		}
+
+		std::vector<uint32_t> uniqueActiveVertices;
+		std::vector<bool> isActive(vertices.size(), false);
+
+		for (uint32_t idx : indices) {
+			if (!isActive[idx]) {
+				isActive[idx] = true;
+				uniqueActiveVertices.push_back(idx);
+			}
+		}
+
+		// sort active vertices by X to prevent unnecessary length checks later
+		std::sort(uniqueActiveVertices.begin(), uniqueActiveVertices.end(),
+			[&vertices](uint32_t a, uint32_t b)
+			{
+				return vertices[a].pos.x < vertices[b].pos.x;
+			}
+		);
+
+		// tag vertices that are very close to each other as border vertices to prevent
+		// collapsing them into one (which would cause holes in the mesh)
+		// this resolves non-watertight meshes made from more separate meshes better
+		for (size_t i = 0; i < uniqueActiveVertices.size(); i++)
+		{
+			uint32_t v1 = uniqueActiveVertices[i];
+
+			for (size_t j = i + 1; j < uniqueActiveVertices.size(); j++)
+			{
+				uint32_t v2 = uniqueActiveVertices[j];
+
+				// since we did sorting by X axis, we can break early
+				if (std::abs(vertices[v1].pos.x - vertices[v2].pos.x) > 0.0001f)
+				{
+					break;
+				}
+
+				// tag vertices that are very close to each other as border vertices
+				if (glm::length(vertices[v1].pos - vertices[v2].pos) < 0.0001f)
+				{
+					isBorderVertex[v1] = true;
+					isBorderVertex[v2] = true;
+				}
+			}
+		}
+
+		return isBorderVertex;
+	}
+
+	bool checkFaceFlipping(glm::vec3 beforePos, glm::vec3 afterPos, uint32_t movingVertexIdx, std::vector<uint32_t>& indices, std::vector<Vertex>& vertices)
+	{
+		for (size_t i = 0; i < indices.size(); i += 3)
+		{
+			uint32_t idx1 = indices[i];
+			uint32_t idx2 = indices[i + 1];
+			uint32_t idx3 = indices[i + 2];
+
+			// only triangles that share the moving vertex can potentially flip, skip others
+			if (idx1 != movingVertexIdx && idx2 != movingVertexIdx && idx3 != movingVertexIdx)
+			{
+				continue;
+			}
+
+			// pos before collapse
+			glm::vec3 pos1 = (idx1 == movingVertexIdx) ? beforePos : vertices[idx1].pos;
+			glm::vec3 pos2 = (idx2 == movingVertexIdx) ? beforePos : vertices[idx2].pos;
+			glm::vec3 pos3 = (idx3 == movingVertexIdx) ? beforePos : vertices[idx3].pos;
+
+			glm::vec3 d1 = pos2 - pos1;
+			glm::vec3 d2 = pos3 - pos1;
+			glm::vec3 normOld = glm::cross(d1, d2);
+
+			// ignore degenerated triangles
+			if (glm::length(normOld) < 1e-6f)
+			{
+				continue;
+			}
+
+			normOld = glm::normalize(normOld);
+
+			// pos after collapse
+			if (idx1 == movingVertexIdx) pos1 = afterPos;
+			else if (idx2 == movingVertexIdx) pos2 = afterPos;
+			else if (idx3 == movingVertexIdx) pos3 = afterPos;
+
+			d1 = pos2 - pos1;
+			d2 = pos3 - pos1;
+			glm::vec3 normNew = glm::cross(d1, d2);
+
+			if (glm::length(normNew) < 1e-6f)
+			{
+				continue;
+			}
+
+			normNew = glm::normalize(normNew);
+			
+			// if normal flips by more than ~78 degrees, consider it a face flip
+			if (glm::dot(normOld, normNew) < 0.2f)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	std::vector<Edge> getEdgesInModel(std::vector<uint32_t>& indices)
 	{
 		std::vector<Edge> resultEdges;
@@ -309,10 +448,32 @@ namespace SimplificationUtil {
 	{
 		Quadric q = q1 + q2;
 
-		// for now lets only choose between v1, v2 and midpoint
-		// TODO: definitely add more candidates OR compute exact optimal pos
+		// OPTIMAL POSITION - solve for v that minimizes v^T * Q * v
+		// since Q is symmetric, we can use the simplified form from Garland's paper
+		glm::mat3 MAT(
+			q.q11, q.q12, q.q13,
+			q.q12, q.q22, q.q23,
+			q.q13, q.q23, q.q33
+		);
+
+		// if determinant is non-zero, we can find optimal position by solving the linear system
+		float det = glm::determinant(MAT);
+		if (std::abs(det) > 1e-6)
+		{
+			// vector b is the negation of the last column of Q
+			glm::vec3 b(q.q14, q.q24, q.q34);
+
+			// solve for v in MAT * v = -b
+			glm::vec3 exactOptPos = -glm::inverse(MAT) * b;
+			
+			outErr = q.evalError(exactOptPos);
+			return exactOptPos;
+		}
+
+		// FALLBACK - choose between v1, v2 and midpoint
 		glm::vec3 middle = 0.5f * (v1 + v2);
 
+		// min error wins
 		double v1Err = q.evalError(v1);
 		double v2Err = q.evalError(v2);
 		double midErr = q.evalError(middle);
@@ -334,7 +495,7 @@ namespace SimplificationUtil {
 		}
 	}
 
-	std::vector<Qedge> createQedges(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics)
+	std::vector<Qedge> createQedges(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics, std::vector<bool>& isBorderVertex)
 	{
 		std::set<std::pair<uint32_t, uint32_t>> uniqueEdges;
 
@@ -363,26 +524,62 @@ namespace SimplificationUtil {
 			qe.v1 = v1;
 			qe.v2 = v2;
 
-			qe.optimalPos = computeOptPos(quadrics[v1], quadrics[v2], vertices[v1].pos, vertices[v2].pos, qe.error);
+			if (isBorderVertex[v1] || isBorderVertex[v2])
+			{
+				qe.error = FLT_MAX; // do not collapse border edges for now
+				qe.optimalPos = vertices[v1].pos; 
+			}
+			else
+			{
+				qe.optimalPos = computeOptPos(quadrics[v1], quadrics[v2], vertices[v1].pos, vertices[v2].pos, qe.error);
+			}
 			qedges.push_back(qe);
 		}
 
 		return qedges;
 	}
 
-	Qedge findMinErr(std::vector<Qedge>& edges)
+	bool getValidMinEdge(std::vector<Qedge>& edges, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Qedge& outEdge)
 	{
-		if (edges.empty())
+		while (true)
 		{
-			throw std::runtime_error("No edges to find minimum from.");
+			// no more edges to collapse
+			if (edges.empty())
+			{
+				return false;
+			}
+
+			auto minIt = std::min_element(edges.begin(), edges.end(),
+				[](const Qedge& a, const Qedge& b) {
+					return a.error < b.error;
+				});
+			
+			// if error is too high, stop collapsing
+			if (minIt->error > 1e7)
+			{
+				return false;
+			}
+
+			// check if collapse causes face flipping
+			bool willFlip = checkFaceFlipping(
+				vertices[minIt->v1].pos,
+				minIt->optimalPos,
+				minIt->v1,
+				indices,
+				vertices
+			);
+
+			if (willFlip)
+			{
+				// set high error and continue with next edge
+				minIt->error = 1e9;
+				continue;
+			}
+			
+			// found valid edge to collapse
+			outEdge = *minIt;
+			return true;
 		}
-
-		auto minIt = std::min_element(edges.begin(), edges.end(),
-			[](const Qedge& a, const Qedge& b) {
-				return a.error < b.error;
-			});
-
-		return *minIt;
 	}
 
 	void collapseQedge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics, Qedge& edge)
@@ -408,7 +605,7 @@ namespace SimplificationUtil {
 		removeDegeneratedTriangles(indices);
 	}
 
-	void updateAfterCollapse(std::vector<Qedge>& edges, uint32_t idxToRemove, uint32_t idxToKeep, std::vector<Vertex>& vertices, std::vector<Quadric>& quadrics)
+	void updateAfterCollapse(std::vector<Qedge>& edges, uint32_t idxToRemove, uint32_t idxToKeep, std::vector<Vertex>& vertices, std::vector<Quadric>& quadrics, std::vector<bool>& isBorderVertex)
 	{
 		// remap edges
 		for (auto& edge : edges)
@@ -432,8 +629,16 @@ namespace SimplificationUtil {
 		{
 			if (edge.v1 == idxToKeep || edge.v2 == idxToKeep)
 			{
-				uint32_t otherIdx = (edge.v1 == idxToKeep) ? edge.v2 : edge.v1;
-				edge.optimalPos = computeOptPos(quadrics[idxToKeep], quadrics[otherIdx], vertices[idxToKeep].pos, vertices[otherIdx].pos, edge.error);
+				if (isBorderVertex[edge.v1] || isBorderVertex[edge.v2])
+				{
+					edge.error = FLT_MAX;
+					edge.optimalPos = vertices[edge.v1].pos;
+				}
+				else
+				{
+					uint32_t otherIdx = (edge.v1 == idxToKeep) ? edge.v2 : edge.v1;
+					edge.optimalPos = computeOptPos(quadrics[idxToKeep], quadrics[otherIdx], vertices[idxToKeep].pos, vertices[otherIdx].pos, edge.error);
+				}
 			}
 		}
 	}
