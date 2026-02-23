@@ -121,6 +121,7 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t curren
 	// histogram
 	for (uint32_t i = 0; i < config.instanceCount; i++)
 	{
+		// (draha operace odmocniny! lze optimalizovat)
 		float dist = glm::distance(cameraPos, positions[i]);
 		uint8_t lod = 0;
 
@@ -175,23 +176,28 @@ void SpiralScene::updateSpiralPositions(float deltaTime)
 	for (uint32_t i = 0; i < config.instanceCount; i++)
 	{
 		// depth
+		// where would instance be on a straight infinite line
 		float linearPos = (i * config.spacing) + animationTime;
+		// infinite effect via fmod
 		float distance = fmod(linearPos, totalLength);
+		// flip to negative z
 		float currentZ = -distance;
 
 		// base angle of the arm
 		// (i % numArms) ensures that instance 0 goes to arm 0, instance 1 to arm 1...
 		float baseArmAngle = (i % config.numArms) * (6.28318f / config.numArms);
 
-		// angle twist based on depth
+		// angle twist based on depth, deeper means more twist
 		float twistAngle = abs(currentZ) * config.twistSpeed;
 
-		// final angle
+		// final angle, sum of base arm angle and twist
 		float finalAngle = baseArmAngle + twistAngle;
 
 		// radius
+		// starts at minRadius and grows linearly with depth
 		float currentRadius = config.minRadius + (abs(currentZ) * config.coneFactor);
 
+		// polar to cartesian conversion
 		glm::vec3 pos = glm::vec3(
 			currentRadius * cos(finalAngle),
 			currentRadius * sin(finalAngle),
