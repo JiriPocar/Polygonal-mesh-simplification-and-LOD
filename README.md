@@ -34,7 +34,14 @@ BP Pocarovsky
 │   │   │   └── Transform.hpp/cpp
 │   │   ├── simplification
 │   │   │   ├── Simplificator.hpp/cpp
-│   │   │   └── simplificationUtil.hpp/cpp
+│   │   │   ├── utils
+│   │   │   │    ├── Geometry.hpp/cpp
+│   │   │   │    └── Topology.hpp/cpp
+│   │   │   └── algorithms
+│   │   │        ├── Naive.hpp/cpp
+│   │   │        ├── QEM.hpp/cpp
+│   │   │        ├── VertexClustering.hpp/cpp
+│   │   │        └── VertexDecimation.hpp/cpp
 │   │   ├── ui
 │   │   │   └── ui.hpp/cpp
 │   │   └── window.h/cpp
@@ -72,14 +79,19 @@ BP Pocarovsky
 - [x] Setup data structures for LOD manipulation
 - [ ] Simplification algorithms for LOD generation
 	- [x] Quadric Error Metrics
-		- [ ] TODO: add more vertex candidates OR compute optimal position 
-	- [ ] Edge Collapse
+		- [x] Research
+		- [ ] Optimized 
+		- [x] Compute optimal position 
 	- [x] Vertex Clustering
-		- [ ] TODO: can be optimized 
+		- [x] Research
+		- [x] Optimized 
 	- [x] Naive simplification
-		- [ ] TODO: optimize this 
+		- [ ] Optimized
+	- [ ] Vertex decimation
+		- [x] Research 
+		- [ ] Triangulating
 	- [ ] Progressive Meshes
-	- [ ] Own implementation of simplification algorithms
+		- [ ] Research
 - [ ] Demo application
 	- [x] Remake project structure for multiple demo apps support 
 	- [x] CPU LOD switching
@@ -100,10 +112,18 @@ BP Pocarovsky
 - [ ] General TODO's
 	- [x] Texture loading
 	- [ ] UV interpolation for texture coordinates in simplified models
+	- [ ] QEM optimization via priority queue
+	- [ ] Extended QEM with texture coordinates and normals
+	- [ ] Pick a set of testing models
+	- [ ] UI improvements
+		- [ ] Debug (result) window
+		- [ ] Spiral scene - LOD threshold controls
+		- [ ] Enable / disable UI option
+	- [ ] Performance research
 
 # Known issues
 
-- On first run, the application might crash when loading a model. Restarting the application resolves the issue.
+- [FIXED] On first run, the application might crash when loading a model. Restarting the application resolves the issue.
 
 # Assets table
 
