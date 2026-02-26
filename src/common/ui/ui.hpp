@@ -62,6 +62,7 @@ private:
 	void showModelPerspectiveControls(Transform& transform);
 	void showWireframeControls(Renderer& renderer);
 	void showSmoothingControls();
+	void showSimplificationResults();
 
 	// spiral app interface
 	void showSpiralControls(SpiralScene& scene);
@@ -81,6 +82,10 @@ private:
 	bool rotateByX = false;
 	bool rotateByY = true;
 	bool rotateByZ = false;
+
+	SimplificatorResult lastResult;
+	bool hasSimplificationResult = false;
+	const char* getAlgName(Algorithm algorithm);
 };
 
 /* End of the ui.hpp file */

@@ -19,6 +19,7 @@ namespace Geometry {
 	void remapIndices(std::vector<uint32_t>& indices, std::unordered_map<uint32_t, uint32_t>& vertexRemap);
 	void remapIndices(std::vector<uint32_t>& indices, uint32_t oldIdx, uint32_t newIdx);
 	void removeDegeneratedTriangles(std::vector<uint32_t>& indices);
+	void finalizeVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
 
 	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float threshold = 0.0001f);
 	void makeFlatShaded(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);

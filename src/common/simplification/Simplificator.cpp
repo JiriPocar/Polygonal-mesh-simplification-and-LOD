@@ -54,10 +54,16 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 
 	auto end = std::chrono::high_resolution_clock::now();
 	double timeTaken = std::chrono::duration<double, std::milli>(end - start).count();
+	Geometry::finalizeVertices(result.vertices, result.indices);
 
 	result.algorithmUsed = currentAlgorithm;
 	result.timeTaken = timeTaken;
 	result.simplifiedFaceCount = result.indices.size() / 3;
+	result.originalFaceCount = originalFaceCount;
+	result.originalVertexCount = model.extractVertices().size();
+	result.simplifiedVertexCount = result.vertices.size();
+	result.originalMemoryBytes = (result.originalVertexCount * sizeof(Vertex)) + (model.extractIndices().size() * sizeof(uint32_t));
+	result.simplifiedMemoryBytes = (result.simplifiedVertexCount * sizeof(Vertex)) + (result.indices.size() * sizeof(uint32_t));
 
 	std::cout << "======== Simplification took: " << timeTaken/1000 << " seconds ======" << std::endl;
 

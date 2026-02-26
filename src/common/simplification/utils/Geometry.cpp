@@ -52,7 +52,7 @@ namespace Geometry
 	{
 		std::vector<uint32_t> cleanedIndices;
 
-		for (int i = 0; i < indices.size(); i += 3)
+		for (size_t i = 0; i < indices.size(); i += 3)
 		{
 			uint32_t i1 = indices[i];
 			uint32_t i2 = indices[i + 1];
@@ -99,6 +99,60 @@ namespace Geometry
 
 		// remove degenerated triangles
 		removeDegeneratedTriangles(indices);
+	}
+
+	void makeFlatShaded(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	{
+		std::vector<Vertex> flatVertices;
+		std::vector<uint32_t> flatIndices;
+
+		// for each triangle
+		for (size_t i = 0; i < indices.size(); i += 3) {
+			Vertex v0 = vertices[indices[i]];
+			Vertex v1 = vertices[indices[i + 1]];
+			Vertex v2 = vertices[indices[i + 2]];
+
+			// compute triangle normal
+			glm::vec3 normal = glm::normalize(glm::cross(v1.pos - v0.pos, v2.pos - v0.pos));
+			v0.normal = normal;
+			v1.normal = normal;
+			v2.normal = normal;
+
+			// set each vertex normal to the trinangle normal
+			flatIndices.push_back(flatVertices.size());
+			flatVertices.push_back(v0);
+
+			flatIndices.push_back(flatVertices.size());
+			flatVertices.push_back(v1);
+
+			flatIndices.push_back(flatVertices.size());
+			flatVertices.push_back(v2);
+		}
+
+		// assign back
+		vertices = flatVertices;
+		indices = flatIndices;
+	}
+
+	void finalizeVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	{
+		std::unordered_map<uint32_t, uint32_t> oldToNew;
+		std::vector<Vertex> newVertices;
+		std::vector<uint32_t> newIndices;
+		newIndices.reserve(indices.size());
+
+		for (uint32_t oldIdx : indices)
+		{
+			if (oldToNew.find(oldIdx) == oldToNew.end())
+			{
+				oldToNew[oldIdx] = static_cast<uint32_t>(newVertices.size());
+				newVertices.push_back(vertices[oldIdx]);
+			}
+			newIndices.push_back(oldToNew[oldIdx]);
+		}
+
+		vertices = std::move(newVertices);
+		indices = std::move(newIndices);
 	}
 }
  /* End of the Geometry.cpp file */

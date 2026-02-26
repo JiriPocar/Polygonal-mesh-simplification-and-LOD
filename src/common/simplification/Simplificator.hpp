@@ -26,7 +26,10 @@ struct SimplificatorResult {
 
 	size_t originalFaceCount;
 	size_t simplifiedFaceCount;
-	// float geometricError;
+	size_t originalVertexCount;
+	size_t simplifiedVertexCount;
+	size_t originalMemoryBytes;
+	size_t simplifiedMemoryBytes;
 };
 
 class Simplificator {

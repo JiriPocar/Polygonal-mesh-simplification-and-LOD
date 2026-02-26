@@ -81,6 +81,7 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	showStatistics();
 	showModelMenu(currentDualModel, device, renderer, transform);
 	showSimplificationControls(currentDualModel, device);
+	showSimplificationResults();
 	showModelPerspectiveControls(transform);
 	showWireframeControls(renderer);
 	showSmoothingControls();
@@ -209,8 +210,8 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		return;
 	}
 
-	ImGui::SetNextWindowPos(ImVec2(10, 770));
-	ImGui::SetNextWindowSize(ImVec2(300, 120));
+	ImGui::SetNextWindowPos(ImVec2(1390, 10));
+	ImGui::SetNextWindowSize(ImVec2(400, 150));
 
 	ImGui::Begin("Simplification");
 
@@ -251,12 +252,12 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 
 		// choose clustering method
 		ClusteringMethod currentMethod = simplificator.getClusteringMethod();
-		const char* strategies[] = { "Cell Center", "Quadric Error Metric", "Highest Weight", "Mean Weight"};
+		const char* method[] = { "Cell Center", "Quadric Error Metric", "Highest Weight", "Mean Weight"};
 
-		if (ImGui::BeginCombo("Method", strategies[static_cast<int>(currentMethod)]))
+		if (ImGui::BeginCombo("Method", method[static_cast<int>(currentMethod)]))
 		{
 			for (int i = 0; i < 4; i++) {
-				if (ImGui::Selectable(strategies[i], currentMethod == static_cast<ClusteringMethod>(i)))
+				if (ImGui::Selectable(method[i], currentMethod == static_cast<ClusteringMethod>(i)))
 				{
 					currentMethod = static_cast<ClusteringMethod>(i);
 					simplificator.setClusteringMethod(currentMethod);
@@ -273,10 +274,11 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	if (ImGui::Button("Apply"))
 	{
 		try {
-			auto result = simplificator.simplify(originalModel, parameterValue);
+			lastResult = simplificator.simplify(originalModel, parameterValue);
+			hasSimplificationResult = true;
 
 			device.operator*().waitIdle(); // wait for device to be idle before applying simplification
-			currentDualModel->simplifyModel(result.vertices, result.indices);
+			currentDualModel->simplifyModel(lastResult.vertices, lastResult.indices);
 		}
 		catch (const std::exception& e)
 		{
@@ -291,6 +293,83 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 			device.operator*().waitIdle(); // wait for device to be idle before reverting
 			currentDualModel->revertSimplification();
 		}
+	}
+
+	ImGui::End();
+}
+
+void UserInterface::showSimplificationResults()
+{
+	ImGui::SetNextWindowPos(ImVec2(1490, 670));
+	ImGui::SetNextWindowSize(ImVec2(300, 220));
+
+	ImGui::Begin("Simplification Results");
+
+	if (hasSimplificationResult)
+	{
+		ImGui::Text("Algorithm:");
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%s", getAlgName(lastResult.algorithmUsed));
+
+		ImGui::Separator();
+
+		ImGui::Text("Time taken:");
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "%.2f ms", lastResult.timeTaken);
+
+		ImGui::Separator();
+
+		ImGui::Text("Original faces:");
+		ImGui::SameLine();
+		ImGui::Text("%zu", lastResult.originalFaceCount);
+
+		ImGui::Text("Final faces:");
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "%zu", lastResult.simplifiedFaceCount);
+
+		if (lastResult.originalFaceCount > 0)
+		{
+			float reduction = 100.0f * (1.0f - (float)lastResult.simplifiedFaceCount / lastResult.originalFaceCount);
+			ImGui::Text("Reduction:");
+			ImGui::SameLine();
+			ImGui::Text("%.2f %%", reduction);
+		}
+
+		ImGui::Separator();
+
+		ImGui::Text("Original Vertices:");
+		ImGui::SameLine();
+		ImGui::Text("%zu", lastResult.originalVertexCount);
+
+		ImGui::Text("Final Vertices:");
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "%zu", lastResult.simplifiedVertexCount);
+
+		ImGui::Separator();
+
+		float origMB = (float)lastResult.originalMemoryBytes / (1024.0f * 1024.0f);
+		float simpMB = (float)lastResult.simplifiedMemoryBytes / (1024.0f * 1024.0f);
+
+		ImGui::Text("Original Memory:");
+		ImGui::SameLine();
+		ImGui::Text("%.2f MB", origMB);
+
+		ImGui::Text("Final Memory:");
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "%.2f MB", simpMB);
+
+		ImGui::Separator();
+
+		if (lastResult.timeTaken > 0.0) {
+			double trianglesPerSec = (double)lastResult.originalFaceCount / (lastResult.timeTaken / 1000.0);
+			ImGui::Text("Throughput:");
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "%.1f Tri/sec", trianglesPerSec);
+		}
+	}
+	else
+	{
+		ImGui::TextDisabled("No simplification performed yet.");
 	}
 
 	ImGui::End();
@@ -436,6 +515,19 @@ void UserInterface::showSpiralControls(SpiralScene& scene)
 	ImGui::Text("Total Length: %.2f", scene.config.instanceCount * scene.config.spacing);
 
 	ImGui::End();
+}
+
+const char* UserInterface::getAlgName(Algorithm algorithm)
+{
+	switch (algorithm)
+	{
+	case Algorithm::QEM: return "Edge collapse QEM";
+	case Algorithm::Naive: return "Naive shortest edge collapse";
+	case Algorithm::FloatingCellClustering: return "Floating cell clustering";
+	case Algorithm::VertexClustering: return "Vertex clustering";
+	case Algorithm::VertexDecimation: return "Vertex decimation";
+	default: return "Other";
+	}
 }
 
 void UserInterface::handleMouseMove(double x, double y)
