@@ -76,12 +76,14 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+	ImGui::StyleColorsDark();
 
 	showStatistics();
 	showModelMenu(currentDualModel, device, renderer, transform);
 	showSimplificationControls(currentDualModel, device);
 	showModelPerspectiveControls(transform);
 	showWireframeControls(renderer);
+	showSmoothingControls();
 }
 
 void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer)
@@ -89,6 +91,7 @@ void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer)
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+	ImGui::StyleColorsDark();
 
 	showStatistics();
 	showSpiralControls(spiral);
@@ -217,19 +220,24 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	Algorithm currentAlgorithm = simplificator.getCurrentAlgorithm();
 
 	// provisional solution, TODO: make this quite more elegant
-	const char* algorithms[] = { "QEM", "Edge Collapse", "Vertex Clustering", "Naive" };
-	if (ImGui::BeginCombo("Algorithm", algorithms[static_cast<int>(currentAlgorithm)])) {
-		for (int i = 0; i < 4; i++) {
-			if (ImGui::Selectable(algorithms[i], currentAlgorithm == static_cast<Algorithm>(i))) {
+	const char* algorithms[] = { "QEM", "Vertex Clustering", "Floating-cell clustering", "Vertex Decimation", "Naive"};
+	if (ImGui::BeginCombo("Algorithm", algorithms[static_cast<int>(currentAlgorithm)]))
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (ImGui::Selectable(algorithms[i], currentAlgorithm == static_cast<Algorithm>(i)))
+			{
 				currentAlgorithm = static_cast<Algorithm>(i);
 				simplificator.setCurrentAlgorithm(currentAlgorithm);
 			}
 		}
+
 		ImGui::EndCombo();
 	}
 
 	currentAlgorithm = simplificator.getCurrentAlgorithm();
 	float parameterValue = 0.0f;
+
 	if (currentAlgorithm != Algorithm::VertexClustering)
 	{
 		ImGui::SliderFloat("Reduction Ratio", &ratio, 0.01f, 0.9f, "%.2f");
@@ -240,6 +248,23 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		// slider for number of cells per axis
 		ImGui::SliderInt("Cells Per Axis", &cellsPerAxis, 2, 100);
 		parameterValue = static_cast<float>(cellsPerAxis);
+
+		// choose clustering method
+		ClusteringMethod currentMethod = simplificator.getClusteringMethod();
+		const char* strategies[] = { "Cell Center", "Quadric Error Metric", "Highest Weight", "Mean Weight"};
+
+		if (ImGui::BeginCombo("Method", strategies[static_cast<int>(currentMethod)]))
+		{
+			for (int i = 0; i < 4; i++) {
+				if (ImGui::Selectable(strategies[i], currentMethod == static_cast<ClusteringMethod>(i)))
+				{
+					currentMethod = static_cast<ClusteringMethod>(i);
+					simplificator.setClusteringMethod(currentMethod);
+				}
+			}
+
+			ImGui::EndCombo();
+		}
 	}
 	
 
@@ -256,7 +281,6 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		catch (const std::exception& e)
 		{
 			std::cerr << "Simplification failed: " << e.what() << std::endl;
-			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Simplification failed: %s", e.what());
 		}
 	}
 
@@ -307,6 +331,23 @@ Transform UserInterface::fetchTransform()
 void UserInterface::setTransform(const Transform& transform)
 {
 	uiTransform = transform;
+}
+
+void UserInterface::showSmoothingControls()
+{
+	// enable flat shading
+	ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(620, 10));
+	ImGui::SetNextWindowSize(ImVec2(180, 60));
+	ImGui::Begin("Shading");
+
+	static bool flatShading = true;
+	if (ImGui::Checkbox("Flat Shading", &flatShading))
+	{
+		simplificator.enableFlatShading(flatShading);
+	}
+	
+	ImGui::End();
 }
 
 void UserInterface::showWireframeControls(Renderer& renderer)

@@ -61,11 +61,12 @@ private:
 	void showSimplificationControls(std::unique_ptr<DualModel>& currentDualModel, Device& device);
 	void showModelPerspectiveControls(Transform& transform);
 	void showWireframeControls(Renderer& renderer);
+	void showSmoothingControls();
 
 	// spiral app interface
 	void showSpiralControls(SpiralScene& scene);
-	void UserInterface::showGeneralControls(SpiralScene& scene);
-	void UserInterface::showWireframeControls2(SpiralRenderer& renderer);
+	void showGeneralControls(SpiralScene& scene);
+	void showWireframeControls2(SpiralRenderer& renderer);
 
 	Instance& uiInstance;
 	Device& uiDevice;

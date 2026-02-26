@@ -4,9 +4,17 @@
 
 enum class Algorithm {
 	QEM,
-	EdgeCollapse,
 	VertexClustering,
+	FloatingCellClustering,
+	VertexDecimation,
 	Naive
+};
+
+enum class ClusteringMethod {
+	CellCenter,
+	QuadricErrorMetric,
+	HighestWeightedVertex,
+	WeightedAverage
 };
 
 struct SimplificatorResult {
@@ -27,17 +35,22 @@ public:
 	~Simplificator() = default;
 
 	void setCurrentAlgorithm(Algorithm algorithm);
+	void enableFlatShading(bool enableFlatShading) { flatShading = enableFlatShading; };
 	Algorithm getCurrentAlgorithm() const { return currentAlgorithm; };
 
-	SimplificatorResult simplify(const Model& model, float targetFaceCountRatio);
+	void setClusteringMethod(ClusteringMethod method) { clusteringMethod = method; };
+	ClusteringMethod getClusteringMethod() const { return clusteringMethod; };
+
+	SimplificatorResult simplify(Model& model, float targetFaceCountRatio);
 
 private:
 	Algorithm currentAlgorithm;
+	ClusteringMethod clusteringMethod = ClusteringMethod::CellCenter;
+	bool flatShading;
 
-	SimplificatorResult simplifyQEM(const Model& model, size_t targetFaceCount);
-	SimplificatorResult simplifyEdgeCollapse(const Model& model, size_t targetFaceCount);
-	SimplificatorResult simplifyVertexClustering(const Model& model, size_t cellsPerAxis);
-	SimplificatorResult simplifyNaive(const Model& model, size_t targetFaceCount);
-
-	size_t computeTargetFaceCount(const Model& model, float ratio);
+	SimplificatorResult simplifyQEM(Model& model, size_t targetFaceCount);
+	SimplificatorResult simplifyFloatingCellClustering(Model& model, size_t cellRadius);
+	SimplificatorResult simplifyVertexDecimation(Model& model, size_t targetFaceCount);
+	SimplificatorResult simplifyVertexClustering(Model& model, size_t cellsPerAxis);
+	SimplificatorResult simplifyNaive(Model& model, size_t targetFaceCount);
 };

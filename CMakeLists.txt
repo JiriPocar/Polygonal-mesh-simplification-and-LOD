@@ -17,26 +17,48 @@ find_package(Vulkan REQUIRED)
 set(ENGINE_SOURCES
     "src/common/window.cpp"
     "src/common/window.h"
+
+    # Core
     "src/common/core/Device.cpp"
     "src/common/core/Instance.cpp"
     "src/common/core/Pipeline.cpp"
+    "src/common/core/SpiralPipeline.cpp"
     "src/common/core/Swapchain.cpp"
+
+    # Rendering
     "src/common/rendering/Renderer.cpp"
+    "src/common/rendering/SpiralRenderer.cpp"
     "src/common/rendering/RenderPass.cpp"
     "src/common/rendering/Descriptors.cpp"
     "src/common/rendering/CommandManager.cpp"
     "src/common/rendering/FrameBuffer.cpp"
     "src/common/rendering/UniformBuffer.cpp"
+
+    # Resources
     "src/common/resources/Buffer.cpp"
     "src/common/resources/Model.cpp"
     "src/common/resources/DualModel.cpp"
     "src/common/resources/Textures.cpp"
+
+    # Scene
     "src/common/scene/Camera.cpp"
     "src/common/scene/Transform.cpp"
     "src/common/scene/Scene.cpp"
+    "src/common/scene/SpiralScene.cpp"
+
+    # Simplification
     "src/common/simplification/Simplificator.cpp"
-    "src/common/simplification/simplificationUtil.cpp"
+    "src/common/simplification/Simplificator.cpp"
+    "src/common/simplification/utils/Topology.cpp"
+    "src/common/simplification/utils/Geometry.cpp"
+    "src/common/simplification/algorithms/QEM.cpp"
+    "src/common/simplification/algorithms/VertexClustering.cpp"
+    "src/common/simplification/algorithms/VertexDecimation.cpp"
+    "src/common/simplification/algorithms/Naive.cpp"
+
+    # UI
     "src/common/ui/ui.cpp"
+
     # ImGui
     "external/imgui/imgui.cpp"
     "external/imgui/imgui_draw.cpp"
@@ -47,7 +69,7 @@ set(ENGINE_SOURCES
 )
 
 # CREATE STATIC LIBRARY FOR ENGINE
-add_library(BPEngine STATIC ${ENGINE_SOURCES} "src/common/scene/SpiralScene.cpp" "src/common/core/SpiralPipeline.cpp" "src/common/rendering/SpiralRenderer.cpp")
+add_library(BPEngine STATIC ${ENGINE_SOURCES})
 
 target_compile_features(BPEngine PUBLIC cxx_std_17)
 

@@ -209,6 +209,7 @@ void Renderer::drawSplitScreen(const Camera& camera, const Transform& transform,
 	ubo.model = transform.getModelMatrix();
 	ubo.view = camera.getViewMatrix();
 	ubo.proj = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
+	ubo.cameraPos = camera.getPosition();
 	ubo.proj[1][1] *= -1;
 
 	m_uniformBuffer.update(ubo, currentFrame);

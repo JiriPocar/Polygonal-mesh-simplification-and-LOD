@@ -1,5 +1,10 @@
 #include "Simplificator.hpp"
-#include "simplificationUtil.hpp"
+#include "utils/Geometry.hpp"
+#include "utils/Topology.hpp"
+#include "algorithms/QEM.hpp"
+#include "algorithms/VertexClustering.hpp"
+#include "algorithms/VertexDecimation.hpp"
+#include "algorithms/Naive.hpp"
 #include <chrono>
 #include <iostream>
 #include <algorithm>
@@ -14,40 +19,7 @@ void Simplificator::setCurrentAlgorithm(Algorithm algorithm)
 	currentAlgorithm = algorithm;
 }
 
-void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float threshold = 0.0001f)
-{
-	// build index map, each vertex points to its representative
-	// if vertex is duplicate, then map to the first occurrence
-	std::vector<uint32_t> indexMap(vertices.size());
-
-	for (uint32_t i = 0; i < vertices.size(); i++) {
-		indexMap[i] = i;
-
-		// find duplicate vertex
-		for (uint32_t j = 0; j < i; j++) {
-			bool samePos = glm::length(vertices[i].pos - vertices[j].pos) < threshold;
-			if (!samePos) continue;
-
-			bool sameUV = glm::length(vertices[i].texCoord - vertices[j].texCoord) < 0.001f;
-
-			if (samePos && sameUV)
-			{
-				indexMap[i] = indexMap[j];
-				break;
-			}
-		}
-	}
-
-	// remap indexes
-	for (auto& idx : indices) {
-		idx = indexMap[idx];
-	}
-
-	// remove degenerated triangles
-	SimplificationUtil::removeDegeneratedTriangles(indices);
-}
-
-SimplificatorResult Simplificator::simplify(const Model& model, float targetFaceCountRatio)
+SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountRatio)
 {
 	SimplificatorResult result;
 	auto start = std::chrono::high_resolution_clock::now();
@@ -62,10 +34,6 @@ SimplificatorResult Simplificator::simplify(const Model& model, float targetFace
 			targetFaceCount = originalFaceCount * targetFaceCountRatio;
 			result = simplifyQEM(model, targetFaceCount);
 			break;
-		case Algorithm::EdgeCollapse:
-			targetFaceCount = originalFaceCount * targetFaceCountRatio;
-			result = simplifyEdgeCollapse(model, targetFaceCount);
-			break;
 		case Algorithm::VertexClustering:
 			targetFaceCount = targetFaceCountRatio;
 			result = simplifyVertexClustering(model, targetFaceCount);
@@ -73,6 +41,14 @@ SimplificatorResult Simplificator::simplify(const Model& model, float targetFace
 		case Algorithm::Naive:
 			targetFaceCount = originalFaceCount * targetFaceCountRatio;
 			result = simplifyNaive(model, targetFaceCount);
+			break;
+		case Algorithm::FloatingCellClustering:
+			targetFaceCount = targetFaceCountRatio;
+			result = simplifyFloatingCellClustering(model, targetFaceCount);
+			break;
+		case Algorithm::VertexDecimation:
+			targetFaceCount = originalFaceCount * targetFaceCountRatio;
+			result = simplifyVertexDecimation(model, targetFaceCount);
 			break;
 	}
 
@@ -83,16 +59,23 @@ SimplificatorResult Simplificator::simplify(const Model& model, float targetFace
 	result.timeTaken = timeTaken;
 	result.simplifiedFaceCount = result.indices.size() / 3;
 
+	std::cout << "======== Simplification took: " << timeTaken/1000 << " seconds ======" << std::endl;
+
+	if(flatShading)
+	{
+		Geometry::makeFlatShaded(result.vertices, result.indices);
+	}
+
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyQEM(const Model& model, size_t targetFaceCount)
+SimplificatorResult Simplificator::simplifyQEM(Model& model, size_t targetFaceCount)
 {
 	SimplificatorResult result;
 	auto vertices = model.extractVertices();
 	auto indices = model.extractIndices();
 
-	mergeCloseVertices(vertices, indices);
+	Geometry::mergeCloseVertices(vertices, indices);
 	size_t currentFaceCount = indices.size() / 3;
 	size_t resultCompareFaceCount = currentFaceCount;
 
@@ -108,26 +91,26 @@ SimplificatorResult Simplificator::simplifyQEM(const Model& model, size_t target
 		return result;
 	}
 
-	std::vector<bool> isBorderVertex = SimplificationUtil::findBorderVertices(vertices, indices);
+	std::vector<bool> isBorderVertex = Topology::findBorderVertices(vertices, indices);
 
 	// init quadrics
-	auto quadrics = SimplificationUtil::initQuadrics(vertices, indices);
+	auto quadrics = QEM::initQuadrics(vertices, indices);
 
 	// create Qedges
-	auto qedges = SimplificationUtil::createQedges(vertices, indices, quadrics, isBorderVertex);
+	auto qedges = QEM::createQedges(vertices, indices, quadrics, isBorderVertex);
 
 	while (currentFaceCount > targetFaceCount && !qedges.empty())
 	{
-		SimplificationUtil::Qedge minEdge;
-		bool canSimplifyFurther = SimplificationUtil::getValidMinEdge(qedges, vertices, indices, minEdge);
+		QEM::Qedge minEdge;
+		bool canSimplifyFurther = QEM::getValidMinEdge(qedges, vertices, indices, minEdge);
 		if (!canSimplifyFurther)
 		{
 			std::cout << "=== No valid edge found, stopping simplification. ===" << std::endl;
 			break;
 		}
 
-		SimplificationUtil::collapseQedge(vertices, indices, quadrics, minEdge);
-		SimplificationUtil::updateAfterCollapse(qedges, minEdge.v2, minEdge.v1, vertices, quadrics, isBorderVertex);
+		QEM::collapseQedge(vertices, indices, quadrics, minEdge);
+		QEM::updateAfterCollapse(qedges, minEdge.v2, minEdge.v1, vertices, quadrics, isBorderVertex);
 		currentFaceCount = indices.size() / 3;
 	}
 
@@ -140,7 +123,7 @@ SimplificatorResult Simplificator::simplifyQEM(const Model& model, size_t target
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyEdgeCollapse(const Model& model, size_t targetFaceCount)
+SimplificatorResult Simplificator::simplifyFloatingCellClustering(Model& model, size_t targetFaceCount)
 {
 	SimplificatorResult result;
 	result.vertices = model.extractVertices();
@@ -148,13 +131,95 @@ SimplificatorResult Simplificator::simplifyEdgeCollapse(const Model& model, size
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyVertexClustering(const Model& model, size_t cellsPerAxis)
+SimplificatorResult Simplificator::simplifyVertexDecimation(Model& model, size_t targetFaceCount)
 {
 	SimplificatorResult result;
 	auto vertices = model.extractVertices();
 	auto indices = model.extractIndices();
 
-	mergeCloseVertices(vertices, indices);
+	Geometry::mergeCloseVertices(vertices, indices);
+	size_t currentFaceCount = indices.size() / 3;
+	size_t resultCompareFaceCount = currentFaceCount;
+
+	std::cout << "=== Vertex Decimation ===" << std::endl;
+	std::cout << "Input: " << vertices.size() << " vertices, "
+		<< currentFaceCount << " faces" << std::endl;
+	std::cout << "Target: " << targetFaceCount << " faces" << std::endl;
+
+	if (currentFaceCount <= targetFaceCount)
+	{
+		result.vertices = vertices;
+		result.indices = indices;
+		return result;
+	}
+
+	auto vertexInfo = VertexDecimation::computeVertexInfo(indices, vertices.size());
+	std::vector<VertexDecimation::DecimationCandidate> candidates;
+	candidates.reserve(vertices.size());
+
+	for (uint32_t i = 0; i < vertices.size(); i++)
+	{
+		vertexInfo[i].classification = VertexDecimation::classifyVertex(i, vertices, indices, vertexInfo[i]);
+		if (vertexInfo[i].classification != VertexDecimation::VertexClassification::Complex &&
+			vertexInfo[i].classification != VertexDecimation::VertexClassification::Undefined)
+		{
+			double err = VertexDecimation::computeVertexError(i, vertices, indices, vertexInfo[i]);
+			candidates.push_back({ i, err });
+		}
+	}
+
+	while (currentFaceCount > targetFaceCount && !candidates.empty())
+	{
+		auto minErr = std::min_element(candidates.begin(), candidates.end(),
+			[](const VertexDecimation::DecimationCandidate& a, const VertexDecimation::DecimationCandidate& b) {
+				return a.error < b.error;
+			});
+
+		if (minErr->error > 1e7) break;
+
+		uint32_t vIdx = minErr->vertexIdx;
+
+		if (!vertexInfo[vIdx].isActive)
+		{
+			minErr->error = 1e9;
+			continue;
+		}
+
+		std::vector<uint32_t> newTriangles = VertexDecimation::triangulateHole(vIdx, vertices, indices, vertexInfo[vIdx]);
+		if (newTriangles.empty())
+		{
+			minErr->error = 1e9;
+			continue;
+		}
+
+		size_t removedFaces = vertexInfo[vIdx].neighborhood.triangles.size();
+		size_t createdFaces = newTriangles.size() / 3;
+
+		VertexDecimation::updateLocalTopology(vertexInfo, candidates, newTriangles, indices, vIdx, vertices);
+		
+		currentFaceCount = currentFaceCount - removedFaces + createdFaces;
+
+		minErr->error = 1e9; // mark as processed
+	}
+
+	Geometry::removeDegeneratedTriangles(indices);
+
+	size_t finalFaceCount = indices.size() / 3;
+	std::cout << "Final faces: " << finalFaceCount << std::endl;
+	std::cout << "Reduction: " << resultCompareFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / resultCompareFaceCount) << "%)" << std::endl;
+
+	result.vertices = vertices;
+	result.indices = indices;
+	return result;
+}
+
+SimplificatorResult Simplificator::simplifyVertexClustering(Model& model, size_t cellsPerAxis)
+{
+	SimplificatorResult result;
+	auto vertices = model.extractVertices();
+	auto indices = model.extractIndices();
+
+	//mergeCloseVertices(vertices, indices);
 	size_t currentFaceCount = indices.size() / 3;
 
 	std::cout << "=== Vertex Clustering Debug ===" << std::endl;
@@ -162,18 +227,62 @@ SimplificatorResult Simplificator::simplifyVertexClustering(const Model& model, 
 	std::cout << "Input faces: " << currentFaceCount << std::endl;
 	std::cout << "Cells per axis: " << cellsPerAxis << std::endl;
 
-	float gridSize = SimplificationUtil::computeGridCellSize(vertices, cellsPerAxis);
+	float gridSize = VertexClustering::computeGridCellSize(vertices, cellsPerAxis);
 
-	auto grid = SimplificationUtil::createGrid(vertices, gridSize);
+	auto grid = VertexClustering::createGrid(vertices, gridSize);
 	std::cout << "Grid dimensions: " << grid.sizeX << "x"
 		<< grid.sizeY << "x" << grid.sizeZ << std::endl;
 
-	SimplificationUtil::fillGrid(grid, vertices);
+	VertexClustering::fillGrid(grid, vertices);
 
-	auto indexMap = SimplificationUtil::computeClusterCentroids(grid, vertices);
-	SimplificationUtil::remapIndices(indices, indexMap);
+	std::unordered_map<uint32_t, uint32_t> indexMap;
 
-	SimplificationUtil::removeDegeneratedTriangles(indices);
+	switch (clusteringMethod)
+	{
+		case ClusteringMethod::CellCenter:
+			indexMap = VertexClustering::computeRepresentativesCellCentre(grid, vertices);
+			break;
+		case ClusteringMethod::QuadricErrorMetric:
+		{
+			auto quadrics = QEM::initQuadrics(vertices, indices);
+			indexMap = VertexClustering::computeRepresentativesQEM(grid, vertices, quadrics);
+		}
+			break;
+		case ClusteringMethod::HighestWeightedVertex:
+		{
+			std::vector<float> vertexWeights(vertices.size(), 0.0f);
+
+			auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
+
+			for (uint32_t i = 0; i < vertices.size(); i++)
+			{
+				vertexWeights[i] = VertexClustering::calculateVertexWeight(i, vertices, indices, allNeighborhoods[i]);
+			}
+
+			indexMap = VertexClustering::computeRepresentativesHighestWeight(grid, vertices, vertexWeights);
+		}
+			break;
+		case ClusteringMethod::WeightedAverage:
+		{
+			std::vector<float> vertexWeights(vertices.size(), 0.0f);
+
+			auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
+
+			for (uint32_t i = 0; i < vertices.size(); i++)
+			{
+				vertexWeights[i] = VertexClustering::calculateVertexWeight(i, vertices, indices, allNeighborhoods[i]);
+			}
+
+			indexMap = VertexClustering::computeRepresentativesMeanWeight(grid, vertices, vertexWeights);
+		}
+			break;
+		default:
+			break;
+	}
+
+	Geometry::remapIndices(indices, indexMap);
+	Geometry::removeDegeneratedTriangles(indices);
+
 	size_t finalFaceCount = indices.size() / 3;
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
 	std::cout << "Reduction: " << currentFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / currentFaceCount) << "%)" << std::endl;
@@ -183,22 +292,22 @@ SimplificatorResult Simplificator::simplifyVertexClustering(const Model& model, 
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyNaive(const Model& model, size_t targetFaceCount)
+SimplificatorResult Simplificator::simplifyNaive(Model& model, size_t targetFaceCount)
 {
 	SimplificatorResult result;
 	auto vertices = model.extractVertices();
 	auto indices = model.extractIndices();
 
-	mergeCloseVertices(vertices, indices);
+	Geometry::mergeCloseVertices(vertices, indices);
 	size_t currentFaceCount = indices.size() / 3;
 
 	while (currentFaceCount > targetFaceCount)
 	{
-		auto edges = SimplificationUtil::getEdgesInModel(indices);
+		auto edges = Naive::getEdgesInModel(indices);
 		if (edges.empty()) break;
 
-		auto edgeToCollapse = SimplificationUtil::findShortestEdge(vertices, edges);
-		SimplificationUtil::collapseEdge(vertices, indices, edgeToCollapse);
+		auto edgeToCollapse = Naive::findShortestEdge(vertices, edges);
+		Naive::collapseEdge(vertices, indices, edgeToCollapse);
 		currentFaceCount = indices.size() / 3;
 	}
 

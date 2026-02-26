@@ -1,0 +1,27 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Geometry.hpp
+ * @brief Utility functions for mesh geometry and geometry manipulations.
+ *
+ * This file contains ...
+ */
+
+#pragma once
+#include <vector>
+#include <unordered_map>
+#include <glm/glm.hpp>
+#include "../../resources/Model.hpp"
+
+namespace Geometry {
+	void computeBounds(std::vector<Vertex>& vertices, glm::vec3& outMin, glm::vec3& outMax);
+	float getEdgeLength(const glm::vec3& v1, const glm::vec3& v2);
+
+	void remapIndices(std::vector<uint32_t>& indices, std::unordered_map<uint32_t, uint32_t>& vertexRemap);
+	void remapIndices(std::vector<uint32_t>& indices, uint32_t oldIdx, uint32_t newIdx);
+	void removeDegeneratedTriangles(std::vector<uint32_t>& indices);
+
+	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float threshold = 0.0001f);
+	void makeFlatShaded(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
+}
+
+ /* End of the Geometry.hpp file */

@@ -17,7 +17,7 @@ void Descriptor::createDescriptorSetLayout()
 		0,
 		vk::DescriptorType::eUniformBuffer,
 		1,
-		vk::ShaderStageFlagBits::eVertex,
+		vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
 		nullptr
 	);
 
