@@ -26,9 +26,26 @@
 #include "ui/ui.hpp"
 #include "window.h"
 
+void help()
+{
+	std::cout << "===============================================================" << std::endl;
+	std::cout << "Welcome to the Simplificator app!" << std::endl;
+	std::cout << "@author Jiri Pocarovsky" << std::endl;
+	std::cout << "===============================================================" << std::endl;
+	std::cout << "Controls:" << std::endl;
+	std::cout << "  M - Unlock camera" << std::endl;
+	std::cout << "  N - Lock camera" << std::endl;
+	std::cout << "      Movement: WASD" << std::endl;
+	std::cout << "      Zoom: Mouse wheel" << std::endl;
+	std::cout << "  U - Toggle UI" << std::endl;
+	std::cout << "  ESC - Exit application" << std::endl;
+	std::cout << "===============================================================" << std::endl;
+}
+
 int main() {
 	try
 	{
+		help();
 		Window window(1800, 900, "Simplificator");
 		Instance instance(false);
 		auto surface = window.createSurface(instance);
@@ -50,7 +67,7 @@ int main() {
 
 		Camera camera;
 		camera.setPerspective(45.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 1000.0f);
-		camera.setView(glm::vec3(0.0f, 0.5f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		camera.setView(glm::vec3(0.0f, 5.0f, 25.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		
 		Transform transform;
 		transform.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -83,6 +100,8 @@ int main() {
 		});
 
 		bool rotate = true;
+		bool showUI = true;
+		bool pressedDisableUI = false;
 
 		while (!window.shouldClose())
 		{
@@ -109,6 +128,20 @@ int main() {
 				cameraActive = false;
 				camera.resetMouse();
 			}
+			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_C) == GLFW_PRESS)
+			{
+				// print cam pos
+				glm::vec3 camPos = camera.getPosition();
+				std::cout << "Camera position: (" << camPos.x << ", " << camPos.y << ", " << camPos.z << ")" << std::endl;
+			}
+
+
+			bool isUPressed = glfwGetKey(window.getGLFWWindow(), GLFW_KEY_U) == GLFW_PRESS;
+			if (isUPressed && !pressedDisableUI)
+			{
+				showUI = !showUI;
+			}
+			pressedDisableUI = isUPressed;
 
 			camera.handleInput(window.getGLFWWindow(), delta);
 
@@ -145,10 +178,9 @@ int main() {
 			transform.setRot(glm::vec3(xRotation, yRotation, zRotation));
 			ui.setTransform(transform);
 
-			ui.beginFrame(currentDualModel, device, renderer, transform);
+			ui.beginFrame(currentDualModel, device, renderer, transform, showUI);
 
 			try {
-				//renderer.drawFrame(camera, transform, ui);
 				renderer.drawSplitScreen(camera, transform, ui);
 			}
 			catch (const vk::OutOfDateKHRError&) {

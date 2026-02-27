@@ -84,12 +84,16 @@ BP Pocarovsky
 		- [x] Compute optimal position 
 	- [x] Vertex Clustering
 		- [x] Research
-		- [x] Optimized 
+		- [x] Optimized
+	- [x] Floating-cell Clustering
+		- [x] Research
+		- [ ] Implementation
 	- [x] Naive simplification
 		- [ ] Optimized
 	- [ ] Vertex decimation
-		- [x] Research 
-		- [ ] Triangulating
+		- [x] Research
+		- [ ] Implementation
+		- [ ] Triangulating research
 	- [ ] Progressive Meshes
 		- [ ] Research
 - [ ] Demo application
@@ -116,9 +120,9 @@ BP Pocarovsky
 	- [ ] Extended QEM with texture coordinates and normals
 	- [ ] Pick a set of testing models
 	- [ ] UI improvements
-		- [ ] Debug (result) window
+		- [x] Debug (result) window
 		- [ ] Spiral scene - LOD threshold controls
-		- [ ] Enable / disable UI option
+		- [x] Enable / disable UI option
 	- [ ] Performance research
 
 # Known issues

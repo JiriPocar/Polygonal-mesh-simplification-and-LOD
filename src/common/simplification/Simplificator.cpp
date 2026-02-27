@@ -3,6 +3,7 @@
 #include "utils/Topology.hpp"
 #include "algorithms/QEM.hpp"
 #include "algorithms/VertexClustering.hpp"
+#include "algorithms/FloatingCellClustering.hpp"
 #include "algorithms/VertexDecimation.hpp"
 #include "algorithms/Naive.hpp"
 #include <chrono>
@@ -129,11 +130,30 @@ SimplificatorResult Simplificator::simplifyQEM(Model& model, size_t targetFaceCo
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyFloatingCellClustering(Model& model, size_t targetFaceCount)
+SimplificatorResult Simplificator::simplifyFloatingCellClustering(Model& model, size_t cellRadius)
 {
 	SimplificatorResult result;
-	result.vertices = model.extractVertices();
-	result.indices = model.extractIndices();
+	auto vertices = model.extractVertices();
+	auto indices = model.extractIndices();
+
+	size_t currentFaceCount = indices.size() / 3;
+
+	std::cout << "=== Floating-Cell Clustering ===" << std::endl;
+	std::cout << "Input vertices: " << vertices.size() << std::endl;
+	std::cout << "Input faces: " << currentFaceCount << std::endl;
+	std::cout << "Cell radius: " << cellRadius << std::endl;
+
+	float radius = FloatingCellClustering::computeRadius(vertices, cellRadius);
+	auto indexMap = FloatingCellClustering::computeRepresentative(vertices, indices, radius);
+
+	Geometry::remapIndices(indices, indexMap);
+	Geometry::removeDegeneratedTriangles(indices);
+
+	size_t finalFaceCount = indices.size() / 3;
+	std::cout << "Final faces: " << finalFaceCount << std::endl;
+
+	result.vertices = vertices;
+	result.indices = indices;
 	return result;
 }
 

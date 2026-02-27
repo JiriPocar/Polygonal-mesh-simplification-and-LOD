@@ -36,7 +36,7 @@ public:
 	~UserInterface();
 
 	void init();
-	void beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform);
+	void beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform, bool show);
 	void beginFrame2(SpiralScene& scene, SpiralRenderer& renderer);
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);

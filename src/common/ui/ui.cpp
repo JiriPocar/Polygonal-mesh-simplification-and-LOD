@@ -71,20 +71,24 @@ void UserInterface::createDescriptorPool()
 	descriptorPool = uiDevice.operator*().createDescriptorPoolUnique(poolInfo);
 }
 
-void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform)
+void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform, bool show)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	ImGui::StyleColorsDark();
 
-	showStatistics();
-	showModelMenu(currentDualModel, device, renderer, transform);
-	showSimplificationControls(currentDualModel, device);
-	showSimplificationResults();
-	showModelPerspectiveControls(transform);
-	showWireframeControls(renderer);
-	showSmoothingControls();
+	if (show)
+	{
+		showStatistics();
+		showModelMenu(currentDualModel, device, renderer, transform);
+		showSimplificationControls(currentDualModel, device);
+		showSimplificationResults();
+		showModelPerspectiveControls(transform);
+		showWireframeControls(renderer);
+		showSmoothingControls();
+	}
+	
 }
 
 void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer)
@@ -113,7 +117,6 @@ void UserInterface::scanModels()
 			if (extension == ".gltf")
 			{
 				menuModels.push_back(filePath);
-				std::cout << "Found model: " << filePath << std::endl;
 			}
 		}
 	}
@@ -224,7 +227,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	const char* algorithms[] = { "QEM", "Vertex Clustering", "Floating-cell clustering", "Vertex Decimation", "Naive"};
 	if (ImGui::BeginCombo("Algorithm", algorithms[static_cast<int>(currentAlgorithm)]))
 	{
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 5; i++)
 		{
 			if (ImGui::Selectable(algorithms[i], currentAlgorithm == static_cast<Algorithm>(i)))
 			{
@@ -239,7 +242,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	currentAlgorithm = simplificator.getCurrentAlgorithm();
 	float parameterValue = 0.0f;
 
-	if (currentAlgorithm != Algorithm::VertexClustering)
+	if (currentAlgorithm != Algorithm::VertexClustering && currentAlgorithm != Algorithm::FloatingCellClustering)
 	{
 		ImGui::SliderFloat("Reduction Ratio", &ratio, 0.01f, 0.9f, "%.2f");
 		parameterValue = ratio;
@@ -250,22 +253,26 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		ImGui::SliderInt("Cells Per Axis", &cellsPerAxis, 2, 100);
 		parameterValue = static_cast<float>(cellsPerAxis);
 
-		// choose clustering method
-		ClusteringMethod currentMethod = simplificator.getClusteringMethod();
-		const char* method[] = { "Cell Center", "Quadric Error Metric", "Highest Weight", "Mean Weight"};
-
-		if (ImGui::BeginCombo("Method", method[static_cast<int>(currentMethod)]))
+		if (currentAlgorithm == Algorithm::VertexClustering)
 		{
-			for (int i = 0; i < 4; i++) {
-				if (ImGui::Selectable(method[i], currentMethod == static_cast<ClusteringMethod>(i)))
-				{
-					currentMethod = static_cast<ClusteringMethod>(i);
-					simplificator.setClusteringMethod(currentMethod);
-				}
-			}
+			// choose clustering method
+			ClusteringMethod currentMethod = simplificator.getClusteringMethod();
+			const char* method[] = { "Cell Center", "Quadric Error Metric", "Highest Weight", "Mean Weight"};
 
-			ImGui::EndCombo();
+			if (ImGui::BeginCombo("Method", method[static_cast<int>(currentMethod)]))
+			{
+				for (int i = 0; i < 4; i++) {
+					if (ImGui::Selectable(method[i], currentMethod == static_cast<ClusteringMethod>(i)))
+					{
+						currentMethod = static_cast<ClusteringMethod>(i);
+						simplificator.setClusteringMethod(currentMethod);
+					}
+				}
+
+				ImGui::EndCombo();
+			}
 		}
+		
 	}
 	
 

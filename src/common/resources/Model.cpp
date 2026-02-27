@@ -359,10 +359,8 @@ void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 	std::string baseDir = path.parent_path().string();
 	if (!baseDir.empty()) baseDir += "/";
 
-	std::cout << "loading texture.." << std::endl;
 	if (!model.materials.empty())
 	{
-		std::cout << "has materials" << std::endl;
 		auto& material = model.materials[0];
 
 		auto it = material.values.find("baseColorTexture");
@@ -379,11 +377,9 @@ void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 				{
 					std::string imageUri = model.images[imgIdx].uri;
 					std::string imagePath = baseDir + imageUri;
-					std::cout << "Loading texture from: " << imagePath << std::endl;
 
 					try {
 						texture = std::make_unique<Texture>(dev, cmd, imagePath);
-						std::cout << "Loaded texture.." << std::endl;
 					}
 					catch (const std::exception& e) {
 						std::cerr << "Failed to load texture: " << e.what() << std::endl;
