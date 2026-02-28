@@ -285,7 +285,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 			hasSimplificationResult = true;
 
 			device.operator*().waitIdle(); // wait for device to be idle before applying simplification
-			currentDualModel->simplifyModel(lastResult.vertices, lastResult.indices);
+			currentDualModel->simplifyModel(lastResult.meshesData);
 		}
 		catch (const std::exception& e)
 		{
@@ -364,15 +364,6 @@ void UserInterface::showSimplificationResults()
 		ImGui::Text("Final Memory:");
 		ImGui::SameLine();
 		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "%.2f MB", simpMB);
-
-		ImGui::Separator();
-
-		if (lastResult.timeTaken > 0.0) {
-			double trianglesPerSec = (double)lastResult.originalFaceCount / (lastResult.timeTaken / 1000.0);
-			ImGui::Text("Throughput:");
-			ImGui::SameLine();
-			ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "%.1f Tri/sec", trianglesPerSec);
-		}
 	}
 	else
 	{

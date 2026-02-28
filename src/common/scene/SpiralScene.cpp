@@ -58,11 +58,11 @@ void SpiralScene::generateLODVersions(const std::string& modelPath, CommandManag
 
 	simplificator.setCurrentAlgorithm(Algorithm::QEM);
 	auto result1 = simplificator.simplify(*lodSet.lod0, 0.75f); // 75% faces
-	lodSet.lod1 = std::make_unique<Model>(dev, result1.vertices, result1.indices);
+	lodSet.lod1 = std::make_unique<Model>(dev, result1.meshesData);
 	auto result2 = simplificator.simplify(*lodSet.lod0, 0.50f); // 50% faces
-	lodSet.lod2 = std::make_unique<Model>(dev, result2.vertices, result2.indices);
+	lodSet.lod2 = std::make_unique<Model>(dev, result2.meshesData);
 	auto result3 = simplificator.simplify(*lodSet.lod0, 0.25f); // 25% faces
-	lodSet.lod3 = std::make_unique<Model>(dev, result3.vertices, result3.indices);
+	lodSet.lod3 = std::make_unique<Model>(dev, result3.meshesData);
 
 	modelLODSets.push_back(std::move(lodSet));
 }

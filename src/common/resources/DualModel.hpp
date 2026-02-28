@@ -16,7 +16,7 @@ public:
 	void drawSimplifiedModel(vk::CommandBuffer cmd) const;
 
 	void revertSimplification();
-	void simplifyModel(const std::vector<Vertex>& newVertices, const std::vector<uint32_t>& newIndices);
+	void simplifyModel(const std::vector<MeshData>& newMeshesData);
 	bool wasModelSimplified() const { return wasSimplified; }
 
 private:

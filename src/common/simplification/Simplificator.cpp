@@ -25,62 +25,70 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 	SimplificatorResult result;
 	auto start = std::chrono::high_resolution_clock::now();
 
-	auto originalFaceCount = model.extractIndices().size() / 3;
-	uint32_t targetFaceCount;
+	result.originalFaceCount = 0;
+	result.simplifiedFaceCount = 0;
+	result.originalVertexCount = 0;
+	result.simplifiedVertexCount = 0;
+	result.originalMemoryBytes = 0;
+	result.simplifiedMemoryBytes = 0;
 
 	std::cout << "Simplify called with parameter: " << targetFaceCountRatio << std::endl;
 
-	switch (currentAlgorithm) {
-		case Algorithm::QEM:
-			targetFaceCount = originalFaceCount * targetFaceCountRatio;
-			result = simplifyQEM(model, targetFaceCount);
-			break;
-		case Algorithm::VertexClustering:
-			targetFaceCount = targetFaceCountRatio;
-			result = simplifyVertexClustering(model, targetFaceCount);
-			break;
-		case Algorithm::Naive:
-			targetFaceCount = originalFaceCount * targetFaceCountRatio;
-			result = simplifyNaive(model, targetFaceCount);
-			break;
-		case Algorithm::FloatingCellClustering:
-			targetFaceCount = targetFaceCountRatio;
-			result = simplifyFloatingCellClustering(model, targetFaceCount);
-			break;
-		case Algorithm::VertexDecimation:
-			targetFaceCount = originalFaceCount * targetFaceCountRatio;
-			result = simplifyVertexDecimation(model, targetFaceCount);
-			break;
+	const auto& meshes = model.getMeshes();
+	for (const auto& mesh : meshes)
+	{
+		auto vertices = mesh->extractVertices();
+		auto indices = mesh->extractIndices();
+
+		size_t originalFaceCount = indices.size() / 3;
+
+		size_t targetFaceCount;
+		if (currentAlgorithm == Algorithm::VertexClustering || currentAlgorithm == Algorithm::FloatingCellClustering)
+		{
+			targetFaceCount = static_cast<size_t>(targetFaceCountRatio);
+		}
+		else
+		{
+			targetFaceCount = static_cast<size_t>(originalFaceCount * targetFaceCountRatio);
+		}
+
+		MeshData simplifiedMesh;
+		switch (currentAlgorithm)
+		{
+		case Algorithm::QEM: simplifiedMesh = simplifyQEM(vertices, indices, targetFaceCount); break;
+		case Algorithm::VertexClustering: simplifiedMesh = simplifyVertexClustering(vertices, indices, targetFaceCount); break;
+		case Algorithm::Naive: simplifiedMesh = simplifyNaive(vertices, indices, targetFaceCount); break;
+		case Algorithm::FloatingCellClustering: simplifiedMesh = simplifyFloatingCellClustering(vertices, indices, targetFaceCount); break;
+		case Algorithm::VertexDecimation: simplifiedMesh = simplifyVertexDecimation(vertices, indices, targetFaceCount); break;
+		}
+
+		Geometry::finalizeVertices(simplifiedMesh.vertices, simplifiedMesh.indices);
+		if (flatShading)
+		{
+			Geometry::makeFlatShaded(simplifiedMesh.vertices, simplifiedMesh.indices);
+		}
+
+		result.originalFaceCount += originalFaceCount;
+		result.simplifiedFaceCount += simplifiedMesh.indices.size() / 3;
+		result.originalVertexCount += vertices.size();
+		result.simplifiedVertexCount += simplifiedMesh.vertices.size();
+		result.originalMemoryBytes += (vertices.size() * sizeof(Vertex)) + (indices.size() * sizeof(uint32_t));
+		result.simplifiedMemoryBytes += (simplifiedMesh.vertices.size() * sizeof(Vertex)) + (simplifiedMesh.indices.size() * sizeof(uint32_t));
+	
+		result.meshesData.push_back(std::move(simplifiedMesh));
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
 	double timeTaken = std::chrono::duration<double, std::milli>(end - start).count();
-	Geometry::finalizeVertices(result.vertices, result.indices);
-
-	result.algorithmUsed = currentAlgorithm;
 	result.timeTaken = timeTaken;
-	result.simplifiedFaceCount = result.indices.size() / 3;
-	result.originalFaceCount = originalFaceCount;
-	result.originalVertexCount = model.extractVertices().size();
-	result.simplifiedVertexCount = result.vertices.size();
-	result.originalMemoryBytes = (result.originalVertexCount * sizeof(Vertex)) + (model.extractIndices().size() * sizeof(uint32_t));
-	result.simplifiedMemoryBytes = (result.simplifiedVertexCount * sizeof(Vertex)) + (result.indices.size() * sizeof(uint32_t));
-
-	std::cout << "======== Simplification took: " << timeTaken/1000 << " seconds ======" << std::endl;
-
-	if(flatShading)
-	{
-		Geometry::makeFlatShaded(result.vertices, result.indices);
-	}
+	result.algorithmUsed = currentAlgorithm;
 
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyQEM(Model& model, size_t targetFaceCount)
+MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount)
 {
-	SimplificatorResult result;
-	auto vertices = model.extractVertices();
-	auto indices = model.extractIndices();
+	MeshData result;
 
 	Geometry::mergeCloseVertices(vertices, indices);
 	size_t currentFaceCount = indices.size() / 3;
@@ -125,16 +133,14 @@ SimplificatorResult Simplificator::simplifyQEM(Model& model, size_t targetFaceCo
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
 	std::cout << "Reduction: " << resultCompareFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / resultCompareFaceCount) << "%)" << std::endl;
 
-	result.vertices = vertices;
-	result.indices = indices;
+	result.vertices = std::move(vertices);
+	result.indices = std::move(indices);
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyFloatingCellClustering(Model& model, size_t cellRadius)
+MeshData Simplificator::simplifyFloatingCellClustering(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t cellRadius)
 {
-	SimplificatorResult result;
-	auto vertices = model.extractVertices();
-	auto indices = model.extractIndices();
+	MeshData result;
 
 	size_t currentFaceCount = indices.size() / 3;
 
@@ -152,16 +158,14 @@ SimplificatorResult Simplificator::simplifyFloatingCellClustering(Model& model, 
 	size_t finalFaceCount = indices.size() / 3;
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
 
-	result.vertices = vertices;
-	result.indices = indices;
+	result.vertices = std::move(vertices);
+	result.indices = std::move(indices);
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyVertexDecimation(Model& model, size_t targetFaceCount)
+MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount)
 {
-	SimplificatorResult result;
-	auto vertices = model.extractVertices();
-	auto indices = model.extractIndices();
+	MeshData result;
 
 	Geometry::mergeCloseVertices(vertices, indices);
 	size_t currentFaceCount = indices.size() / 3;
@@ -234,16 +238,14 @@ SimplificatorResult Simplificator::simplifyVertexDecimation(Model& model, size_t
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
 	std::cout << "Reduction: " << resultCompareFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / resultCompareFaceCount) << "%)" << std::endl;
 
-	result.vertices = vertices;
-	result.indices = indices;
+	result.vertices = std::move(vertices);
+	result.indices = std::move(indices);
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyVertexClustering(Model& model, size_t cellsPerAxis)
+MeshData Simplificator::simplifyVertexClustering(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t cellsPerAxis)
 {
-	SimplificatorResult result;
-	auto vertices = model.extractVertices();
-	auto indices = model.extractIndices();
+	MeshData result;
 
 	//mergeCloseVertices(vertices, indices);
 	size_t currentFaceCount = indices.size() / 3;
@@ -313,16 +315,14 @@ SimplificatorResult Simplificator::simplifyVertexClustering(Model& model, size_t
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
 	std::cout << "Reduction: " << currentFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / currentFaceCount) << "%)" << std::endl;
 
-	result.vertices = vertices;
-	result.indices = indices;
+	result.vertices = std::move(vertices);
+	result.indices = std::move(indices);
 	return result;
 }
 
-SimplificatorResult Simplificator::simplifyNaive(Model& model, size_t targetFaceCount)
+MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount)
 {
-	SimplificatorResult result;
-	auto vertices = model.extractVertices();
-	auto indices = model.extractIndices();
+	MeshData result;
 
 	Geometry::mergeCloseVertices(vertices, indices);
 	size_t currentFaceCount = indices.size() / 3;
@@ -341,7 +341,7 @@ SimplificatorResult Simplificator::simplifyNaive(Model& model, size_t targetFace
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
 	std::cout << "Reduction: " << currentFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / currentFaceCount) << "%)" << std::endl;
 
-	result.vertices = vertices;
-	result.indices = indices;
+	result.vertices = std::move(vertices);
+	result.indices = std::move(indices);
 	return result;
 }

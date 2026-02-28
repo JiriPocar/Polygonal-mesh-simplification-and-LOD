@@ -87,7 +87,7 @@ BP Pocarovsky
 		- [x] Optimized
 	- [x] Floating-cell Clustering
 		- [x] Research
-		- [ ] Implementation
+		- [x] Implementation
 	- [x] Naive simplification
 		- [ ] Optimized
 	- [ ] Vertex decimation

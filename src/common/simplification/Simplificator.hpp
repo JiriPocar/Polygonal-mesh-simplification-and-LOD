@@ -18,8 +18,7 @@ enum class ClusteringMethod {
 };
 
 struct SimplificatorResult {
-	std::vector<Vertex> vertices;
-	std::vector<uint32_t> indices;
+	std::vector<MeshData> meshesData;
 
 	Algorithm algorithmUsed;
 	double timeTaken;
@@ -51,9 +50,9 @@ private:
 	ClusteringMethod clusteringMethod = ClusteringMethod::CellCenter;
 	bool flatShading;
 
-	SimplificatorResult simplifyQEM(Model& model, size_t targetFaceCount);
-	SimplificatorResult simplifyFloatingCellClustering(Model& model, size_t cellRadius);
-	SimplificatorResult simplifyVertexDecimation(Model& model, size_t targetFaceCount);
-	SimplificatorResult simplifyVertexClustering(Model& model, size_t cellsPerAxis);
-	SimplificatorResult simplifyNaive(Model& model, size_t targetFaceCount);
+	MeshData simplifyQEM(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount);
+	MeshData simplifyFloatingCellClustering(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t cellRadius);
+	MeshData simplifyVertexDecimation(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount);
+	MeshData simplifyVertexClustering(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t cellsPerAxis);
+	MeshData simplifyNaive(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount);
 };

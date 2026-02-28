@@ -35,11 +35,11 @@ void DualModel::drawSimplifiedModel(vk::CommandBuffer cmd) const
 	}
 }
 
-void DualModel::simplifyModel(const std::vector<Vertex>& newVertices, const std::vector<uint32_t>& newIndices)
+void DualModel::simplifyModel(const std::vector<MeshData>& newMeshesData)
 {
-	if (newVertices.empty() || newIndices.empty())
+	if (newMeshesData.empty())
 	{
-		throw std::runtime_error("New vertices or indices are empty.");
+		throw std::runtime_error("New meshes are empty.");
 	}
 
 	if (!simplifiedModel)
@@ -49,7 +49,7 @@ void DualModel::simplifyModel(const std::vector<Vertex>& newVertices, const std:
 
 	try {
 		
-		simplifiedModel = std::make_unique<Model>(dev, newVertices, newIndices);
+		simplifiedModel = std::make_unique<Model>(dev, newMeshesData);
 		wasSimplified = true;
 	}
 	catch (const std::exception& e) {

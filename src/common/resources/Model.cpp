@@ -324,6 +324,18 @@ Model::Model(Device& device, const std::vector<Vertex>& vertices, const std::vec
 	createFromData(vertices, indices);
 }
 
+Model::Model(Device& device, const std::vector<MeshData>& simplifiedMeshesData)
+	: dev(device), vertexCount(0), indexCount(0)
+{
+	for (auto& meshData : simplifiedMeshesData)
+	{
+		meshes.push_back(std::make_unique<Mesh>(dev, meshData.vertices, meshData.indices));
+
+		vertexCount += static_cast<uint32_t>(meshData.vertices.size());
+		indexCount += static_cast<uint32_t>(meshData.indices.size());
+	}
+}
+
 void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 {
 

@@ -26,6 +26,11 @@ struct Vertex {
 	}
 };
 
+struct MeshData {
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+};
+
 class Mesh {
 public:
 	Mesh(Device& device, const tinygltf::Model& model, const tinygltf::Primitive& primitive);
@@ -69,6 +74,9 @@ public:
 	// data constructor
 	Model(Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	
+	// simplified meshes constructor
+	Model(Device& device, const std::vector<MeshData>& simplifiedMeshesData);
+
 	~Model() = default;
 
 	vk::Buffer getVertexBuffer() const {
@@ -81,6 +89,7 @@ public:
 		return meshes[0]->getIndexBuffer();
 	}
 
+	const std::vector<std::unique_ptr<Mesh>>& getMeshes() const { return meshes; }
 	Texture* getTexture() const { return texture.get(); }
 	bool hasTexture() const { return texture != nullptr; }
 
