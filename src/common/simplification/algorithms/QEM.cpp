@@ -215,6 +215,7 @@ namespace QEM {
 			if (willFlip)
 			{
 				// set high error and continue with next edge
+				// TODO: fix this, since it flags indefinitely edges causing flipping
 				minErrEdge->error = 1e9;
 				continue;
 			}

@@ -37,7 +37,7 @@ public:
 
 	void init();
 	void beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform, bool show);
-	void beginFrame2(SpiralScene& scene, SpiralRenderer& renderer);
+	void beginFrame2(SpiralScene& scene, SpiralRenderer& renderer, bool show);
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);
 
@@ -66,8 +66,9 @@ private:
 
 	// spiral app interface
 	void showSpiralControls(SpiralScene& scene);
-	void showGeneralControls(SpiralScene& scene);
+	void showGeneralControls(SpiralScene& scene, SpiralRenderer& renderer);
 	void showWireframeControls2(SpiralRenderer& renderer);
+	void showUseGPUCPUControls(SpiralRenderer& renderer);
 
 	Instance& uiInstance;
 	Device& uiDevice;

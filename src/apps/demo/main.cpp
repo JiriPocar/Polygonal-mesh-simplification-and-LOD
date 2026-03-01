@@ -6,6 +6,7 @@
 #include "core/Device.hpp"
 #include "core/Swapchain.hpp"
 #include "core/SpiralPipeline.hpp"
+#include "core/SpiralComputePipeline.hpp"
 #include "rendering/RenderPass.hpp"
 #include "rendering/FrameBuffer.hpp"
 #include "rendering/CommandManager.hpp"
@@ -18,6 +19,21 @@
 #include "scene/SpiralScene.hpp"
 #include "ui/ui.hpp"
 #include "window.h"
+
+void help()
+{
+	std::cout << "===============================================================" << std::endl;
+	std::cout << "Welcome to the Spiral app!" << std::endl;
+	std::cout << "@author Jiri Pocarovsky" << std::endl;
+	std::cout << "===============================================================" << std::endl;
+	std::cout << "Controls:" << std::endl;
+	std::cout << "  M - Unlock camera" << std::endl;
+	std::cout << "  N - Lock camera" << std::endl;
+	std::cout << "      Movement: WASD" << std::endl;
+	std::cout << "  U - Toggle UI" << std::endl;
+	std::cout << "  ESC - Exit application" << std::endl;
+	std::cout << "===============================================================" << std::endl;
+}
 
 int main()
 {
@@ -43,8 +59,11 @@ int main()
 
 		std::string modelPath = "assets/Duck.gltf";
 
-		SpiralScene spiralScene(device, commandManager, modelPath);
+		SpiralScene spiralScene(device, commandManager, modelPath, uniformBuffer);
 		UserInterface ui(instance, device, swapchain, renderPass, window, commandManager);
+
+		descriptor.createComputeDescriptors(spiralScene);
+		SpiralComputePipeline computePipeline(device, descriptor.getComputeLayout());
 
 		Camera camera;
 		camera.setPerspective(
@@ -76,6 +95,7 @@ int main()
 			descriptor
 		);
 		renderer.setWireframePipeline(wireframePipeline);
+		renderer.setComputePipeline(computePipeline);
 
 		bool cameraActive = false;
 		window.setMouseCallback([&](double xPos, double yPos)
@@ -89,6 +109,8 @@ int main()
 			}
 		);
 
+		bool showUI = true;
+		bool pressedDisableUI = false;
 
 		auto last = std::chrono::high_resolution_clock::now();
 		while (!window.shouldClose())
@@ -117,9 +139,16 @@ int main()
 				camera.resetMouse();
 			}
 
+			bool isUPressed = glfwGetKey(window.getGLFWWindow(), GLFW_KEY_U) == GLFW_PRESS;
+			if (isUPressed && !pressedDisableUI)
+			{
+				showUI = !showUI;
+			}
+			pressedDisableUI = isUPressed;
+
 			camera.handleInput(window.getGLFWWindow(), delta);
-			spiralScene.updateSpiralPositions(delta);
-			ui.beginFrame2(spiralScene, renderer);
+			spiralScene.updateSpiralPositions(delta, renderer.getUseGPUSpiralCompute());
+			ui.beginFrame2(spiralScene, renderer, showUI);
 
 			try
 			{

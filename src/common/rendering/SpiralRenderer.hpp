@@ -16,6 +16,7 @@
 #include "../scene/SpiralScene.hpp"
 
 class UserInterface;
+class SpiralComputePipeline;
 
 class SpiralRenderer {
 public:
@@ -39,6 +40,20 @@ public:
     void recreateSwapchain();
 	void setWireframePipeline(SpiralPipeline& pipeline) { m_wireframePipeline = &pipeline; }
 	void setShowWireframe(bool show) { showWireframe = show; }
+    void setComputePipeline(SpiralComputePipeline& pipeline) { m_computePipeline = &pipeline; }
+    void setUseGPULODCompute(bool use)
+    { 
+        useGPULODCompute = use;
+        if (!useGPULODCompute) useGPUSpiralCompute = false;
+    }
+    bool getUseGPULODCompute() const { return useGPULODCompute; }
+
+	void setUseGPUSpiralCompute(bool use)
+    {
+        useGPUSpiralCompute = use;
+        if (useGPUSpiralCompute) useGPULODCompute = true;
+    }
+	bool getUseGPUSpiralCompute() const { return useGPUSpiralCompute; }
 
     static const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -52,6 +67,7 @@ private:
     RenderPass& m_renderPass;
     SpiralPipeline& m_pipeline;
     SpiralPipeline* m_wireframePipeline = nullptr;
+    SpiralComputePipeline* m_computePipeline = nullptr;
     FrameBuffer& m_framebuffer;
     CommandManager& m_commandManager;
     Window& m_window;
@@ -66,6 +82,8 @@ private:
     std::vector<vk::Fence> imagesInFlight;
 
     bool showWireframe = false;
+    bool useGPULODCompute = false;
+	bool useGPUSpiralCompute = false;
 
 	// swaps between 0/1 to track current frame in flight
     uint32_t currentFrame = 0;

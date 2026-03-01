@@ -16,21 +16,25 @@ BP Pocarovsky
 │   │   │   ├── Device.hpp/cpp
 │   │   │   ├── Instance.hpp/cpp
 │   │   │   ├── Pipeline.hpp/cpp
+│   │   │   ├── SpiralPipline.hpp/cpp
 │   │   │   └── Swapchain.hpp/cpp
 │   │   ├── rendering
 │   │   │   ├── CommandManager.hpp/cpp
 │   │   │   ├── Descriptors.hpp/cpp
 │   │   │   ├── FrameBuffer.hpp/cpp
 │   │   │   ├── Renderer.hpp/cpp
+│   │   │   ├── SpiralRenderer.hpp/cpp
 │   │   │   ├── RenderPass.hpp/cpp
 │   │   │   └── UniformBuffer.hpp/cpp
 │   │   ├── resources
 │   │   │   ├── Buffer.hpp/cpp
 │   │   │   ├── DualModel.hpp/cpp
-│   │   │   └── Model.hpp/cpp
+│   │   │   ├── Model.hpp/cpp
+│   │   │   └── Textures.hpp/cpp
 │   │   ├── scene
 │   │   │   ├── Camera.hpp/cpp
 │   │   │   ├── Scene.hpp/cpp
+│   │   │   ├── SpiralScene.hpp/cpp
 │   │   │   └── Transform.hpp/cpp
 │   │   ├── simplification
 │   │   │   ├── Simplificator.hpp/cpp
@@ -87,6 +91,7 @@ BP Pocarovsky
 		- [x] Optimized
 	- [x] Floating-cell Clustering
 		- [x] Research
+		- [ ] Optimized
 		- [x] Implementation
 	- [x] Naive simplification
 		- [ ] Optimized
@@ -94,6 +99,7 @@ BP Pocarovsky
 		- [x] Research
 		- [ ] Implementation
 		- [ ] Triangulating research
+		- [ ] Optimized
 	- [ ] Progressive Meshes
 		- [ ] Research
 - [ ] Demo application

@@ -1,0 +1,121 @@
+#version 450
+
+// 256 threads per work group
+layout(local_size_x = 256) in;
+
+// 32bytes structure per instance
+struct InstanceData {
+	vec3 pos;
+	float padding;
+	uint modelTypeIndex;
+	uint lodLevel;
+	vec2 padding2;
+};
+
+// binding 0
+layout(std140, binding = 0) uniform UBO {
+	mat4 model;
+	mat4 view;
+	mat4 proj;
+	vec3 cameraPos;
+} ubo;
+
+// binding 1 - input raw data
+layout(std430, binding = 1) readonly buffer InputInstances {
+	InstanceData instances[];
+} inputBuffer;
+
+// binding 2 - output sorted instances
+layout(std430, binding = 2) writeonly buffer OutputInstances {
+	InstanceData instances[];
+} outputBuffer;
+
+// binding 3 - indirect buffer for indirect draw calls
+layout(std430, binding = 3) buffer IndirectBuffer {
+	uint commands[];
+} indirectBuffer;
+
+layout(push_constant) uniform Constants {
+	// LOD selection push constants
+	uint totalInstances;
+	float lodDist0;
+	float lodDist1;
+	float lodDist2;
+	float lodDist3;
+	// spiral position push constants
+	uint computeSpiral;
+	float spacing;
+	int numArms;
+	float minRadius;
+	float coneFactor;
+	float twistSpeed;
+	float animationTime;
+} pushConsts;
+
+const float PI2 = 6.28318530718;
+
+void main()
+{
+	uint idx = gl_GlobalInvocationID.x;
+
+	// return if out of bounds
+	if (idx >= pushConsts.totalInstances) return;
+
+	vec3 currentPos;
+
+	// Spiral positions
+	if(pushConsts.computeSpiral == 1)
+	{
+		float totalLength = pushConsts.totalInstances * pushConsts.spacing;
+		float linearPos = (float(idx) * pushConsts.spacing) + pushConsts.animationTime;
+		float dist = mod(linearPos, totalLength);
+		float currentZ = -dist;
+
+		float baseArmAngle = mod(float(idx), float(pushConsts.numArms)) * (PI2 / float(pushConsts.numArms));
+		float twistAngle = abs(currentZ) * pushConsts.twistSpeed;
+		float finalAngle = baseArmAngle + twistAngle;
+
+		float currentRadius = pushConsts.minRadius + (abs(currentZ) * pushConsts.coneFactor);
+
+		currentPos = vec3(
+			currentRadius * cos(finalAngle),
+			currentRadius * sin(finalAngle),
+			currentZ
+		);
+	}
+	else
+	{
+		currentPos = inputBuffer.instances[idx].pos;
+	}
+
+	InstanceData instance;
+	instance.pos = currentPos;
+	instance.modelTypeIndex = 0;
+
+	float dist = distance(ubo.cameraPos, currentPos);
+
+	// determine LOD level based on distance
+	uint lod = 3;
+	if (dist < pushConsts.lodDist0)
+	{
+		lod = 0;
+	}
+	else if (dist < pushConsts.lodDist1)
+	{
+		lod = 1;
+	}
+	else if (dist < pushConsts.lodDist2)
+	{
+		lod = 2;
+	}
+	instance.lodLevel = lod;
+
+	// increase instanceCount (idx LOD * 5 + 1) by one
+	uint insertIdx = atomicAdd(indirectBuffer.commands[lod * 5 + 1], 1);
+
+	// get first instance offset for this LOD (idx LOD * 5 + 4), tells us where the LOD block begins in the output buffer
+	uint baseOffset = indirectBuffer.commands[lod * 5 + 4];
+
+	// write instance data to output buffer at the correct offset for this LOD
+	outputBuffer.instances[baseOffset + insertIdx] = instance;
+}

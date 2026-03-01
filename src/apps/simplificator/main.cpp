@@ -36,7 +36,6 @@ void help()
 	std::cout << "  M - Unlock camera" << std::endl;
 	std::cout << "  N - Lock camera" << std::endl;
 	std::cout << "      Movement: WASD" << std::endl;
-	std::cout << "      Zoom: Mouse wheel" << std::endl;
 	std::cout << "  U - Toggle UI" << std::endl;
 	std::cout << "  ESC - Exit application" << std::endl;
 	std::cout << "===============================================================" << std::endl;
@@ -128,13 +127,6 @@ int main() {
 				cameraActive = false;
 				camera.resetMouse();
 			}
-			if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_C) == GLFW_PRESS)
-			{
-				// print cam pos
-				glm::vec3 camPos = camera.getPosition();
-				std::cout << "Camera position: (" << camPos.x << ", " << camPos.y << ", " << camPos.z << ")" << std::endl;
-			}
-
 
 			bool isUPressed = glfwGetKey(window.getGLFWWindow(), GLFW_KEY_U) == GLFW_PRESS;
 			if (isUPressed && !pressedDisableUI)

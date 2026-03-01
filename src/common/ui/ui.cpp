@@ -91,17 +91,21 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	
 }
 
-void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer)
+void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer, bool show)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	ImGui::StyleColorsDark();
 
-	showStatistics();
-	showSpiralControls(spiral);
-	showGeneralControls(spiral);
-	showWireframeControls2(renderer);
+	if (show)
+	{
+		showStatistics();
+		showSpiralControls(spiral);
+		showGeneralControls(spiral, renderer);
+		showWireframeControls2(renderer);
+		showUseGPUCPUControls(renderer);
+	}
 }
 
 void UserInterface::scanModels()
@@ -459,7 +463,29 @@ void UserInterface::showWireframeControls2(SpiralRenderer& renderer)
 	ImGui::End();
 }
 
-void UserInterface::showGeneralControls(SpiralScene& scene)
+void UserInterface::showUseGPUCPUControls(SpiralRenderer& renderer)
+{
+	ImGui::SetNextWindowPos(ImVec2(1600, 10), ImGuiCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(220, 80), ImGuiCond_Once);
+
+	ImGui::Begin("Compute controls");
+
+	bool useGPULOD = renderer.getUseGPULODCompute();
+	if (ImGui::Checkbox("GPU LOD selection compute", &useGPULOD))
+	{
+		renderer.setUseGPULODCompute(useGPULOD);
+	}
+
+	bool useGPUSpiral = renderer.getUseGPUSpiralCompute();
+	if (ImGui::Checkbox("GPU Spiral positions compute", &useGPUSpiral))
+	{
+		renderer.setUseGPUSpiralCompute(useGPUSpiral);
+	}
+
+	ImGui::End();
+}
+
+void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& renderer)
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 300));
 	ImGui::SetNextWindowSize(ImVec2(200, 250));
@@ -475,7 +501,9 @@ void UserInterface::showGeneralControls(SpiralScene& scene)
 			selectedInstanceCount = scene.getMaxInstanceCount();
 
 		scene.config.instanceCount = static_cast<uint32_t>(selectedInstanceCount);
-		scene.updateSpiralPositions(0.0f); // reset positions
+		scene.updateSpiralPositions(0.0f, false); // reset positions
+		renderer.setUseGPULODCompute(false);
+		renderer.setUseGPUSpiralCompute(false);
 	}
 
 	ImGui::End();

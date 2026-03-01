@@ -38,6 +38,11 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 			presentMode = availablePresentMode;
 			break;
 		}
+		if (availablePresentMode == vk::PresentModeKHR::eImmediate)
+		{
+			presentMode = availablePresentMode;
+			break;
+		}
 	}
 
 	// determine the image count

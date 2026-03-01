@@ -13,9 +13,13 @@ public:
 	~Descriptor() = default;
 
 	vk::DescriptorSet get(uint32_t frame) const { return *descriptorSets[frame]; }
+	vk::DescriptorSet getCompute(uint32_t frame) const { return *computeDescriptorSets[frame]; };
+
 	vk::DescriptorSetLayout getLayout() const { return *descriptorSetLayout; }
+	vk::DescriptorSetLayout getComputeLayout() const { return *computeDescriptorSetLayout; }
 
 	void updateTexture(uint32_t frame, Texture& texture);
+	void createComputeDescriptors(class SpiralScene& scene, uint32_t maxFrames = 2);
 
 private:
 	void createDescriptorSetLayout();
@@ -24,6 +28,8 @@ private:
 
 	Device& dev;
 	vk::UniqueDescriptorSetLayout descriptorSetLayout;
+	vk::UniqueDescriptorSetLayout computeDescriptorSetLayout;
 	vk::UniqueDescriptorPool descriptorPool;
+	std::vector<vk::UniqueDescriptorSet> computeDescriptorSets; // per frame
 	std::vector<vk::UniqueDescriptorSet> descriptorSets; // per frame
 };

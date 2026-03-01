@@ -3,19 +3,21 @@
 #include <iostream>
 #include <chrono>
 
-SpiralScene::SpiralScene(Device& dev, CommandManager& cmd, const std::string& modelPath)
-	: dev(dev)
+SpiralScene::SpiralScene(Device& dev, CommandManager& cmd, const std::string& modelPath, UniformBuffer& uniformBuffer)
+	: dev(dev), uniformBuffer(uniformBuffer)
 {
 	generateSpiralPositions();
 	generateLODVersions(modelPath, cmd);
 	createInstanceBuffer();
+	createIndirectBuffer();
+	createLODInstanceBuffer();
 	std::cout << "SpiralScene created" << std::endl;
 }
 
 void SpiralScene::generateSpiralPositions()
 {
 	positions.clear();
-	positions.reserve(MAX_INSTANCE_COUNT);
+	positions.resize(MAX_INSTANCE_COUNT);
 	instanceData.resize(MAX_INSTANCE_COUNT);
 
 	float spacing = 2.0f;
@@ -105,9 +107,84 @@ void SpiralScene::createInstanceBuffer()
 	
 }
 
-void SpiralScene::updateLODs(const glm::vec3& cameraPos, uint32_t currentFrame)
+void SpiralScene::createIndirectBuffer()
 {
-	updateInstancesCPU(cameraPos, currentFrame);
+	int frameCount = 2;
+	indirectBuffers.resize(frameCount);
+	indirectBufferMemory.resize(frameCount);
+	mappedIndirectMemory.resize(frameCount);
+
+	vk::DeviceSize bufferSize = sizeof(vk::DrawIndexedIndirectCommand) * 4; // 4 LOD levels
+
+	for (int i = 0; i < frameCount; i++)
+	{
+		vk::BufferCreateInfo bufferInfo{};
+		bufferInfo.size = bufferSize;
+		bufferInfo.usage = vk::BufferUsageFlagBits::eIndirectBuffer | vk::BufferUsageFlagBits::eStorageBuffer;
+		bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+
+		indirectBuffers[i] = dev.operator*().createBuffer(bufferInfo);
+		vk::MemoryRequirements memReq = dev.operator*().getBufferMemoryRequirements(indirectBuffers[i]);
+
+		vk::MemoryAllocateInfo allocInfo{};
+		allocInfo.allocationSize = memReq.size;
+		allocInfo.memoryTypeIndex = dev.findMemoryType(memReq.memoryTypeBits,
+			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+
+		indirectBufferMemory[i] = dev.operator*().allocateMemory(allocInfo);
+		dev.operator*().bindBufferMemory(indirectBuffers[i], indirectBufferMemory[i], 0);
+
+		mappedIndirectMemory[i] = dev.operator*().mapMemory(indirectBufferMemory[i], 0, bufferSize, vk::MemoryMapFlags{});
+	}
+}
+
+void SpiralScene::createLODInstanceBuffer()
+{
+	int frameCount = 2;
+	LODInstanceBuffers.resize(frameCount);
+	LODInstanceBufferMemory.resize(frameCount);
+
+	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * MAX_INSTANCE_COUNT * 4;
+
+	for (int i = 0; i < frameCount; i++)
+	{
+		vk::BufferCreateInfo bufferInfo{};
+		bufferInfo.size = bufferSize;
+		// storage buffer for compute shader
+		bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eStorageBuffer;
+		bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+
+		LODInstanceBuffers[i] = dev.operator*().createBuffer(bufferInfo);
+		vk::MemoryRequirements memReq = dev.operator*().getBufferMemoryRequirements(LODInstanceBuffers[i]);
+
+		vk::MemoryAllocateInfo allocInfo{};
+		allocInfo.allocationSize = memReq.size;
+		allocInfo.memoryTypeIndex = dev.findMemoryType(memReq.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+		LODInstanceBufferMemory[i] = dev.operator*().allocateMemory(allocInfo);
+		dev.operator*().bindBufferMemory(LODInstanceBuffers[i], LODInstanceBufferMemory[i], 0);
+	}
+}
+
+void SpiralScene::updateLODs(const glm::vec3& cameraPos, uint32_t currentFrame, bool useGPULOD, bool useGPUSpiral)
+{
+	if (useGPULOD)
+	{
+		if (!useGPUSpiral)
+		{
+			for (uint32_t i = 0; i < config.instanceCount; i++) {
+				instanceData[i].pos = positions[i];
+				instanceData[i].lodLevel = 0;
+			}
+			memcpy(mappedMemory[currentFrame], instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
+		}
+		
+		return;
+	}
+	else
+	{
+		updateInstancesCPU(cameraPos, currentFrame);
+	}
 }
 
 void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t currentFrame)
@@ -168,9 +245,12 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t curren
 	memcpy(mappedMemory[currentFrame], instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
 }
 
-void SpiralScene::updateSpiralPositions(float deltaTime)
+void SpiralScene::updateSpiralPositions(float deltaTime, bool useGPUSpiral)
 {
 	animationTime += deltaTime * config.speed;
+
+	if (useGPUSpiral) return;
+
 	float totalLength = config.instanceCount * config.spacing;
 
 	for (uint32_t i = 0; i < config.instanceCount; i++)
@@ -207,6 +287,28 @@ void SpiralScene::updateSpiralPositions(float deltaTime)
 		positions[i] = pos;
 	}
 
+}
+
+void SpiralScene::resetIndirectBuffer(uint32_t currentFrame)
+{
+	// prepare four commands for four LOD levels, instance count will be updated by compute shader after culling
+	DrawIndexedIndirectCommand cmds[4];
+
+	for (int i = 0; i < 4; i++)
+	{
+		// get exact index count for each LOD level to ensure correct draw calls
+		Model& lodModel = modelLODSets[0].getLOD(i);
+
+		cmds[i].indexCount = static_cast<uint32_t>(lodModel.getIndexCount());
+		cmds[i].instanceCount = 0; // will be updated by compute shader
+		cmds[i].firstIndex = 0;
+		cmds[i].vertexOffset = 0;
+
+		// base offset for each LOD level
+		cmds[i].firstInstance = i * MAX_INSTANCE_COUNT;
+	}
+
+	memcpy(mappedIndirectMemory[currentFrame], cmds, sizeof(cmds));
 }
 
 void SpiralScene::addModelType(const std::string& modelPath, CommandManager& cmd)

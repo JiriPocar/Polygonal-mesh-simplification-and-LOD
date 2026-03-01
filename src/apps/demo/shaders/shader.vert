@@ -11,7 +11,7 @@ layout(location = 4) in uint instanceModelType;
 layout(location = 5) in uint instanceLodLevel;
 
 // outputs to fragment shader
-layout(location = 0) out flat vec3 fragColor;
+layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
 // ubo
@@ -23,36 +23,11 @@ layout(binding = 0) uniform UBO {
 
 void main()
 {
-	// create model matrix from instance positions
-	mat4 instanceModel = mat4(1.0);
-	instanceModel[3] = vec4(instancePosition, 1.0);
+	float scale = 0.1;
+	vec3 worldPos = (inPosition * scale) + instancePosition;
 
-	// scale down large models
-	float s = 0.1;
-	mat4 scaleMat = mat4(
-		vec4(s, 0.0, 0.0, 0.0),
-		vec4(0.0, s, 0.0, 0.0),
-		vec4(0.0, 0.0, s, 0.0),
-		vec4(0.0, 0.0, 0.0, 1.0)
-	);
+	gl_Position = ubo.proj * ubo.view * vec4(worldPos, 1.0);
 
-	instanceModel = instanceModel * scaleMat;
-
-	// transform vertex position
-	gl_Position = ubo.proj * ubo.view * instanceModel * vec4(inPosition, 1.0);
-
-	// diffuse lightning
-	vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
-	float diff = max(dot(inNormal, lightDir), 0.2);
-
-	vec3 lodColors[4] = vec3[4](
-		vec3(0.2, 1.0, 0.2),  // LOD0 - green
-		vec3(1.0, 1.0, 0.2),  // LOD1 - yellow
-		vec3(1.0, 0.5, 0.2),  // LOD2 - orange
-		vec3(1.0, 0.2, 0.2)   // LOD3 - red
-    );
-
-	vec3 baseColor = lodColors[instanceLodLevel];
 	fragColor = inNormal;
 	fragTexCoord = inTexCoord;
 }
