@@ -186,11 +186,12 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 
 		ComputePushConstants pcs = {};
 		pcs.totalInstances = m_spiralScene.config.instanceCount;
-		pcs.lodDist0 = 400.0f;
-		pcs.lodDist1 = 1200.0f;
-		pcs.lodDist2 = 3000.0f;
-		pcs.lodDist3 = 8000.0f;
+		pcs.lodDist0 = m_spiralScene.config.lodDist0;
+		pcs.lodDist1 = m_spiralScene.config.lodDist1;
+		pcs.lodDist2 = m_spiralScene.config.lodDist2;
+		pcs.lodDist3 = m_spiralScene.config.lodDist3;
 		pcs.computeSpiral = useGPUSpiralCompute ? 1 : 0;
+		pcs.enableLOD = m_spiralScene.config.enableLOD ? 1 : 0;
 		pcs.spacing = m_spiralScene.config.spacing;
 		pcs.numArms = m_spiralScene.config.numArms;
 		pcs.minRadius = m_spiralScene.config.minRadius;

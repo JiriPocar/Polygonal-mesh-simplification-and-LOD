@@ -35,14 +35,17 @@ class Mesh {
 public:
 	Mesh(Device& device, const tinygltf::Model& model, const tinygltf::Primitive& primitive);
 	Mesh(Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+
 	void draw(vk::CommandBuffer commandBuffer) const;
 
 	vk::Buffer getVertexBuffer() const { return vertexBuffer->getBuffer(); }
 	vk::Buffer getIndexBuffer() const { return indexBuffer->getBuffer(); }
 	uint32_t getVertexCount() const { return vertexCount; }
 	uint32_t getIndexCount() const { return indexCount; }
+
 	std::vector<Vertex> extractVertices() const;
 	std::vector<uint32_t> extractIndices() const;
+
 	void getBounds(glm::vec3& minBound, glm::vec3& maxBound) const;
 
 private:
@@ -91,6 +94,8 @@ public:
 
 	const std::vector<std::unique_ptr<Mesh>>& getMeshes() const { return meshes; }
 	Texture* getTexture() const { return texture.get(); }
+	std::unique_ptr<Texture> releaseTexture() { return std::move(texture); }
+	void setTexture(std::unique_ptr<Texture> newTexture) { texture = std::move(newTexture); }
 	bool hasTexture() const { return texture != nullptr; }
 
 	std::vector<Vertex> extractVertices() const;

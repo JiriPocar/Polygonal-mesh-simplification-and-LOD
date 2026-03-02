@@ -105,6 +105,7 @@ void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer, b
 		showGeneralControls(spiral, renderer);
 		showWireframeControls2(renderer);
 		showUseGPUCPUControls(renderer);
+		showSceneInfo(spiral);
 	}
 }
 
@@ -153,7 +154,7 @@ void UserInterface::showStatistics()
 	}
 
 	ImGui::SetNextWindowPos(ImVec2(10, 10));
-	ImGui::SetNextWindowSize(ImVec2(200, 300));
+	ImGui::SetNextWindowSize(ImVec2(200, 235));
 	ImGui::Begin("Statistics");
 	ImGui::Text("FPS: %.1f", fps);
 	ImGui::Text("Delta time: %.3f ms", delta * 1000.0f);
@@ -465,8 +466,8 @@ void UserInterface::showWireframeControls2(SpiralRenderer& renderer)
 
 void UserInterface::showUseGPUCPUControls(SpiralRenderer& renderer)
 {
-	ImGui::SetNextWindowPos(ImVec2(1600, 10), ImGuiCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(220, 80), ImGuiCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(1550, 10), ImGuiCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(260, 80), ImGuiCond_Once);
 
 	ImGui::Begin("Compute controls");
 
@@ -485,10 +486,68 @@ void UserInterface::showUseGPUCPUControls(SpiralRenderer& renderer)
 	ImGui::End();
 }
 
+void UserInterface::showSceneInfo(SpiralScene& scene)
+{
+	ImGui::SetNextWindowPos(ImVec2(1505, 670));
+	ImGui::SetNextWindowSize(ImVec2(300, 300));
+
+	ImGui::Begin("Scene Info");
+
+	ImGui::Text("Instance Count:");
+	ImGui::SameLine();
+	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%d", scene.config.instanceCount);
+
+	ImGui::Text("Total Length:");
+	ImGui::SameLine();
+	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%.2f units", scene.config.instanceCount * scene.config.spacing);
+
+	ImGui::Separator();
+
+	try
+	{
+		auto& lodSet = scene.getModelLODSet(0);
+
+		ImGui::Text("LOD Mesh Statistics:");
+
+		if (ImGui::BeginTable("LODStats", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+		{
+			ImGui::TableSetupColumn("LOD Level");
+			ImGui::TableSetupColumn("Vertices");
+			ImGui::TableSetupColumn("Faces");
+			ImGui::TableHeadersRow();
+
+			for (int i = 0; i < 4; ++i)
+			{
+				ImGui::TableNextRow();
+
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("LOD %d", i);
+
+				uint32_t vCount = lodSet.getLOD(i).getVertexCount();
+				uint32_t iCount = lodSet.getLOD(i).getIndexCount();
+				uint32_t fCount = iCount / 3;
+
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%u", vCount);
+
+				ImGui::TableSetColumnIndex(2);
+				ImGui::Text("%u", fCount);
+			}
+			ImGui::EndTable();
+		}
+	}
+	catch (...)
+	{
+		ImGui::TextDisabled("Model data not available yet.");
+	}
+
+	ImGui::End();
+}
+
 void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& renderer)
 {
-	ImGui::SetNextWindowPos(ImVec2(10, 300));
-	ImGui::SetNextWindowSize(ImVec2(200, 250));
+	ImGui::SetNextWindowPos(ImVec2(10, 250));
+	ImGui::SetNextWindowSize(ImVec2(330, 400));
 
 	ImGui::Begin("General Settings");
 	static int selectedInstanceCount = scene.config.instanceCount;
@@ -504,6 +563,35 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 		scene.updateSpiralPositions(0.0f, false); // reset positions
 		renderer.setUseGPULODCompute(false);
 		renderer.setUseGPUSpiralCompute(false);
+	}
+
+	ImGui::Separator();
+
+	ImGui::Text("LOD Settings");
+	ImGui::Checkbox("Enable LOD", &scene.config.enableLOD);
+
+	ImGui::Separator();
+
+	if (scene.config.enableLOD)
+	{
+		ImGui::SliderFloat("LOD0 Range", &scene.config.lodDist0, 10.0f,				   scene.config.lodDist1);
+		ImGui::SliderFloat("LOD1 Range", &scene.config.lodDist1, scene.config.lodDist0, scene.config.lodDist2);
+		ImGui::SliderFloat("LOD2 Range", &scene.config.lodDist2, scene.config.lodDist1, scene.config.lodDist3);
+		ImGui::SliderFloat("LOD3 Range", &scene.config.lodDist3, scene.config.lodDist2, 20000.0f);
+	}
+
+	ImGui::Separator();
+
+	ImGui::Text("LOD Simplification");
+
+	ImGui::SliderFloat("LOD0 % Faces", &scene.config.lodPercentageSimplification0, scene.config.lodPercentageSimplification1, 1.0f, "%.2f");
+	ImGui::SliderFloat("LOD1 % Faces", &scene.config.lodPercentageSimplification1, scene.config.lodPercentageSimplification2, scene.config.lodPercentageSimplification0, "%.2f");
+	ImGui::SliderFloat("LOD2 % Faces", &scene.config.lodPercentageSimplification2, scene.config.lodPercentageSimplification3, scene.config.lodPercentageSimplification1, "%.2f");
+	ImGui::SliderFloat("LOD3 % Faces", &scene.config.lodPercentageSimplification3, 0.01f,									   scene.config.lodPercentageSimplification2, "%.2f");
+
+	if (ImGui::Button("Apply and regenerate meshes"))
+	{
+		scene.rebuildLODs(uiCmdManager);
 	}
 
 	ImGui::End();
@@ -535,10 +623,6 @@ void UserInterface::showSpiralControls(SpiralScene& scene)
 	if (ImGui::Button("Reset Animation Time")) {
 		scene.resetAnimation();
 	}
-
-	// debug
-	ImGui::Text("Instance Count: %d", scene.config.instanceCount);
-	ImGui::Text("Total Length: %.2f", scene.config.instanceCount * scene.config.spacing);
 
 	ImGui::End();
 }

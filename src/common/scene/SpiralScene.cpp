@@ -4,10 +4,10 @@
 #include <chrono>
 
 SpiralScene::SpiralScene(Device& dev, CommandManager& cmd, const std::string& modelPath, UniformBuffer& uniformBuffer)
-	: dev(dev), uniformBuffer(uniformBuffer)
+	: dev(dev), uniformBuffer(uniformBuffer), modelPath(modelPath)
 {
 	generateSpiralPositions();
-	generateLODVersions(modelPath, cmd);
+	generateLODVersions(cmd);
 	createInstanceBuffer();
 	createIndirectBuffer();
 	createLODInstanceBuffer();
@@ -51,22 +51,50 @@ void SpiralScene::generateSpiralPositions()
 	}
 }
 
-void SpiralScene::generateLODVersions(const std::string& modelPath, CommandManager& cmd)
+void SpiralScene::generateLODVersions(CommandManager& cmd)
 {
 	ModelLODSet lodSet;
 	lodSet.name = modelPath;
 
-	lodSet.lod0 = std::make_unique<Model>(dev, cmd, modelPath); // Original model
+	auto originalModel = std::make_unique<Model>(dev, cmd, modelPath);
 
 	simplificator.setCurrentAlgorithm(Algorithm::QEM);
-	auto result1 = simplificator.simplify(*lodSet.lod0, 0.75f); // 75% faces
+
+	auto result1 = simplificator.simplify(*originalModel, config.lodPercentageSimplification1); // 75% faces
 	lodSet.lod1 = std::make_unique<Model>(dev, result1.meshesData);
-	auto result2 = simplificator.simplify(*lodSet.lod0, 0.50f); // 50% faces
+
+	auto result2 = simplificator.simplify(*originalModel, config.lodPercentageSimplification2); // 50% faces
 	lodSet.lod2 = std::make_unique<Model>(dev, result2.meshesData);
-	auto result3 = simplificator.simplify(*lodSet.lod0, 0.25f); // 25% faces
+
+	auto result3 = simplificator.simplify(*originalModel, config.lodPercentageSimplification3); // 25% faces
 	lodSet.lod3 = std::make_unique<Model>(dev, result3.meshesData);
 
+	if (config.lodPercentageSimplification0 >= 0.99f)
+	{
+		lodSet.lod0 = std::move(originalModel);
+	}
+	else
+	{
+		auto result0 = simplificator.simplify(*originalModel, config.lodPercentageSimplification0);
+		lodSet.lod0 = std::make_unique<Model>(dev, result0.meshesData);
+		lodSet.lod0->setTexture(originalModel->releaseTexture());
+	}
+
+
 	modelLODSets.push_back(std::move(lodSet));
+}
+
+void SpiralScene::rebuildLODs(CommandManager& cmd)
+{
+	// wait for device to be idle
+	dev.operator*().waitIdle();
+
+	// clear existing LODs and generate new ones based on current model path
+	modelLODSets.clear();
+	generateLODVersions(cmd);
+
+	resetIndirectBuffer(0);
+	resetIndirectBuffer(1);
 }
 
 void SpiralScene::createInstanceBuffer()
@@ -202,21 +230,21 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t curren
 		float dist = glm::distance(cameraPos, positions[i]);
 		uint8_t lod = 0;
 
-		if (dist < lodDistances[0])
+		if (config.enableLOD)
 		{
-			lod = 0;
-		}
-		else if (dist < lodDistances[1])
-		{
-			lod = 1;
-		}
-		else if (dist < lodDistances[2])
-		{
-			lod = 2;
-		}
-		else
-		{
-			lod = 3;
+			lod = 3; // default to lowest LOD
+			if (dist < config.lodDist0)
+			{
+				lod = 0;
+			}
+			else if (dist < config.lodDist1)
+			{
+				lod = 1;
+			}
+			else if (dist < config.lodDist2)
+			{
+				lod = 2;
+			}
 		}
 
 		instanceLODs[i] = lod;
@@ -313,5 +341,5 @@ void SpiralScene::resetIndirectBuffer(uint32_t currentFrame)
 
 void SpiralScene::addModelType(const std::string& modelPath, CommandManager& cmd)
 {
-	generateLODVersions(modelPath, cmd);
+	generateLODVersions(cmd);
 }

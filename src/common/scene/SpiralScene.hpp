@@ -35,6 +35,17 @@ struct SpiralConfig {
 	float coneFactor = 0.5f;
 	float twistSpeed = 0.02f;
 	float armSpread = 0.6f;
+
+	bool enableLOD = true;
+	float lodDist0 = 400.0f;
+	float lodDist1 = 1200.0f;
+	float lodDist2 = 3000.0f;
+	float lodDist3 = 8000.0f;
+
+	float lodPercentageSimplification0 = 1.0f;
+	float lodPercentageSimplification1 = 0.75f;
+	float lodPercentageSimplification2 = 0.5f;
+	float lodPercentageSimplification3 = 0.25f;
 };
 
 struct ModelLODSet {
@@ -69,6 +80,7 @@ public:
 
 	void updateLODs(const glm::vec3& cameraPos, uint32_t currentFrame, bool useGPULOD, bool useGPUSpiral);
 	void updateSpiralPositions(float deltaTime, bool useGPUSpiral);
+	void rebuildLODs(CommandManager& cmd);
 
 	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return instanceBuffers[currentFrame]; }
 	uint32_t getMaxInstanceCount() const { return MAX_INSTANCE_COUNT; }
@@ -90,7 +102,7 @@ public:
 
 private:
 	void generateSpiralPositions();
-	void generateLODVersions(const std::string& modelPath, CommandManager& cmd);
+	void generateLODVersions(CommandManager& cmd);
 	void createInstanceBuffer();
 	void updateInstancesCPU(const glm::vec3& cameraPos, uint32_t currentFrame);
 
@@ -104,6 +116,7 @@ private:
 
 	Device& dev;
 	UniformBuffer& uniformBuffer;
+	std::string modelPath;
 
 	std::vector<glm::vec3> positions;
 	std::vector<SpiralInstanceData> instanceData;
@@ -113,11 +126,10 @@ private:
 	std::vector<vk::DeviceMemory> instanceBufferMemory;
 	std::vector<void*> mappedMemory;
 
-	float lodDistances[4] = { 400.0f, 1200.0f, 3000.0f, 8000.0f};
-	float animationTime = 0.0f;
-
 	std::array<uint32_t, 4> lodCounts = { 0, 0, 0, 0 };
 	std::array<uint32_t, 4> lodOffsets = { 0, 0, 0, 0 };
 
 	Simplificator simplificator;
+
+	float animationTime = 0.0f;
 };

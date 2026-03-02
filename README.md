@@ -100,21 +100,26 @@ BP Pocarovsky
 		- [ ] Implementation
 		- [ ] Triangulating research
 		- [ ] Optimized
-	- [ ] Progressive Meshes
-		- [ ] Research
 - [ ] Demo application
 	- [x] Remake project structure for multiple demo apps support 
 	- [x] CPU LOD switching
 		- [x] Switch LOD levels based on distance from the main camera
 		- [ ] Switch LOD levels based on screen size of the model
-	- [ ] GPU LOD switching
-		- [ ] Switch LOD levels based on distance from the main camera 
+	- [x] GPU LOD switching
+		- [x] Switch LOD levels based on distance from the main camera
+		- [x] Compute spiral positions on GPU
 	- [ ] Implement popping effect reduction techniques
 		- [ ] Cross fading
 	- [ ] Performance comparison
+		- [ ] Set up environment for performance testing 
+			- [ ] Simplification
+			- [ ] Spiral
 		- [ ] Save performance statistics to file
 		- [ ] Create graphs using ```python```, ```matplotlib```, ...
 	- [ ] Visual comparison
+		- [ ] Hausdorff Distance [here](https://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html])
+		- [ ] Root Mean Square Error
+		- [ ] Use MeshLab for visual comparison of models (?)
 	- [ ] Moving scene(s) with dynamic LOD adjustment
 		- [x] Spiral scene with moving parts
 		- [ ] Simple scene with car driving through "mountains"
@@ -122,14 +127,19 @@ BP Pocarovsky
 - [ ] General TODO's
 	- [x] Texture loading
 	- [ ] UV interpolation for texture coordinates in simplified models
+		- [ ] QEM
+			- [ ] Interpolation for texture coordinates and normals
+			- [ ] Usage of extended QEM
 	- [ ] QEM optimization via priority queue
-	- [ ] Extended QEM with texture coordinates and normals
 	- [ ] Pick a set of testing models
 	- [ ] UI improvements
 		- [x] Debug (result) window
-		- [ ] Spiral scene - LOD threshold controls
+		- [x] Spiral scene - LOD threshold controls
 		- [x] Enable / disable UI option
 	- [ ] Performance research
+	- [ ] (?) Export model option (.obj is trivial, .gltf is a bit tricky)
+	- [ ] (?) Use MeshLab for visual comparison of models
+	- [ ] 
 
 # Known issues
 

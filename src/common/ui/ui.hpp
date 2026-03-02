@@ -69,6 +69,7 @@ private:
 	void showGeneralControls(SpiralScene& scene, SpiralRenderer& renderer);
 	void showWireframeControls2(SpiralRenderer& renderer);
 	void showUseGPUCPUControls(SpiralRenderer& renderer);
+	void showSceneInfo(SpiralScene& scene);
 
 	Instance& uiInstance;
 	Device& uiDevice;

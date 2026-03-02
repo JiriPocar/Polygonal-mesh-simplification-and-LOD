@@ -48,7 +48,7 @@ public:
 private:
 	Algorithm currentAlgorithm;
 	ClusteringMethod clusteringMethod = ClusteringMethod::CellCenter;
-	bool flatShading;
+	bool flatShading = false;
 
 	MeshData simplifyQEM(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount);
 	MeshData simplifyFloatingCellClustering(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t cellRadius);

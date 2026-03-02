@@ -16,6 +16,7 @@ struct ComputePushConstants {
     float coneFactor;
     float twistSpeed;
     float animationTime;
+    uint32_t enableLOD;
 };
 
 class SpiralComputePipeline {

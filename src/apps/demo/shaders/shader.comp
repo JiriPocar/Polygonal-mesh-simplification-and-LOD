@@ -50,6 +50,7 @@ layout(push_constant) uniform Constants {
 	float coneFactor;
 	float twistSpeed;
 	float animationTime;
+	uint enableLOD;
 } pushConsts;
 
 const float PI2 = 6.28318530718;
@@ -95,19 +96,24 @@ void main()
 	float dist = distance(ubo.cameraPos, currentPos);
 
 	// determine LOD level based on distance
-	uint lod = 3;
-	if (dist < pushConsts.lodDist0)
+	uint lod = 0;
+	if(pushConsts.enableLOD == 1)
 	{
-		lod = 0;
+		lod = 3; // default to lowest LOD
+		if (dist < pushConsts.lodDist0)
+		{
+			lod = 0;
+		}
+		else if (dist < pushConsts.lodDist1)
+		{
+			lod = 1;
+		}
+		else if (dist < pushConsts.lodDist2)
+		{
+			lod = 2;
+		}
 	}
-	else if (dist < pushConsts.lodDist1)
-	{
-		lod = 1;
-	}
-	else if (dist < pushConsts.lodDist2)
-	{
-		lod = 2;
-	}
+	
 	instance.lodLevel = lod;
 
 	// increase instanceCount (idx LOD * 5 + 1) by one
