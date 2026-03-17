@@ -22,8 +22,10 @@ set(ENGINE_SOURCES
     "src/common/core/Device.cpp"
     "src/common/core/Instance.cpp"
     "src/common/core/Pipeline.cpp"
+    "src/common/core/SpiralComputePipeline.cpp"
     "src/common/core/SpiralPipeline.cpp"
     "src/common/core/Swapchain.cpp"
+    "src/common/core/VulkanApp.cpp"
 
     # Rendering
     "src/common/rendering/Renderer.cpp"
@@ -70,7 +72,7 @@ set(ENGINE_SOURCES
 )
 
 # CREATE STATIC LIBRARY FOR ENGINE
-add_library(BPEngine STATIC ${ENGINE_SOURCES} "src/common/core/SpiralComputePipeline.cpp")
+add_library(BPEngine STATIC ${ENGINE_SOURCES})
 
 target_compile_features(BPEngine PUBLIC cxx_std_17)
 
@@ -82,6 +84,7 @@ target_include_directories(BPEngine PUBLIC
     external/tinygltf
     external/imgui
     external/imgui/backends
+    external/vma
 )
 
 # LIBRARY LINKING
