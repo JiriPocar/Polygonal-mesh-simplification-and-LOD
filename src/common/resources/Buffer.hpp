@@ -1,24 +1,28 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
+#include <vk_mem_alloc.h>
 #include "../core/Device.hpp"
 
 class Buffer {
 public:
-	Buffer(const Device& device, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties);
-	~Buffer() = default;
+	Buffer(const Device& device, vk::DeviceSize size, vk::BufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags flags = 0);
+	~Buffer();
 
-	vk::Buffer getBuffer() const { return *buffer; }
-	vk::DeviceMemory getMemory() const { return *memory; }
+	// prevent copying, RAII handles resource management
+	Buffer(const Buffer&) = delete;
+	Buffer& operator=(const Buffer&) = delete;
+
+	vk::Buffer getBuffer() const { return buffer; }
 	vk::DeviceSize getSize() const { return devSize; }
 
-	void* map();
-	void unmap();
+	void* getMappedData() const { return allocInfo.pMappedData; }
 	void copyData(const void* data, vk::DeviceSize size);
 
 private:
 	const Device& dev;
-	vk::UniqueBuffer buffer;
-	vk::UniqueDeviceMemory memory;
+	vk::Buffer buffer = nullptr;
+	VmaAllocation allocation = nullptr;
+	VmaAllocationInfo allocInfo = {};
 	vk::DeviceSize devSize;
 };

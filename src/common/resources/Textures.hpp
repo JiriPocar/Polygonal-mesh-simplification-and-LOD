@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include <string.h>
+#include <vk_mem_alloc.h>
 #include "../core/Device.hpp"
 #include "../rendering/CommandManager.hpp"
 
@@ -18,17 +19,10 @@ private:
 	void createTextureImageView();
 	void createTextureSampler();
 
-	// TODO: move this to buffer class
-	void createBuffer(vk::DeviceSize size,
-					  vk::BufferUsageFlags usage,
-					  vk::MemoryPropertyFlags flags,
-					  vk::UniqueBuffer& buffer,
-				      vk::UniqueDeviceMemory& bufferMemory);
-
 	// Vulkan resources
 	Device& dev;
-	vk::UniqueImage image;
-	vk::UniqueDeviceMemory imageMemory;
+	vk::Image image = nullptr;
+	VmaAllocation imageAllocation = nullptr;
 	vk::UniqueImageView imageView;
 	vk::UniqueSampler sampler;
 

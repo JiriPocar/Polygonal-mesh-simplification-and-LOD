@@ -93,22 +93,23 @@ void main()
 	instance.pos = currentPos;
 	instance.modelTypeIndex = 0;
 
-	float dist = distance(ubo.cameraPos, currentPos);
+	vec3 dist = currentPos - ubo.cameraPos;
+	float distSquared = dot(dist, dist);
 
 	// determine LOD level based on distance
 	uint lod = 0;
 	if(pushConsts.enableLOD == 1)
 	{
 		lod = 3; // default to lowest LOD
-		if (dist < pushConsts.lodDist0)
+		if (distSquared < pushConsts.lodDist0)
 		{
 			lod = 0;
 		}
-		else if (dist < pushConsts.lodDist1)
+		else if (distSquared < pushConsts.lodDist1)
 		{
 			lod = 1;
 		}
-		else if (dist < pushConsts.lodDist2)
+		else if (distSquared < pushConsts.lodDist2)
 		{
 			lod = 2;
 		}

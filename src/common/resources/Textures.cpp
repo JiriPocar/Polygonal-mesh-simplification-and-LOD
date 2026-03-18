@@ -1,7 +1,7 @@
 #include "Textures.hpp"
 
 #include "../external/tinygltf/stb_image.h"
-
+#include "../resources/Buffer.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -15,6 +15,10 @@ Texture::Texture(Device& device, CommandManager& cmd, std::string& filePath)
 
 Texture::~Texture()
 {
+	if (image != nullptr)
+	{
+		vmaDestroyImage(dev.getAllocator(), image, imageAllocation);
+	}
 }
 
 void Texture::createTextureImage(CommandManager& cmd, std::string& filePath)
@@ -27,67 +31,62 @@ void Texture::createTextureImage(CommandManager& cmd, std::string& filePath)
 
 	imageSize = width * height * 4; // 4 bytes per pixel (RGBA)
 
-	// create staging buffer for image data
-	vk::UniqueBuffer stagingBuffer;
-	vk::UniqueDeviceMemory stagingBufferMemory;
-	createBuffer(
+	// create staging buffer and copy pixel data to it
+	Buffer stagingBuffer(
+		dev,
 		imageSize,
-		vk::BufferUsageFlagBits::eTransferSrc, // src for copying to image
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, // cpu can write to this buffer
-		stagingBuffer,
-		stagingBufferMemory
+		vk::BufferUsageFlagBits::eTransferSrc,
+		VMA_MEMORY_USAGE_CPU_ONLY,
+		VMA_ALLOCATION_CREATE_MAPPED_BIT
 	);
-
-	// copy pixel data to staging buffer
-	void* data = dev.operator*().mapMemory(*stagingBufferMemory, 0, imageSize);
-	memcpy(data, pixels, static_cast<size_t>(imageSize));
-	dev.operator*().unmapMemory(*stagingBufferMemory);
-
+	stagingBuffer.copyData(pixels, imageSize);
 	stbi_image_free(pixels);
 
-	// create optimal tiled image for the texture
-	vk::ImageCreateInfo imageInfo(
-		{},									// flags
-		vk::ImageType::e2D,					// image type
-		vk::Format::eR8G8B8A8Srgb,			// format (srgb, 8 bits per channel)
-		vk::Extent3D{ static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
-		1,
-		1,
-		vk::SampleCountFlagBits::e1,
-		vk::ImageTiling::eOptimal,
-		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled
-	);
+	// create optimal tiled image on GPU
+	VkImageCreateInfo imageInfo = {};
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+	imageInfo.extent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-	image = dev.operator*().createImageUnique(imageInfo);
+	VmaAllocationCreateInfo allocInfo = {};
+	allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-	vk::MemoryRequirements memRequirements = dev.operator*().getImageMemoryRequirements(*image);
-	vk::MemoryAllocateInfo allocateInfo(
-		memRequirements.size,
-		dev.findMemoryType(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal)
-	);
+	// vmaCreateImage can create the image and allocate memory for it in one call
+	VkImage rawImage;
+	auto result = vmaCreateImage(dev.getAllocator(), &imageInfo, &allocInfo, &rawImage, &imageAllocation, nullptr);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to create texture image!");
+	}
+	image = rawImage;
 
-	imageMemory = dev.operator*().allocateMemoryUnique(allocateInfo);
-	dev.operator*().bindImageMemory(*image, *imageMemory, 0);
-
-	// transition image layout
+	// transition to transfer destination layout for copy
 	cmd.transitionImageLayout(
-		*image,
+		image,
 		vk::Format::eR8G8B8A8Srgb,
 		vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eTransferDstOptimal
 	);
 
-	// copy data from staging buffer to image
+	// copy buffer to image
 	cmd.copyBufferToImage(
-		*stagingBuffer,
-		*image,
+		stagingBuffer.getBuffer(),
+		image,
 		static_cast<uint32_t>(width),
 		static_cast<uint32_t>(height)
 	);
 
-	// transition image layout for shader access
+	// transition to shader read layout for sampling in shader
 	cmd.transitionImageLayout(
-		*image,
+		image,
 		vk::Format::eR8G8B8A8Srgb,
 		vk::ImageLayout::eTransferDstOptimal,
 		vk::ImageLayout::eShaderReadOnlyOptimal
@@ -98,7 +97,7 @@ void Texture::createTextureImageView()
 {
 	vk::ImageViewCreateInfo viewInfo(
 		{},
-		*image,
+		image,
 		vk::ImageViewType::e2D,
 		vk::Format::eR8G8B8A8Srgb,
 		{},
@@ -135,26 +134,4 @@ void Texture::createTextureSampler()
 	);
 
 	sampler = dev.operator*().createSamplerUnique(samplerInfo);
-}
-
-void Texture::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
-						   vk::MemoryPropertyFlags flags, vk::UniqueBuffer& buffer,
-						   vk::UniqueDeviceMemory& bufferMemory)
-{
-	vk::BufferCreateInfo bufferInfo(
-		{},
-		size,
-		usage,
-		vk::SharingMode::eExclusive
-	);
-	
-	buffer = dev.operator*().createBufferUnique(bufferInfo);
-	vk::MemoryRequirements memRequirements = dev.operator*().getBufferMemoryRequirements(*buffer);
-	vk::MemoryAllocateInfo allocInfo(
-		memRequirements.size,
-		dev.findMemoryType(memRequirements.memoryTypeBits, flags)
-	);
-
-	bufferMemory = dev.operator*().allocateMemoryUnique(allocInfo);
-	dev.operator*().bindBufferMemory(*buffer, *bufferMemory, 0);
 }

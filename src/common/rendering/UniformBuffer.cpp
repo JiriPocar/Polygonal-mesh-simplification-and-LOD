@@ -12,7 +12,8 @@ UniformBuffer::UniformBuffer(Device& device, uint32_t maxFrames)
 			device,
 			sizeof(UniformBufferObject),
 			vk::BufferUsageFlagBits::eUniformBuffer,
-			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+			VMA_MEMORY_USAGE_CPU_TO_GPU,
+			VMA_ALLOCATION_CREATE_MAPPED_BIT
 		);
 	}
 }

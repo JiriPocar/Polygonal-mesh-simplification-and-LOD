@@ -41,6 +41,7 @@ set(ENGINE_SOURCES
     "src/common/resources/Model.cpp"
     "src/common/resources/DualModel.cpp"
     "src/common/resources/Textures.cpp"
+    "src/common/resources/VmaUsage.cpp"
 
     # Scene
     "src/common/scene/Camera.cpp"

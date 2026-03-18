@@ -13,21 +13,25 @@ layout(location = 5) in uint instanceLodLevel;
 // outputs to fragment shader
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
+layout(location = 2) flat out uint fragLodLevel;
 
 // ubo
 layout(binding = 0) uniform UBO {
 	mat4 model;
 	mat4 view;
 	mat4 proj;
+	vec3 cameraPos;
+	uint showLodColors;
 } ubo;
 
 void main()
 {
-	float scale = 0.1;
+	float scale = 4;
 	vec3 worldPos = (inPosition * scale) + instancePosition;
 
 	gl_Position = ubo.proj * ubo.view * vec4(worldPos, 1.0);
 
 	fragColor = inNormal;
 	fragTexCoord = inTexCoord;
+	fragLodLevel = instanceLodLevel;
 }

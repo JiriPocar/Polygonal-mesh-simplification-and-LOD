@@ -1,5 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
 #include <vector>
 #include <memory>
 #include "core/Device.hpp"
@@ -82,19 +84,19 @@ public:
 	void updateSpiralPositions(float deltaTime, bool useGPUSpiral);
 	void rebuildLODs(CommandManager& cmd);
 
-	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return instanceBuffers[currentFrame]; }
+	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return instanceBuffers[currentFrame]->getBuffer(); }
 	uint32_t getMaxInstanceCount() const { return MAX_INSTANCE_COUNT; }
 	uint32_t getLODCount(uint32_t lodLevel) const { return lodCounts[lodLevel]; }
 	uint32_t getLODOffset(uint32_t lodLevel) const { return lodOffsets[lodLevel]; }
 	ModelLODSet& getModelLODSet(uint32_t index = 0) { return modelLODSets[index]; }
 	const std::vector<SpiralInstanceData>& getInstanceData() const { return instanceData; }
-	vk::Buffer getIndirectBuffer(uint32_t currentFrame) const { return indirectBuffers[currentFrame]; }
+	vk::Buffer getIndirectBuffer(uint32_t currentFrame) const { return indirectBuffers[currentFrame]->getBuffer(); }
 	UniformBuffer& getUniformBuffer() const { return uniformBuffer; }
-	vk::Buffer getLODInstanceBuffer(uint32_t currentFrame) const { return LODInstanceBuffers[currentFrame]; }
+	vk::Buffer getLODInstanceBuffer(uint32_t currentFrame) const { return LODInstanceBuffers[currentFrame]->getBuffer(); }
 	uint32_t getModelTypeCount() const { return static_cast<uint32_t>(modelLODSets.size()); }
 	float getAnimationTime() const { return animationTime; }
 
-	void resetIndirectBuffer(uint32_t currentFrame);
+	void resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFrame);
 
 	void addModelType(const std::string& modelPath, CommandManager& cmd);
 	void resetAnimation() { animationTime = 0.0f; }
@@ -108,11 +110,6 @@ private:
 
 	void createIndirectBuffer();
 	void createLODInstanceBuffer();
-	std::vector<vk::Buffer> indirectBuffers;
-	std::vector<vk::DeviceMemory> indirectBufferMemory;
-	std::vector<void*> mappedIndirectMemory;
-	std::vector<vk::Buffer> LODInstanceBuffers;
-	std::vector<vk::DeviceMemory> LODInstanceBufferMemory;
 
 	Device& dev;
 	UniformBuffer& uniformBuffer;
@@ -122,9 +119,9 @@ private:
 	std::vector<SpiralInstanceData> instanceData;
 	std::vector<ModelLODSet> modelLODSets;
 
-	std::vector<vk::Buffer> instanceBuffers;
-	std::vector<vk::DeviceMemory> instanceBufferMemory;
-	std::vector<void*> mappedMemory;
+	std::vector<std::unique_ptr<Buffer>> indirectBuffers;
+	std::vector<std::unique_ptr<Buffer>> LODInstanceBuffers;
+	std::vector<std::unique_ptr<Buffer>> instanceBuffers;
 
 	std::array<uint32_t, 4> lodCounts = { 0, 0, 0, 0 };
 	std::array<uint32_t, 4> lodOffsets = { 0, 0, 0, 0 };
