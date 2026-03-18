@@ -365,10 +365,17 @@ void SpiralRenderer::recreateSwapchain()
 
 	m_device.operator*().waitIdle();
 
-	m_swapchain.recreateOnResize(m_surface, width, height);
+	// prevent validation errrors
+	imageAvailableSemaphores.clear();
+	renderFinishedSemaphores.clear();
+	inFlightFence.clear();
+	imagesInFlight.clear();
 
+	m_swapchain.recreateOnResize(m_surface, width, height);
 	recreateFramebuffers();
 
+	// recreate sync objects, old were referencing old swapchain images
+	createSyncObjects();
 	framebufferResized = false;
 }
 

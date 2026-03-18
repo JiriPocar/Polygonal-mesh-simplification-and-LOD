@@ -130,6 +130,7 @@ void Device::createLogicalDevice(vk::SurfaceKHR surface)
 	// specify device features
 	vk::PhysicalDeviceFeatures deviceFeatures = {};
 	deviceFeatures.fillModeNonSolid = VK_TRUE; // wireframe support
+	deviceFeatures.samplerAnisotropy = VK_TRUE; // anisotropic filtering support
 
 	// specify device extensions
 	std::vector<const char*> extensions = {
