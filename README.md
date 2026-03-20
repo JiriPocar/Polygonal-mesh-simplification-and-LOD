@@ -146,6 +146,11 @@ BP Pocarovsky
 	- [ ] Performance research
 	- [ ] Export model option (.obj is trivial, .gltf is a bit tricky)
 	- [ ] Use MeshLab for visual comparison of models
+	- [ ] Spiral App - change the wireframe mode enable, which is in UBO, to a push constant
+
+- [ ] Simplifications
+	- [ ] Dont build vertex neighborhood in checkConnectivity for each collapse
+	- [ ] 
 
 # Since last meeting
 - Theoretical part of the thesis

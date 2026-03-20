@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <glm/glm.hpp>
 #include "../../resources/Model.hpp"
+#include "../Simplificator.hpp"
 
 namespace Geometry {
 	void computeBounds(std::vector<Vertex>& vertices, glm::vec3& outMin, glm::vec3& outMax);
@@ -21,7 +22,7 @@ namespace Geometry {
 	void removeDegeneratedTriangles(std::vector<uint32_t>& indices);
 	void finalizeVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
 
-	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float threshold = 0.0001f);
+	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, float threshold = 0.0001f);
 	void makeFlatShaded(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
 }
 

@@ -31,19 +31,33 @@ struct SimplificatorResult {
 	size_t simplifiedMemoryBytes;
 };
 
+struct CollapseOptions {
+	bool checkFaceFlipping = false;
+	bool checkConnectivity = false;
+	bool preserveBorders = false;
+	bool resolveUVSeams = false;
+
+	bool enableMerging = false;
+	bool mergeCloseVertivesPos = false;
+	bool mergeCloseVerticesUV = false;
+	bool mergeCloseVerticesNormal = false;
+};
+
 class Simplificator {
 public:
 	Simplificator();
 	~Simplificator() = default;
 
-	void setCurrentAlgorithm(Algorithm algorithm);
 	void enableFlatShading(bool enableFlatShading) { flatShading = enableFlatShading; };
+
+	void setCurrentAlgorithm(Algorithm algorithm);
 	Algorithm getCurrentAlgorithm() const { return currentAlgorithm; };
 
 	void setClusteringMethod(ClusteringMethod method) { clusteringMethod = method; };
 	ClusteringMethod getClusteringMethod() const { return clusteringMethod; };
 
 	SimplificatorResult simplify(Model& model, float targetFaceCountRatio);
+	CollapseOptions options;
 
 private:
 	Algorithm currentAlgorithm;

@@ -80,7 +80,6 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 
 	if (show)
 	{
-		showStatistics();
 		showModelMenu(currentDualModel, device, renderer, transform);
 		showSimplificationControls(currentDualModel, device);
 		showSimplificationResults();
@@ -159,7 +158,7 @@ void UserInterface::showStatistics()
 	ImGui::Text("FPS: %.1f", fps);
 	ImGui::Text("Delta time: %.3f ms", delta * 1000.0f);
 	ImGui::Separator();
-	ImGui::Text("Average: %.1f");
+	ImGui::Text("Average: %.1f", avgFps);
 	ImGui::Text("Min: %.1f", minFps);
 	ImGui::Text("Max: %.1f", maxFps);
 
@@ -174,38 +173,42 @@ void UserInterface::showStatistics()
 
 void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform)  
 {  
-	ImGui::SetNextWindowPos(ImVec2(10, 350));  
-	ImGui::SetNextWindowSize(ImVec2(250, 400));  
-	if (ImGui::Begin("Models", nullptr, ImGuiWindowFlags_None))
-	{  
-		ImGui::Separator();  
-		if (ImGui::BeginChild("ModelList", ImVec2(0, 300), true))  
-		{  
-			for (const auto& modelPath : menuModels)  
-			{  
-				if (ImGui::Selectable(modelPath.c_str())) {  
-					try {
-						device.operator*().waitIdle(); // wait for device to be idle before loading new model
-						currentDualModel = std::make_unique<DualModel>(device, uiCmdManager, modelPath);  
-						float setScale = currentDualModel->getOriginalModel().getScaleIndex();
-						transform.setScale(glm::vec3(setScale, setScale, setScale));
-						renderer.setDualModel(*currentDualModel);
-						std::cout << "Loaded model: " << modelPath << std::endl;  
-					}  
-					catch (const std::exception& e) {  
-						std::cerr << "Failed to load model: " << modelPath << " - " << e.what() << std::endl;  
-					}  
-				}  
-			}  
-			ImGui::EndChild();  
-		}  
-		ImGui::Separator();  
-		if (ImGui::Button("Refresh List"))  
-		{  
-			scanModels();  
-		}  
-	}  
-	ImGui::End();  
+	ImGui::SetNextWindowPos(ImVec2(10, 490));
+	ImGui::SetNextWindowSize(ImVec2(250, 400));
+	ImGui::Begin("Models");
+
+	ImGui::Separator();
+
+	if (ImGui::BeginChild("ModelList", ImVec2(0, 300), true))
+	{
+		for (const auto& modelPath : menuModels)
+		{
+			if (ImGui::Selectable(modelPath.c_str()))
+			{
+				try {
+					device.operator*().waitIdle(); // wait for device to be idle before loading new model
+					currentDualModel = std::make_unique<DualModel>(device, uiCmdManager, modelPath);
+					float setScale = currentDualModel->getOriginalModel().getScaleIndex();
+					transform.setScale(glm::vec3(setScale, setScale, setScale));
+					renderer.setDualModel(*currentDualModel);
+					std::cout << "Loaded model: " << modelPath << std::endl;
+				}
+				catch (const std::exception& e) {
+					std::cerr << "Failed to load model: " << modelPath << " - " << e.what() << std::endl;
+				}
+			}
+		}
+		ImGui::EndChild();
+	}
+
+	ImGui::Separator();
+
+	if (ImGui::Button("Refresh List"))
+	{
+		scanModels();
+	}
+
+	ImGui::End();
 }
 
 void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& currentDualModel, Device& device)
@@ -218,8 +221,8 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		return;
 	}
 
-	ImGui::SetNextWindowPos(ImVec2(1390, 10));
-	ImGui::SetNextWindowSize(ImVec2(400, 150));
+	ImGui::SetNextWindowPos(ImVec2(1490, 10));
+	ImGui::SetNextWindowSize(ImVec2(300, 355));
 
 	ImGui::Begin("Simplification");
 
@@ -249,7 +252,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 
 	if (currentAlgorithm != Algorithm::VertexClustering && currentAlgorithm != Algorithm::FloatingCellClustering)
 	{
-		ImGui::SliderFloat("Reduction Ratio", &ratio, 0.01f, 0.9f, "%.2f");
+		ImGui::SliderFloat("Reduction (%)", &ratio, 0.01f, 0.99f, "%.2f");
 		parameterValue = ratio;
 	}
 	else
@@ -280,9 +283,72 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		
 	}
 	
+	ImGui::Separator();
+
+	if (currentAlgorithm != Algorithm::VertexClustering && currentAlgorithm != Algorithm::FloatingCellClustering)
+	{
+		ImGui::Text("Edge collapse constraints");
+		ImGui::Checkbox("Check face flipping", &simplificator.options.checkFaceFlipping);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Prevents collapses that would cause faces to flip their normal direction, which can lead to visual artifacts.");
+		ImGui::Checkbox("Check connectivity", &simplificator.options.checkConnectivity);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ensures that collapses do not disconnect the mesh, which can create holes or separate parts of the model.");
+		ImGui::Checkbox("Preserve borders", &simplificator.options.preserveBorders);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Prevents collapsing edges that are on the border of the mesh, maintaining the overall shape.");
+		ImGui::Separator();
+
+		ImGui::Text("Holes and tearing prevention");
+		ImGui::Checkbox("Simplify with UV seams", &simplificator.options.resolveUVSeams);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("The simplification process will attempt to preserve UV seams. Use for models with textures.");
+		if (ImGui::Checkbox("Enable merging vertices", &simplificator.options.enableMerging))
+		{
+			if (simplificator.options.enableMerging)
+			{
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+			else
+			{
+				simplificator.options.mergeCloseVertivesPos = false;
+				simplificator.options.mergeCloseVerticesUV = false;
+				simplificator.options.mergeCloseVerticesNormal = false;
+			}
+		}
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Vertices with the selected criteria will be merged. Use when textures dont matter.");
+
+		ImGui::Indent();
+
+		if (ImGui::Checkbox("Merge by position", &simplificator.options.mergeCloseVertivesPos))
+		{
+			if (simplificator.options.mergeCloseVertivesPos) simplificator.options.enableMerging = true;
+		}
+
+		if (ImGui::Checkbox("Merge by UV", &simplificator.options.mergeCloseVerticesUV))
+		{
+			if (simplificator.options.mergeCloseVerticesUV)
+			{
+				simplificator.options.enableMerging = true;
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+		}
+
+		if (ImGui::Checkbox("Merge by normal", &simplificator.options.mergeCloseVerticesNormal))
+		{
+			if (simplificator.options.mergeCloseVerticesNormal)
+			{
+				simplificator.options.enableMerging = true;
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+		}
+		ImGui::Unindent();
+	}
+	else
+	{
+		ImGui::Text("By definition clustering algorithms do not consider topology or face flipping");
+	}
+	
+
+	ImGui::Separator();
 
 	auto& originalModel = currentDualModel->getOriginalModel();
-	
 	if (ImGui::Button("Apply"))
 	{
 		try {
@@ -380,9 +446,8 @@ void UserInterface::showSimplificationResults()
 
 void UserInterface::showModelPerspectiveControls(Transform& transform)
 {
-	ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
-	ImGui::SetNextWindowPos(ImVec2(420, 10));
-	ImGui::SetNextWindowSize(ImVec2(180, 180));
+	ImGui::SetNextWindowPos(ImVec2(10, 10));
+	ImGui::SetNextWindowSize(ImVec2(180, 155));
 
 	ImGui::Begin("Model Transform");
 	glm::vec3 rotation = transform.getRot();
@@ -395,6 +460,8 @@ void UserInterface::showModelPerspectiveControls(Transform& transform)
 	ImGui::Checkbox("X", &rotateByX);
 	ImGui::Checkbox("Y", &rotateByY);
 	ImGui::Checkbox("Z", &rotateByZ);
+
+	ImGui::Separator();
 
 	// reset transform
 	if (ImGui::Button("Reset Transform"))
@@ -418,12 +485,11 @@ void UserInterface::setTransform(const Transform& transform)
 void UserInterface::showSmoothingControls()
 {
 	// enable flat shading
-	ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
-	ImGui::SetNextWindowPos(ImVec2(620, 10));
+	ImGui::SetNextWindowPos(ImVec2(10, 175));
 	ImGui::SetNextWindowSize(ImVec2(180, 60));
 	ImGui::Begin("Shading");
 
-	static bool flatShading = true;
+	static bool flatShading = false;
 	if (ImGui::Checkbox("Flat Shading", &flatShading))
 	{
 		simplificator.enableFlatShading(flatShading);

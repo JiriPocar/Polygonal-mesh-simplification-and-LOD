@@ -7,6 +7,8 @@
  */
 
 #include "Topology.hpp"
+#include <map>
+#include <numeric>
 
 namespace Topology
 {
@@ -29,6 +31,10 @@ namespace Topology
 				if (i2 != vertexIdx) neighborhood.vertices.push_back(i2);
 			}
 		}
+
+		// sort and remove duplicates from neighborhood.vertices
+		std::sort(neighborhood.vertices.begin(), neighborhood.vertices.end());
+		neighborhood.vertices.erase(std::unique(neighborhood.vertices.begin(), neighborhood.vertices.end()), neighborhood.vertices.end());
 
 		return neighborhood;
 	}
@@ -64,81 +70,126 @@ namespace Topology
 		return neighborhoods;
 	}
 
-	std::vector<bool> findBorderVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	std::vector<uint32_t> buildSamePlaceRepresentatives(const std::vector<Vertex>& vertices)
 	{
-		std::vector<bool> isBorderVertex(vertices.size(), false);
+		std::vector<uint32_t> representatives(vertices.size());
 
-		// { (v1, v2), number of faces sharing this edge }
-		std::map<std::pair<uint32_t, uint32_t>, int> edgeCount;
-
-		// fill edge count map
-		for (size_t i = 0; i < indices.size(); i += 3)
-		{
-			for (int j = 0; j < 3; j++)
-			{
-				uint32_t v1 = indices[i + j];
-				uint32_t v2 = indices[i + (j + 1) % 3];
-
-				std::pair<uint32_t, uint32_t> edge = std::minmax(v1, v2);
-
-				// at given edge, increment count of faces sharing it
-				edgeCount[edge]++;
-			}
-		}
-
-		// if edge is only shared by one face, then both vertices are border vertices
-		for (auto& pair : edgeCount)
-		{
-			if (pair.second == 1)
-			{
-				uint32_t v1 = pair.first.first;
-				uint32_t v2 = pair.first.second;
-
-				isBorderVertex[v1] = true;
-				isBorderVertex[v2] = true;
-			}
-		}
-
-		std::vector<uint32_t> uniqueActiveVertices;
-		std::vector<bool> isActive(vertices.size(), false);
-
-		for (uint32_t idx : indices) {
-			if (!isActive[idx]) {
-				isActive[idx] = true;
-				uniqueActiveVertices.push_back(idx);
-			}
-		}
-
-		// sort active vertices by X to prevent unnecessary length checks later
-		std::sort(uniqueActiveVertices.begin(), uniqueActiveVertices.end(),
+		// sort vertices by x coordinate to speed up the search for vertices in the same place
+		std::vector<uint32_t> sortedIndices(vertices.size());
+		std::iota(sortedIndices.begin(), sortedIndices.end(), 0);
+		std::sort(sortedIndices.begin(), sortedIndices.end(),
 			[&vertices](uint32_t a, uint32_t b)
 			{
 				return vertices[a].pos.x < vertices[b].pos.x;
 			}
 		);
 
-		// tag vertices that are very close to each other as border vertices to prevent
-		// collapsing them into one (which would cause holes in the mesh)
-		// this resolves non-watertight meshes made from more separate meshes better
-		for (size_t i = 0; i < uniqueActiveVertices.size(); i++)
+		// initially, each vertex is its own representative
+		for (uint32_t i = 0; i < vertices.size(); i++)
 		{
-			uint32_t v1 = uniqueActiveVertices[i];
+			representatives[i] = i;
+		}
 
-			for (size_t j = i + 1; j < uniqueActiveVertices.size(); j++)
+		// for each vertex, find other vertices in the same place and set their representative to the same index
+		for (size_t i = 0; i < sortedIndices.size(); i++)
+		{
+			uint32_t idx1 = sortedIndices[i];
+
+			if (representatives[idx1] != idx1) continue;
+
+			for (size_t j = i + 1; j < sortedIndices.size(); j++)
 			{
-				uint32_t v2 = uniqueActiveVertices[j];
+				uint32_t idx2 = sortedIndices[j];
 
-				// since we did sorting by X axis, we can break early
-				if (std::abs(vertices[v1].pos.x - vertices[v2].pos.x) > 0.0001f)
+				if (vertices[idx2].pos.x - vertices[idx1].pos.x > 0.0001f)
 				{
 					break;
 				}
 
-				// tag vertices that are very close to each other as border vertices
-				if (glm::length(vertices[v1].pos - vertices[v2].pos) < 0.0001f)
+				if (glm::length(vertices[idx1].pos - vertices[idx2].pos) < 0.0001f)
 				{
-					isBorderVertex[v1] = true;
-					isBorderVertex[v2] = true;
+					representatives[idx2] = idx1;
+				}
+			}
+		}
+
+		return representatives;
+	}
+
+	std::vector<std::vector<uint32_t>> buildTwinMap(const std::vector<uint32_t>& representatives)
+	{
+		/**
+		 * Vertices 0, 3, 7 share the same representative (0)
+		 * 
+		 * Result:
+		 * twinMap[0] = { 3, 7 }
+		 * twinMap[3] = { 0, 7 }
+		 * twinMap[7] = { 0, 3 }
+		 * 
+		 * All other vertices: twinMap[i] = {}
+		*/
+		std::vector<std::vector<uint32_t>> twinMap(representatives.size());
+
+		// group vertices by their representative
+		std::unordered_map<uint32_t, std::vector<uint32_t>> representativesGroups;
+
+		// for each vertex, add it to the group of its representative
+		for (uint32_t i = 0; i < representatives.size(); i++)
+		{
+			representativesGroups[representatives[i]].push_back(i);
+		}
+
+		for (uint32_t i = 0; i < representatives.size(); i++)
+		{
+			uint32_t rep = representatives[i];
+			for (auto twin : representativesGroups[rep])
+			{
+				if (twin != i)
+				{
+					twinMap[i].push_back(twin);
+				}
+			}
+		}
+	
+		return twinMap;
+	}
+
+
+	std::vector<bool> findBorderVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<uint32_t>& representatives)
+	{
+		std::vector<bool> isBorderVertex(vertices.size(), false);
+		std::map<std::pair<uint32_t, uint32_t>, int> edgeCount;
+		
+		for (size_t i = 0; i < indices.size(); i += 3)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				uint32_t r1 = representatives[indices[i + j]];
+				uint32_t r2 = representatives[indices[i + (j + 1) % 3]];
+
+				if (r1 == r2) continue;
+
+				std::pair<uint32_t, uint32_t> edge = std::minmax(r1, r2);
+				edgeCount[edge]++;
+			}
+		}
+
+		for (size_t i = 0; i < indices.size(); i += 3)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				uint32_t rawV1 = indices[i + j];
+				uint32_t rawV2 = indices[i + (j + 1) % 3];
+
+				uint32_t r1 = representatives[rawV1];
+				uint32_t r2 = representatives[rawV2];
+
+				if (r1 == r2) continue;
+
+				if (edgeCount[std::minmax(r1, r2)] == 1)
+				{
+					isBorderVertex[rawV1] = true;
+					isBorderVertex[rawV2] = true;
 				}
 			}
 		}
@@ -202,6 +253,139 @@ namespace Topology
 		}
 
 		return false;
+	}
+
+	bool checkConnectivity(uint32_t v1, uint32_t v2, std::vector<uint32_t>& indices)
+	{
+		// get neighborhoods of both vertices
+		auto n1 = getVertexNeighborhood(v1, indices);
+		auto n2 = getVertexNeighborhood(v2, indices);
+
+		// get number of shared vertices
+		int sharedVertices = 0;
+		for (uint32_t a : n1.vertices)
+		{
+			for (uint32_t b : n2.vertices)
+			{
+				if (a == b)
+				{
+					sharedVertices++;
+					break;
+				}
+			}
+		}
+
+		// get number of shared faces
+		int sharedFaces = 0;
+		for (uint32_t a : n1.triangles)
+		{
+			for (uint32_t b : n2.triangles)
+			{
+				if (a == b)
+				{
+					sharedFaces++;
+					break;
+				}
+			}
+		}
+
+		// link condition check
+		// interior edge -> 2 == 2 -> okay
+		// boundary edge -> 1 == 1 -> okay
+		// non-manifold edge -> 2 != 1 -> not okay
+		return sharedVertices == sharedFaces;
+	}
+
+	bool isCollapseValid(uint32_t v1, uint32_t v2,std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, const std::vector<bool>& isBorderVertex, const std::vector<std::vector<uint32_t>>& twinMap)
+	{
+		if (options.preserveBorders)
+		{
+			if (isBorderVertex[v1] || isBorderVertex[v2])
+			{
+				return false;
+			}
+		}
+
+		if (options.checkFaceFlipping)
+		{
+			if (checkFaceFlipping(vertices[v2].pos, vertices[v1].pos, v2, indices, vertices))
+			{
+				return false;
+			}
+		}
+
+		if (options.checkConnectivity)
+		{
+			if (checkConnectivity(v1, v2, indices))
+			{
+				return false;
+			}
+
+			if (options.resolveUVSeams)
+			{
+				std::vector<uint32_t> keepCandidates = twinMap[v1];
+				keepCandidates.push_back(v1);
+
+				for (uint32_t twinToRemove : twinMap[v2])
+				{
+					uint32_t bestTwinKeep = v1;
+					float minDiff = FLT_MAX;
+
+					for (uint32_t candidate : keepCandidates)
+					{
+						float uvDiff = glm::length(vertices[twinToRemove].texCoord - vertices[candidate].texCoord);
+						float normDiff = glm::length(vertices[twinToRemove].normal - vertices[candidate].normal);
+						if (uvDiff + normDiff < minDiff)
+						{
+							minDiff = uvDiff + normDiff;
+							bestTwinKeep = candidate;
+						}
+					}
+
+					if (!checkConnectivity(bestTwinKeep, twinToRemove, indices))
+					{
+						return false;
+					}
+				}
+
+			}
+		}
+
+		return true;
+	}
+
+	bool isCollapseValidQEM(uint32_t v1, uint32_t v2, glm::vec3 optimalPos,
+		std::vector<Vertex>& vertices, std::vector<uint32_t>& indices,
+		CollapseOptions& options, const std::vector<bool>& isBorderVertex)
+	{
+		// preserve edges that only share one face
+		if (options.preserveBorders)
+		{
+			if (isBorderVertex[v1] || isBorderVertex[v2])
+			{
+				return false;
+			}
+		}
+
+		if (options.checkFaceFlipping)
+		{
+			// check flip for both (v1, optimalPos) and (v2, optimalPos), if either flips, the collapse is invalid
+			if (checkFaceFlipping(vertices[v1].pos, optimalPos, v1, indices, vertices))
+			{
+				return false;
+			}
+			if (checkFaceFlipping(vertices[v2].pos, optimalPos, v2, indices, vertices))
+			{
+				return false;
+			}
+		}
+
+		if (options.checkConnectivity)
+		{
+
+		}
+
+		return true;
 	}
 }
 /* End of the Topology.cpp file */

@@ -68,7 +68,7 @@ namespace Geometry
 		indices = cleanedIndices;
 	}
 
-	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float threshold)
+	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, float threshold)
 	{
 		// build index map, each vertex points to its representative
 		// if vertex is duplicate, then map to the first occurrence
@@ -79,12 +79,37 @@ namespace Geometry
 
 			// find duplicate vertex
 			for (uint32_t j = 0; j < i; j++) {
-				bool samePos = glm::length(vertices[i].pos - vertices[j].pos) < threshold;
-				if (!samePos) continue;
+				bool canMerge = true;
 
-				bool sameUV = glm::length(vertices[i].texCoord - vertices[j].texCoord) < 0.001f;
+				if (options.mergeCloseVertivesPos)
+				{
+					if (glm::length(vertices[i].pos - vertices[j].pos) > threshold)
+					{
+						canMerge = false;
+					}
+				}
+				else
+				{
+					canMerge = false;
+				}
 
-				if (samePos && sameUV)
+				if (canMerge && options.mergeCloseVerticesUV)
+				{
+					if (glm::length(vertices[i].texCoord - vertices[j].texCoord) > 0.001f)
+					{
+						canMerge = false;
+					}
+				}
+
+				if (canMerge && options.mergeCloseVerticesNormal)
+				{
+					if (glm::length(vertices[i].normal - vertices[j].normal) > 0.01f)
+					{
+						canMerge = false;
+					}
+				}
+
+				if (canMerge)
 				{
 					indexMap[i] = indexMap[j];
 					break;
