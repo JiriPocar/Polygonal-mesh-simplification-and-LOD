@@ -10,6 +10,7 @@
 
 const uint32_t MAX_INSTANCE_COUNT = 1000000;
 
+// matches the structure in the shader for instance data
 struct SpiralInstanceData {
 	glm::vec3 pos;
 	float padding1;
@@ -18,6 +19,7 @@ struct SpiralInstanceData {
 	glm::vec2 padding2;
 };
 
+// matches the structure in the shader for indirect draw commands
 struct DrawIndexedIndirectCommand {
 	uint32_t indexCount;
 	uint32_t instanceCount;

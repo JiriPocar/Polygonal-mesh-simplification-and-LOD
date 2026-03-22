@@ -247,7 +247,7 @@ MeshData Simplificator::simplifyVertexClustering(std::vector<Vertex> vertices, s
 {
 	MeshData result;
 
-	//mergeCloseVertices(vertices, indices);
+	Geometry::mergeCloseVertices(vertices, indices);
 	size_t currentFaceCount = indices.size() / 3;
 
 	std::cout << "=== Vertex Clustering Debug ===" << std::endl;

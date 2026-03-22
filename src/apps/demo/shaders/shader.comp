@@ -78,13 +78,14 @@ void main()
 
 		float currentRadius = pushConsts.minRadius + (abs(currentZ) * pushConsts.coneFactor);
 
+		// compute position in spiral
 		currentPos = vec3(
 			currentRadius * cos(finalAngle),
 			currentRadius * sin(finalAngle),
 			currentZ
 		);
 	}
-	else
+	else // read positions of this instance from input buffer
 	{
 		currentPos = inputBuffer.instances[idx].pos;
 	}

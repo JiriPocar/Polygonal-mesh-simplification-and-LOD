@@ -84,7 +84,7 @@ BP Pocarovsky
 - [ ] Simplification algorithms for LOD generation
 	- [x] Quadric Error Metrics
 		- [x] Research
-		- [ ] Optimized 
+		- [ ] Optimized
 		- [x] Compute optimal position 
 	- [x] Vertex Clustering
 		- [x] Research
@@ -132,14 +132,13 @@ BP Pocarovsky
 			- [ ] Usage of extended QEM
 	- [ ] QEM optimization via priority queue
 	- [ ] Pick a set of testing models
-	- [ ] UI improvements
+	- [x] UI improvements
 		- [x] Debug (result) window
 		- [x] Spiral scene - LOD threshold controls
 		- [x] Enable / disable UI option
 	- [ ] Performance research
 	- [ ] (?) Export model option (.obj is trivial, .gltf is a bit tricky)
 	- [ ] (?) Use MeshLab for visual comparison of models
-	- [ ] 
 
 # Known issues
 

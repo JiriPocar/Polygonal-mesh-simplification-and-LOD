@@ -578,20 +578,20 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 		ImGui::SliderFloat("LOD1 Range", &scene.config.lodDist1, scene.config.lodDist0, scene.config.lodDist2);
 		ImGui::SliderFloat("LOD2 Range", &scene.config.lodDist2, scene.config.lodDist1, scene.config.lodDist3);
 		ImGui::SliderFloat("LOD3 Range", &scene.config.lodDist3, scene.config.lodDist2, 20000.0f);
-	}
 
-	ImGui::Separator();
+		ImGui::Separator();
 
-	ImGui::Text("LOD Simplification");
+		ImGui::Text("LOD Simplification");
 
-	ImGui::SliderFloat("LOD0 % Faces", &scene.config.lodPercentageSimplification0, scene.config.lodPercentageSimplification1, 1.0f, "%.2f");
-	ImGui::SliderFloat("LOD1 % Faces", &scene.config.lodPercentageSimplification1, scene.config.lodPercentageSimplification2, scene.config.lodPercentageSimplification0, "%.2f");
-	ImGui::SliderFloat("LOD2 % Faces", &scene.config.lodPercentageSimplification2, scene.config.lodPercentageSimplification3, scene.config.lodPercentageSimplification1, "%.2f");
-	ImGui::SliderFloat("LOD3 % Faces", &scene.config.lodPercentageSimplification3, 0.01f,									   scene.config.lodPercentageSimplification2, "%.2f");
-
-	if (ImGui::Button("Apply and regenerate meshes"))
-	{
-		scene.rebuildLODs(uiCmdManager);
+		ImGui::SliderFloat("LOD0 % Faces", &scene.config.lodPercentageSimplification0, scene.config.lodPercentageSimplification1, 1.0f, "%.2f");
+		ImGui::SliderFloat("LOD1 % Faces", &scene.config.lodPercentageSimplification1, scene.config.lodPercentageSimplification2, scene.config.lodPercentageSimplification0, "%.2f");
+		ImGui::SliderFloat("LOD2 % Faces", &scene.config.lodPercentageSimplification2, scene.config.lodPercentageSimplification3, scene.config.lodPercentageSimplification1, "%.2f");
+		ImGui::SliderFloat("LOD3 % Faces", &scene.config.lodPercentageSimplification3, 0.01f, scene.config.lodPercentageSimplification2, "%.2f");
+	
+		if (ImGui::Button("Apply and regenerate meshes"))
+		{
+			scene.rebuildLODs(uiCmdManager);
+		}
 	}
 
 	ImGui::End();
