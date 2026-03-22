@@ -166,10 +166,6 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 			nullptr
 		);
 
-	if (useGPULODCompute)
-	{
-		m_spiralScene.resetIndirectBuffer(currentFrame);
-
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, m_computePipeline->get());
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eCompute,

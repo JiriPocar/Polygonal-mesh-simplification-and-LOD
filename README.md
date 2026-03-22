@@ -3,13 +3,17 @@
 ## Requirements
 
 - Vulkan SDK [found here](https://vulkan.lunarg.com/sdk/home). Make sure to restart Visual Studio after the installation.
-
+- *(optional)* Python and ```matplotlib``` for performance statistics visualization
 ## Project structure
 
 ```
 BP Pocarovsky
 ├── assets
 ├── external
+├── plot
+│   ├── output.txt
+│   ├── plotLOD.py
+│   └── run.bat
 ├── src
 │   ├── common
 │   │   ├── core
@@ -161,8 +165,15 @@ BP Pocarovsky
 - Application
 	- Added VMA (Spiral CPU-compute boost, tweaking desired comparison)
 		- Some thorough testing was done here, to assure that the performance boost is not a fluke
-	- Several UI and QoL Spiral app improvements (wireframe mode)
+	- Several UI and QoL Spiral app improvements (wireframe mode in particular)
 	- Refactored spaghetti ```main``` codes
+- Other
+	- Visited a lecture about computer graphics in KCD2
+	- 50 000 up to 100 000 triangles per character
+	- up to 10 milion triangles for a whole scene
+	- use of imposters (billboards)
+	- polygonal meshes with rasterization pipeline
+	- very specific profiler for frame times
 
 # Known issues
 
