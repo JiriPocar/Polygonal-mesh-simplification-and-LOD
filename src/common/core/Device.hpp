@@ -14,6 +14,7 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include <optional>
+#include <vk_mem_alloc.h>
 
 class Device {
 public:
@@ -24,7 +25,7 @@ public:
 	 * @param surface Vulkan surface for presentation.
 	 */
 	Device(vk::Instance instance, vk::SurfaceKHR surface);
-	~Device() = default;
+	~Device();
 
 	/**
 	 * @brief Returns the physical device (GPU) being used.
@@ -98,7 +99,9 @@ public:
 		return 0;
 	}
 
-
+	VmaAllocator getAllocator() const {
+		return allocator;
+	}
 
 private:
 	// structure to hold queue family indices
@@ -143,6 +146,8 @@ private:
 
 	vk::Queue graphicsQueue;
 	vk::Queue presentQueue;
+
+	VmaAllocator allocator = nullptr;
 
 	uint32_t graphicsQueueFamily;
 	uint32_t presentQueueFamily;

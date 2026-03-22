@@ -16,8 +16,10 @@ BP Pocarovsky
 │   │   │   ├── Device.hpp/cpp
 │   │   │   ├── Instance.hpp/cpp
 │   │   │   ├── Pipeline.hpp/cpp
-│   │   │   ├── SpiralPipline.hpp/cpp
-│   │   │   └── Swapchain.hpp/cpp
+│   │   │   ├── SpiralPipeline.hpp/cpp
+│   │   │   ├── SpiralComputePipeline.hpp/cpp
+│   │   │   ├── Swapchain.hpp/cpp
+│   │   │   └── VulkanApp.hpp/cpp
 │   │   ├── rendering
 │   │   │   ├── CommandManager.hpp/cpp
 │   │   │   ├── Descriptors.hpp/cpp
@@ -30,7 +32,8 @@ BP Pocarovsky
 │   │   │   ├── Buffer.hpp/cpp
 │   │   │   ├── DualModel.hpp/cpp
 │   │   │   ├── Model.hpp/cpp
-│   │   │   └── Textures.hpp/cpp
+│   │   │   ├── Textures.hpp/cpp
+│   │   │   └── VmaUsage.cpp
 │   │   ├── scene
 │   │   │   ├── Camera.hpp/cpp
 │   │   │   ├── Scene.hpp/cpp
@@ -45,6 +48,7 @@ BP Pocarovsky
 │   │   │        ├── Naive.hpp/cpp
 │   │   │        ├── QEM.hpp/cpp
 │   │   │        ├── VertexClustering.hpp/cpp
+│   │   │        ├── FloatingCellClustering.hpp/cpp
 │   │   │        └── VertexDecimation.hpp/cpp
 │   │   ├── ui
 │   │   │   └── ui.hpp/cpp
@@ -52,16 +56,19 @@ BP Pocarovsky
 │   └── apps
 │       ├── demo
 │       │   ├── shaders
-│       │   │   ├── frag.spv
-│       │   │   └── vert.spv
+│       │   │   ├── shader.vert
+│       │   │   ├── shader.frag
+│       │   │   └── shader.comp
 │       │   ├── CMakeLists.txt
-│       │   └── main.cpp
+│       │   ├── main.cpp
+│       │   └── SpiralApp.hpp/cpp
 │       └── simplificator
 │           ├── shaders
-│           │   ├── frag.spv
-│           │   └── vert.spv
+│           │   ├── shader.vert
+│           │   └── shader.frag
 │           ├── CMakeLists.txt
-│           └── main.cpp
+│           ├── main.cpp
+│           └── SimplificatorApp.hpp/cpp
 ├── CMakeLists.txt
 ├── LICENSE.txt
 └── README.md
@@ -139,10 +146,29 @@ BP Pocarovsky
 	- [ ] Performance research
 	- [ ] (?) Export model option (.obj is trivial, .gltf is a bit tricky)
 	- [ ] (?) Use MeshLab for visual comparison of models
+	- [ ] 
+
+# Since last meeting
+- Theoretical part of the thesis
+	- Many re-iterations of existing chapters (Nanite, model repr., Vulkan chapter, ..)
+	- Some reiterations left (simpl. methods, )
+	- Completed remaining chapters (CLOD, View-dependent LOD, additional techniques, libraries)
+	- Structure changes in chapters (chronology)
+	- Formal side of the thesis improved (figures, equations, pointers to these)
+- Implementation part of the thesis
+	- Looked for inspiration in existing theses
+	- Format of the design and implementation chapters to be decided
+- Application
+	- Added VMA (Spiral CPU-compute boost, tweaking desired comparison)
+		- Some thorough testing was done here, to assure that the performance boost is not a fluke
+	- Several UI and QoL Spiral app improvements (wireframe mode)
+	- Refactored spaghetti ```main``` codes
 
 # Known issues
 
 - [FIXED] On first run, the application might crash when loading a model. Restarting the application resolves the issue.
+- Spiral app tends to be 'tweaking' until you reset the animation time
+- Simplificator doesn't handle non-manifold meshes well, though is still functional. 
 
 # Assets table
 

@@ -66,13 +66,97 @@ namespace Naive {
 		return shortestEdge;
 	}
 
-	void collapseEdge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const Edge& edgeToCollapse)
-	{
-		uint32_t keepIdx = edgeToCollapse.v1;
-		uint32_t removeIdx = edgeToCollapse.v2;
+	uint32_t collapseEdge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const Edge& edgeToCollapse, std::vector<std::vector<uint32_t>>& twinMap, bool syncUVSeams, std::vector<bool>& vertexDeleted)
+    {
+        uint32_t keepIdx = edgeToCollapse.v1;
+        uint32_t removeIdx = edgeToCollapse.v2;
 
-		Geometry::remapIndices(indices, removeIdx, keepIdx);
-		Geometry::removeDegeneratedTriangles(indices);
+		// if removeIdx is a seam vertex and keepIdx is not, turn the collapse around to keep the seam vertex
+        if (syncUVSeams)
+        {
+            bool keepIsSeam = !twinMap[keepIdx].empty();
+            bool removeIsSeam = !twinMap[removeIdx].empty();
+            if (removeIsSeam && !keepIsSeam)
+                std::swap(keepIdx, removeIdx);
+        }
+
+		// remap all indices from removeIdx to keepIdx in the index buffer
+        Geometry::remapIndices(indices, removeIdx, keepIdx);
+		// mark the removed vertex as deleted
+        vertexDeleted[removeIdx] = true;
+
+		// if syncing UV seams, we need to also remap all twin vertices of
+        // removeIdx to the best matching twin of keepIdx and mark them as deleted
+		if (syncUVSeams)
+		{
+			// keepCandidates = keepIdx + all its twins, from which we choose the best match for each twin of removeIdx
+			std::vector<uint32_t> keepCandidates = twinMap[keepIdx];
+			keepCandidates.push_back(keepIdx);
+
+			// for each twin of removeIdx find the best matching twin of keepIdx and remap it
+			for (auto twinToRemove : twinMap[removeIdx])
+			{
+				if (vertexDeleted[twinToRemove]) continue;
+
+				// find the best matching twin in keepCandidates based on UV and normal
+				uint32_t bestTwinKeep = keepIdx;
+				float minDiff = FLT_MAX;
+				for (uint32_t candidate : keepCandidates)
+				{
+					if (vertexDeleted[candidate]) continue;
+					float uvDiff = glm::length(vertices[twinToRemove].texCoord - vertices[candidate].texCoord);
+					float normDiff = glm::length(vertices[twinToRemove].normal - vertices[candidate].normal);
+					if (uvDiff + normDiff < minDiff)
+					{
+						minDiff = uvDiff + normDiff;
+						bestTwinKeep = candidate;
+					}
+				}
+
+				// collapse twins
+				Geometry::remapIndices(indices, twinToRemove, bestTwinKeep);
+				vertexDeleted[twinToRemove] = true;
+
+				// reconnect other twins of twinToRemove to bestTwinKeep
+				for (uint32_t grandTwin : twinMap[twinToRemove])
+				{
+					if (grandTwin == bestTwinKeep || vertexDeleted[grandTwin]) continue;
+
+					// add grandTwin to bestTwinKeep's twin list if not already there
+					auto& btkTwins = twinMap[bestTwinKeep];
+					if (std::find(btkTwins.begin(), btkTwins.end(), grandTwin) == btkTwins.end())
+					{
+						btkTwins.push_back(grandTwin);
+					}
+
+					// deal with grandTwin's twin list - replace twinToRemove with bestTwinKeep
+					auto& gtTwins = twinMap[grandTwin];
+					std::replace(gtTwins.begin(), gtTwins.end(), twinToRemove, bestTwinKeep);
+				}
+				twinMap[twinToRemove].clear();
+			}
+
+			// reconnect twins of removeIdx to keepIdx
+			for (uint32_t twin : twinMap[removeIdx])
+			{
+				if (vertexDeleted[twin] || twin == keepIdx) continue;
+
+				// add twin to keepIdx's twin list if not already there
+				auto& keepIdxTwin = twinMap[keepIdx];
+				if (std::find(keepIdxTwin.begin(), keepIdxTwin.end(), twin) == keepIdxTwin.end())
+				{
+					keepIdxTwin.push_back(twin);
+				}
+
+				// deal with twin's twin list - replace removeIdx with keepIdx
+				auto& tTwins = twinMap[twin];
+				std::replace(tTwins.begin(), tTwins.end(), removeIdx, keepIdx);
+			}
+			twinMap[removeIdx].clear();
+		}
+
+        Geometry::removeDegeneratedTriangles(indices);
+        return keepIdx;
 	}
 }
 

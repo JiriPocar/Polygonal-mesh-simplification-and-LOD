@@ -17,6 +17,29 @@ Device::Device(vk::Instance instance, vk::SurfaceKHR surface)
 {
 	pickPhysicalDevice(instance, surface);
 	createLogicalDevice(surface);
+
+	// create VMA allocator
+	VmaAllocatorCreateInfo allocatorInfo = {};
+	allocatorInfo.physicalDevice = static_cast<VkPhysicalDevice>(physicalDevice);
+	allocatorInfo.device = static_cast<VkDevice>(*device);
+	allocatorInfo.instance = static_cast<VkInstance>(instance);
+	allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+
+	auto result = vmaCreateAllocator(&allocatorInfo, &allocator);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to create VMA allocator!");
+	}
+}
+
+Device::~Device()
+{
+	// destroy VMA allocator, other RAII objects will be
+	// automatically cleaned up by their destructors after this
+	if (allocator != nullptr)
+	{
+		vmaDestroyAllocator(allocator);
+	}
 }
 
 void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface)
@@ -107,6 +130,7 @@ void Device::createLogicalDevice(vk::SurfaceKHR surface)
 	// specify device features
 	vk::PhysicalDeviceFeatures deviceFeatures = {};
 	deviceFeatures.fillModeNonSolid = VK_TRUE; // wireframe support
+	deviceFeatures.samplerAnisotropy = VK_TRUE; // anisotropic filtering support
 
 	// specify device extensions
 	std::vector<const char*> extensions = {

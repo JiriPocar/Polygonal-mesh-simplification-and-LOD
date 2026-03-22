@@ -226,24 +226,10 @@ namespace QEM {
 		}
 	}
 
-	void collapseQedge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics, Qedge& edge)
+	void collapseQedge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics, Qedge& edge, std::vector<std::vector<uint32_t>>& twinMap, bool syncUVSeams, std::vector<bool>& vertexDeleted)
 	{
 		uint32_t keepIdx = edge.v1;
 		uint32_t removeIdx = edge.v2;
-
-		// though, extended QEM exists for these purposes, lets interpolate UVs for now
-		float d1 = glm::distance(vertices[keepIdx].pos, edge.optimalPos);
-		float d2 = glm::distance(vertices[removeIdx].pos, edge.optimalPos);
-		float totalDistance = d1 + d2;
-		if (totalDistance > 1e-6f)
-		{
-			float t = d1 / totalDistance;
-			vertices[keepIdx].texCoord = glm::mix(vertices[keepIdx].texCoord, vertices[removeIdx].texCoord, t);
-		}
-		else
-		{
-			vertices[keepIdx].texCoord = 0.5f * (vertices[keepIdx].texCoord + vertices[removeIdx].texCoord);
-		}
 
 		// update vertex position with optimal position
 		vertices[keepIdx].pos = edge.optimalPos;
@@ -252,12 +238,9 @@ namespace QEM {
 		quadrics[keepIdx] = quadrics[keepIdx] + quadrics[removeIdx];
 
 		// remap indices
-		for (auto& idx : indices)
-		{
-			if (idx == removeIdx) {
-				idx = keepIdx;
-			}
-		}
+		Geometry::remapIndices(indices, removeIdx, keepIdx);
+		// mark removed vertex as deleted
+		vertexDeleted[removeIdx] = true;
 
 		// at last, remove degenerated triangles
 		Geometry::removeDegeneratedTriangles(indices);

@@ -37,6 +37,15 @@ SpiralRenderer::SpiralRenderer(
 		{
 			this->framebufferResized = true;
 		});
+
+	Texture* texture = m_spiralScene.getModelLODSet(0).getLOD(0).getTexture();
+	if (texture)
+	{
+		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			m_descriptor.updateTexture(i, *texture);
+		}
+	}
 }
 
 SpiralRenderer::~SpiralRenderer()
@@ -125,55 +134,42 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 	ubo.model = glm::mat4(1.0f);
 	ubo.view = camera.getViewMatrix();
 	ubo.proj = camera.getProjectionMatrix();
+	ubo.cameraPos = camera.getPosition();
+	ubo.showLodColors = showWireframe ? 1 : 0;
 	m_uniformBuffer.update(ubo, currentFrame);
 
-	Texture* texture = m_spiralScene.getModelLODSet(0).getLOD(0).getTexture();
-
-	if (texture)
+	if (useGPULODCompute)
 	{
-		m_descriptor.updateTexture(currentFrame, *texture);
-	}
+		// reset indirect buffer before dispatching compute shader to ensure its empty
+		m_spiralScene.resetIndirectBuffer(cmdBuffer, currentFrame);
 
-	// render pass
-	std::array<vk::ClearValue, 2> clearValues = {};
-	clearValues[0].color = vk::ClearColorValue(0.1f, 0.1f, 0.15f, 1.0f); // background color
-	clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);   // clear depth to far plane
+		// barrier to ensure indirect buffer is ready for compute shader to write after reset
+		vk::BufferMemoryBarrier updateBarrier(
+			vk::AccessFlagBits::eTransferWrite,
+			vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite,
+			VK_QUEUE_FAMILY_IGNORED,
+			VK_QUEUE_FAMILY_IGNORED,
+			m_spiralScene.getIndirectBuffer(currentFrame),
+			0,
+			VK_WHOLE_SIZE
+		);
 
-	vk::RenderPassBeginInfo renderPassInfo(
-		m_renderPass.get(),
-		m_framebuffer.getFrameBufferAt(imgIdx),
-		vk::Rect2D({ 0, 0 }, m_swapchain.getExtent()),
-		clearValues.size(),
-		clearValues.data()
-	);
-
-	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-
-	// bind pipeline
-	if (showWireframe && m_wireframePipeline != nullptr)
-	{
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_wireframePipeline->get());
-	}
-	else
-	{
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
-	}
-
-
-	// bind descriptor sets
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-		m_pipeline.getLayout(),
-		0,
-		1,
-		&m_descriptor.get(currentFrame),
-		0,
-		nullptr);
+		cmdBuffer.pipelineBarrier(
+			vk::PipelineStageFlagBits::eTransfer,
+			vk::PipelineStageFlagBits::eComputeShader,
+			{},
+			0,
+			nullptr,
+			1,
+			&updateBarrier,
+			0,
+			nullptr
+		);
 
 	if (useGPULODCompute)
 	{
 		m_spiralScene.resetIndirectBuffer(currentFrame);
 
-		// activate compute pipeline to update instance data and indirect draw commands
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, m_computePipeline->get());
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eCompute,
@@ -185,13 +181,12 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 			nullptr
 		);
 
-		// push constants for compute shader
 		ComputePushConstants pcs = {};
 		pcs.totalInstances = m_spiralScene.config.instanceCount;
-		pcs.lodDist0 = m_spiralScene.config.lodDist0;
-		pcs.lodDist1 = m_spiralScene.config.lodDist1;
-		pcs.lodDist2 = m_spiralScene.config.lodDist2;
-		pcs.lodDist3 = m_spiralScene.config.lodDist3;
+		pcs.lodDist0 = m_spiralScene.config.lodDist0 * m_spiralScene.config.lodDist0;
+		pcs.lodDist1 = m_spiralScene.config.lodDist1 * m_spiralScene.config.lodDist1;
+		pcs.lodDist2 = m_spiralScene.config.lodDist2 * m_spiralScene.config.lodDist2;
+		pcs.lodDist3 = m_spiralScene.config.lodDist3 * m_spiralScene.config.lodDist3;
 		pcs.computeSpiral = useGPUSpiralCompute ? 1 : 0;
 		pcs.enableLOD = m_spiralScene.config.enableLOD ? 1 : 0;
 		pcs.spacing = m_spiralScene.config.spacing;
@@ -209,13 +204,10 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 			&pcs
 		);
 
-		// setup workgroup count based on total instance count and local size of 256
-		// this way we can have one thread per instance and easily scale with instances
 		uint32_t groupCount = (m_spiralScene.config.instanceCount + 255) / 256;
 
 		// dispatch group count for compute shader to update instance data and indirect draw commands
 		cmdBuffer.dispatch(groupCount, 1, 1);
-
 
 		std::array<vk::BufferMemoryBarrier, 2> barriers = {
 			// wait for compute shader to finish writing indirect draw commands before allowing indirect draw to read them
@@ -253,7 +245,6 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 		);
 	}
 
-	// one big instance buffer for all LODs
 	vk::Buffer instanceBuffer[] = { useGPULODCompute ? m_spiralScene.getLODInstanceBuffer(currentFrame) : m_spiralScene.getInstanceBuffer(currentFrame) };
 	vk::DeviceSize instanceOffsets[] = { 0 };
 	cmdBuffer.bindVertexBuffers(1, 1, instanceBuffer, instanceOffsets);
@@ -269,7 +260,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 		cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
 		cmdBuffer.bindIndexBuffer(lodModel.getIndexBuffer(), 0, vk::IndexType::eUint32);
 
-		if (useGPULODCompute) // GPU drawing with indirect commands
+		if (useGPULODCompute) // GPU computed, drawing with indirect commands
 		{
 			cmdBuffer.drawIndexedIndirect(
 				m_spiralScene.getIndirectBuffer(currentFrame),	// buffer with draw commands generated by compute shader
@@ -278,7 +269,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 				sizeof(DrawIndexedIndirectCommand)				// stride between commands
 			);
 		}
-		else // CPU drawing
+		else // CPU computed, drawing traditionally
 		{
 			uint32_t instanceCount = m_spiralScene.getLODCount(lod);
 			uint32_t firstInstance = m_spiralScene.getLODOffset(lod);
@@ -345,10 +336,17 @@ void SpiralRenderer::recreateSwapchain()
 
 	m_device.operator*().waitIdle();
 
-	m_swapchain.recreateOnResize(m_surface, width, height);
+	// prevent validation errrors
+	imageAvailableSemaphores.clear();
+	renderFinishedSemaphores.clear();
+	inFlightFence.clear();
+	imagesInFlight.clear();
 
+	m_swapchain.recreateOnResize(m_surface, width, height);
 	recreateFramebuffers();
 
+	// recreate sync objects, old were referencing old swapchain images
+	createSyncObjects();
 	framebufferResized = false;
 }
 

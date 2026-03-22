@@ -26,9 +26,18 @@ namespace Naive {
         }
     };
 
+	// comparator for priority queue to sort edges by length (shortest first)
+    struct EdgeCompare {
+        bool operator()(const Edge& a, const Edge& b) const
+        {
+            // larger length is lower priority
+			return a.length > b.length;
+        }
+    };
+
     std::vector<Edge> getEdgesInModel(const std::vector<uint32_t>& indices);
     Edge findShortestEdge(const std::vector<Vertex>& vertices, const std::vector<Edge>& edges);
-    void collapseEdge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const Edge& edgeToCollapse);
+    uint32_t collapseEdge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const Edge& edgeToCollapse, std::vector<std::vector<uint32_t>>& twinMap, bool syncUVSeams, std::vector<bool>& vertexDeleted);
 
 }
 

@@ -242,7 +242,7 @@ void Mesh::createVertexBuffer(const std::vector<Vertex>& vertices)
 		dev,
 		bufferSize,
 		vk::BufferUsageFlagBits::eVertexBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		VMA_MEMORY_USAGE_CPU_TO_GPU
 	);
 
 	vertexBuffer->copyData(vertices.data(), bufferSize);
@@ -261,7 +261,7 @@ void Mesh::createIndexBuffer(const std::vector<uint32_t>& indices)
 		dev,
 		bufferSize,
 		vk::BufferUsageFlagBits::eIndexBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		VMA_MEMORY_USAGE_CPU_TO_GPU
 	);
 
 	indexBuffer->copyData(indices.data(), bufferSize);
