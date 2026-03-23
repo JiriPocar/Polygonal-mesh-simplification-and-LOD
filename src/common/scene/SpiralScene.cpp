@@ -59,6 +59,10 @@ void SpiralScene::generateLODVersions(CommandManager& cmd)
 	auto originalModel = std::make_unique<Model>(dev, cmd, modelPath);
 
 	simplificator.setCurrentAlgorithm(Algorithm::QEM);
+	simplificator.options.checkConnectivity = true;
+	simplificator.options.checkFaceFlipping = true;
+	simplificator.options.enableMerging = true;
+	simplificator.options.mergeCloseVertivesPos = true;
 
 	auto result1 = simplificator.simplify(*originalModel, config.lodPercentageSimplification1); // 75% faces
 	lodSet.lod1 = std::make_unique<Model>(dev, result1.meshesData);

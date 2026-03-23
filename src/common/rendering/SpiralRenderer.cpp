@@ -166,6 +166,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 			nullptr
 		);
 
+		// bind compute pipeline and descriptor sets
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, m_computePipeline->get());
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eCompute,
@@ -177,6 +178,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 			nullptr
 		);
 
+		// gather push constants for compute shader
 		ComputePushConstants pcs = {};
 		pcs.totalInstances = m_spiralScene.config.instanceCount;
 		pcs.lodDist0 = m_spiralScene.config.lodDist0 * m_spiralScene.config.lodDist0;
@@ -236,6 +238,50 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 			nullptr,
 			barriers.size(),
 			barriers.data(),
+			0,
+			nullptr
+		);
+	}
+
+	std::array<vk::ClearValue, 2> clearValues = {};
+	clearValues[0].color = vk::ClearColorValue(0.1f, 0.1f, 0.15f, 1.0f); // background color
+	clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);   // clear depth to far plane
+
+	vk::RenderPassBeginInfo renderPassInfo(
+		m_renderPass.get(),
+		m_framebuffer.getFrameBufferAt(imgIdx),
+		vk::Rect2D({ 0, 0 }, m_swapchain.getExtent()),
+		clearValues.size(),
+		clearValues.data()
+	);
+
+	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+
+	// bind pipeline
+	if (showWireframe && m_wireframePipeline != nullptr)
+	{
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_wireframePipeline->get());
+
+		// bind descriptor sets
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+			m_wireframePipeline->getLayout(),
+			0,
+			1,
+			&m_descriptor.get(currentFrame),
+			0,
+			nullptr
+		);
+	}
+	else
+	{
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+
+		// bind descriptor sets
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+			m_pipeline.getLayout(),
+			0,
+			1,
+			&m_descriptor.get(currentFrame),
 			0,
 			nullptr
 		);
