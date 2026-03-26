@@ -10,6 +10,8 @@
 #include <vector>
 #include <unordered_map>
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
 #include "../../resources/Model.hpp"
 #include "../Simplificator.hpp"
 

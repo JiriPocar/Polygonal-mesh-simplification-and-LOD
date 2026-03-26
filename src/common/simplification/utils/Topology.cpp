@@ -154,7 +154,7 @@ namespace Topology
 		return twinMap;
 	}
 
-	size_t countActiveFaces(const std::vector<uint32_t> indices, const std::vector<uint32_t>& reps)
+	size_t countActiveFaces(const std::vector<uint32_t>& indices, const std::vector<uint32_t>& reps)
 	{
 		size_t count = 0;
 		for (size_t i = 0; i < indices.size(); i += 3)

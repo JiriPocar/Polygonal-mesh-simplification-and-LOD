@@ -142,22 +142,22 @@ namespace QEM {
 
 	std::vector<Qedge> createQedges(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics, std::vector<bool>& isBorderVertex)
 	{
-		std::set<std::pair<uint32_t, uint32_t>> uniqueEdges;
+		std::vector<std::pair<uint32_t, uint32_t>> uniqueEdges;
+		uniqueEdges.reserve(indices.size());
 
 		// find unique edges
 		for (int i = 0; i < indices.size(); i += 3)
 		{
-			uint32_t idxTriplet[3] = { indices[i], indices[i + 1], indices[i + 2] };
+			uint32_t idx0 = indices[i];
+			uint32_t idx1 = indices[i + 1];
+			uint32_t idx2 = indices[i + 2];
 
-			for (int j = 0; j < 3; j++)
-			{
-				uint32_t v1 = idxTriplet[j];
-				uint32_t v2 = idxTriplet[(j + 1) % 3];
-
-				auto edge = std::minmax(v1, v2);
-				uniqueEdges.insert(edge);
-			}
+			uniqueEdges.push_back(std::minmax(idx0, idx1));
+			uniqueEdges.push_back(std::minmax(idx1, idx2));
+			uniqueEdges.push_back(std::minmax(idx2, idx0));
 		}
+		std::sort(uniqueEdges.begin(), uniqueEdges.end());
+		uniqueEdges.erase(std::unique(uniqueEdges.begin(), uniqueEdges.end()), uniqueEdges.end());
 
 		// create Qedges
 		std::vector<Qedge> qedges;
@@ -184,10 +184,11 @@ namespace QEM {
 		return qedges;
 	}
 
-	uint32_t collapseQedge(QEMContext& context, Qedge& edge)
+	uint32_t collapseQedge(QEMContext& context, Qedge& edge, int& outDeletedFaces)
 	{
 		uint32_t keepIdx = edge.v1;
 		uint32_t removeIdx = edge.v2;
+		outDeletedFaces = 0;
 
 		// set vertex position with optimal position
 		context.vertices[keepIdx].pos = edge.optimalPos;
@@ -211,6 +212,7 @@ namespace QEM {
 
 			// if we replace removeIdx with keepIdx in this triangle, will it become degenerate?
 			bool willDegenerate = (idx0 == keepIdx || idx1 == keepIdx || idx2 == keepIdx);
+			if (willDegenerate) outDeletedFaces++;
 
 			// set removeIdx to keepIdx in this triangle
 			if (context.indices[tri] == removeIdx) context.indices[tri] = keepIdx;
@@ -243,8 +245,10 @@ namespace QEM {
 		return keepIdx;
 	}
 
-	void syncSeamTwinsAfterCollapse(QEMContext& context, uint32_t keepIdx, uint32_t removeIdx, const glm::vec3& optimalPos)
+	int syncSeamTwinsAfterCollapse(QEMContext& context, uint32_t keepIdx, uint32_t removeIdx, const glm::vec3& optimalPos)
 	{
+		int totalDeletedFaces = 0;
+
 		std::vector<uint32_t> keepCandidates = context.twinMap[keepIdx];
 		keepCandidates.push_back(keepIdx);
 
@@ -277,7 +281,9 @@ namespace QEM {
 			twinEdge.v1 = bestV1twin;
 			twinEdge.v2 = v2twin;
 			twinEdge.optimalPos = optimalPos;
-			collapseQedge(context, twinEdge);
+			int deletedByTwin = 0;
+			collapseQedge(context, twinEdge, deletedByTwin);
+			totalDeletedFaces += deletedByTwin;
 
 			// update cross-references in the twin map for the twins of the removed vertex
 			for (uint32_t grandTwin : context.twinMap[v2twin])
@@ -322,6 +328,7 @@ namespace QEM {
 				context.vertices[twin].pos = context.vertices[keepIdx].pos;
 			}
 		}
+		return totalDeletedFaces;
 	}
 
 	void enqueueAffectedEdges(QEMContext& context, uint32_t keepIdx, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, CollapseOptions options)

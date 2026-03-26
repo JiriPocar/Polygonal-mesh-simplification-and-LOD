@@ -65,8 +65,8 @@ namespace QEM {
     glm::vec3 computeOptPos(Quadric& q1, Quadric& q2, glm::vec3& v1, glm::vec3& v2, double& outErr);
 
     std::vector<Qedge> createQedges(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics, std::vector<bool>& isBorderVertex);
-    void syncSeamTwinsAfterCollapse(QEMContext& context, uint32_t keepIdx, uint32_t removeIdx, const glm::vec3& optimalPos);
-    uint32_t collapseQedge(QEMContext& context, Qedge& edge);
+    int syncSeamTwinsAfterCollapse(QEMContext& context, uint32_t keepIdx, uint32_t removeIdx, const glm::vec3& optimalPos);
+    uint32_t collapseQedge(QEMContext& context, Qedge& edge, int& outDeletedFaces);
 
     bool isEdgeValidForCollapse(QEMContext& context, const QEM::Qedge& e, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, CollapseOptions options);
 

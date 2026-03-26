@@ -178,15 +178,16 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 			}
 		}
 
-		uint32_t keepIdx = QEM::collapseQedge(context, minEdge);
+		int deletedFaces = 0;
+		uint32_t keepIdx = QEM::collapseQedge(context, minEdge, deletedFaces);
 		uint32_t removeIdx = (keepIdx == minEdge.v1) ? minEdge.v2 : minEdge.v1;
 
 		if (options.resolveUVSeams)
 		{
-			QEM::syncSeamTwinsAfterCollapse(context, keepIdx, removeIdx, minEdge.optimalPos);
+			deletedFaces += QEM::syncSeamTwinsAfterCollapse(context, keepIdx, removeIdx, minEdge.optimalPos);
 		}
 
-		currentFaceCount = Topology::countActiveFaces(indices, reps);
+		currentFaceCount -= deletedFaces;
 
 		QEM::enqueueAffectedEdges(context, keepIdx, qedgeQueue, options);
 	}

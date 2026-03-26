@@ -7,6 +7,8 @@
  */
 
 #include "Geometry.hpp"
+#include <algorithm>
+#include <numeric>
 
 namespace Geometry
 {
@@ -70,20 +72,52 @@ namespace Geometry
 
 	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, float threshold)
 	{
-		// build index map, each vertex points to its representative
-		// if vertex is duplicate, then map to the first occurrence
+		// optimization inspired by https://leanrada.com/notes/sweep-and-prune/
+		// briefly explained here http://parallel.vub.ac.be/documentation/pvm/Example/Marc_Ramaekers/node3.html
+		// sort vertices by x coordinate and only compare vertices that are close in x coordinate,
+		// since if they are far in x coordinate, they cannot be close in 3D space
+
+		// initially, each vertex is its own representative
 		std::vector<uint32_t> indexMap(vertices.size());
-
-		for (uint32_t i = 0; i < vertices.size(); i++) {
+		for (uint32_t i = 0; i < vertices.size(); i++)
+		{
 			indexMap[i] = i;
+		}
 
-			// find duplicate vertex
-			for (uint32_t j = 0; j < i; j++) {
+		// sort vertices by x coordinate
+		std::vector<uint32_t> sortedIndices(vertices.size());
+		std::iota(sortedIndices.begin(), sortedIndices.end(), 0);
+		std::sort(sortedIndices.begin(), sortedIndices.end(),
+			[&vertices](uint32_t a, uint32_t b) {
+				return vertices[a].pos.x < vertices[b].pos.x;
+			}
+		);
+
+		// compare each vertex with the following vertices in the sorted order
+		for (uint32_t i = 0; i < sortedIndices.size(); i++)
+		{
+			uint32_t idx1 = sortedIndices[i];
+			if (indexMap[idx1] != idx1) continue; // already merged with another vertex
+
+			for (uint32_t j = i + 1; j < sortedIndices.size(); j++)
+			{
+				uint32_t idx2 = sortedIndices[j];
+
+				// prune - break for vertices that are way too far in x coordinate
+				if (vertices[idx2].pos.x - vertices[idx1].pos.x > threshold)
+				{
+					break;
+				}
+
+				if (indexMap[idx2] != idx2) continue; // already merged with another vertex
+
 				bool canMerge = true;
 
 				if (options.mergeCloseVertivesPos)
 				{
-					if (glm::length(vertices[i].pos - vertices[j].pos) > threshold)
+					// KEEP THIS CHECK since we are only comparing vertices that are close in x coordinate,
+					// but they still may be far in y and z coordinates
+					if (glm::length2(vertices[idx1].pos - vertices[idx2].pos) > threshold * threshold)
 					{
 						canMerge = false;
 					}
@@ -95,7 +129,7 @@ namespace Geometry
 
 				if (canMerge && options.mergeCloseVerticesUV)
 				{
-					if (glm::length(vertices[i].texCoord - vertices[j].texCoord) > 0.001f)
+					if (glm::length2(vertices[idx1].texCoord - vertices[idx2].texCoord) > 0.001f * 0.001f)
 					{
 						canMerge = false;
 					}
@@ -103,26 +137,25 @@ namespace Geometry
 
 				if (canMerge && options.mergeCloseVerticesNormal)
 				{
-					if (glm::length(vertices[i].normal - vertices[j].normal) > 0.01f)
+					if (glm::length2(vertices[idx1].normal - vertices[idx2].normal) > 0.01f * 0.01f)
 					{
 						canMerge = false;
 					}
 				}
 
+				// in index map, set the representative of idx2 to be the representative of idx1
 				if (canMerge)
 				{
-					indexMap[i] = indexMap[j];
-					break;
+					indexMap[idx2] = idx1;
 				}
 			}
 		}
 
-		// remap indexes
+		// remap indices to the representative vertex index
 		for (auto& idx : indices) {
 			idx = indexMap[idx];
 		}
 
-		// remove degenerated triangles
 		removeDegeneratedTriangles(indices);
 	}
 
