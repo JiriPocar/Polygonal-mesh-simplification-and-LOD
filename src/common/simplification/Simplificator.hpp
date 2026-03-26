@@ -36,6 +36,7 @@ struct CollapseOptions {
 	bool checkConnectivity = false;
 	bool preserveBorders = false;
 	bool resolveUVSeams = false;
+	bool lockUVSeams = false;
 
 	bool enableMerging = false;
 	bool mergeCloseVertivesPos = false;

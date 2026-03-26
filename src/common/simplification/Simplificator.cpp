@@ -94,17 +94,14 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 	if (options.enableMerging)
 	{
 		Geometry::mergeCloseVertices(vertices, indices, options);
+		//Geometry::removeDegeneratedTriangles(indices);
 	}
 
 	auto reps = Topology::buildSamePlaceRepresentatives(vertices);
 	auto twinMap = Topology::buildTwinMap(reps);
-	std::vector<bool> isBorderVertex(vertices.size(), false);
-	if (options.preserveBorders)
-	{
-		isBorderVertex = Topology::findBorderVertices(vertices, indices, reps);
-	}
+	std::vector<bool> isBorderVertex = Topology::findLockedVertices(vertices, indices, reps, options);
 	
-	size_t currentFaceCount = indices.size() / 3;
+	size_t currentFaceCount = Topology::countActiveFaces(indices, reps);
 	size_t resultCompareFaceCount = currentFaceCount;
 
 	std::cout << "=== QEM Simplification ===" << std::endl;
@@ -121,23 +118,80 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 
 	// init quadrics
 	auto quadrics = QEM::initQuadrics(vertices, indices);
+	if (options.resolveUVSeams)
+	{
+		for (uint32_t i = 0; i < vertices.size(); i++)
+		{
+			if (reps[i] != i) continue;
+			if (twinMap[i].empty()) continue;
 
+			QEM::Quadric combined = quadrics[i];
+			for (uint32_t twin : twinMap[i])
+			{
+				combined = combined + quadrics[twin];
+			}
+
+			quadrics[i] = combined;
+			for (uint32_t twin : twinMap[i])
+			{
+				quadrics[twin] = combined;
+			}
+		}
+	}
+
+	auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
+
+	// init lazy priority queue and deleted vertex tracking
 	LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare> qedgeQueue;
 	std::vector<bool> vertexDeleted(vertices.size(), false);
+
+	// fill priority queue with initial edges
 	auto startEdges = QEM::createQedges(vertices, indices, quadrics, isBorderVertex);
 	for (auto& edge : startEdges)
 	{
 		qedgeQueue.push(edge);
 	}
 
+	QEM::QEMContext context{vertices, indices, quadrics, vertexDeleted, isBorderVertex, twinMap, allNeighborhoods};
+
 	while (currentFaceCount > targetFaceCount)
 	{
 		QEM::Qedge minEdge;
-		
-		QEM::collapseQedge(vertices, indices, quadrics, minEdge, twinMap, options.resolveUVSeams, vertexDeleted);
+		bool foundValidEdge = qedgeQueue.popValid(minEdge, [&](const QEM::Qedge& e) {
+			return QEM::isEdgeValidForCollapse(context, e, qedgeQueue, options);
+		});
 
-		currentFaceCount = indices.size() / 3;
+		if (!foundValidEdge)
+		{
+			std::cout << "Abrupt stop - no more edges to collapse that would fit the criteria." << std::endl;
+			break;
+		}
+
+		if (options.resolveUVSeams)
+		{
+			bool keepIsSeam = !twinMap[minEdge.v1].empty();
+			bool removeIsSeam = !twinMap[minEdge.v2].empty();
+
+			if (removeIsSeam && !keepIsSeam)
+			{
+				std::swap(minEdge.v1, minEdge.v2);
+			}
+		}
+
+		uint32_t keepIdx = QEM::collapseQedge(context, minEdge);
+		uint32_t removeIdx = (keepIdx == minEdge.v1) ? minEdge.v2 : minEdge.v1;
+
+		if (options.resolveUVSeams)
+		{
+			QEM::syncSeamTwinsAfterCollapse(context, keepIdx, removeIdx, minEdge.optimalPos);
+		}
+
+		currentFaceCount = Topology::countActiveFaces(indices, reps);
+
+		QEM::enqueueAffectedEdges(context, keepIdx, qedgeQueue, options);
 	}
+
+	Geometry::removeDegeneratedTriangles(indices);
 
 	size_t finalFaceCount = indices.size() / 3;
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
@@ -340,17 +394,17 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 	if (options.enableMerging)
 	{
 		Geometry::mergeCloseVertices(vertices, indices, options);
+		Geometry::removeDegeneratedTriangles(indices);
 	}
 
 	auto reps = Topology::buildSamePlaceRepresentatives(vertices);
 	auto twinMap = Topology::buildTwinMap(reps);
-	std::vector<bool> isBorderVertex(vertices.size(), false);
-	if (options.preserveBorders)
-	{
-		isBorderVertex = Topology::findBorderVertices(vertices, indices, reps);
-	}
+	std::vector<bool> isBorderVertex = Topology::findLockedVertices(vertices, indices, reps, options);
+	
 
 	size_t currentFaceCount = indices.size() / 3;
+
+	auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
 
 	LazyPriorityQueue<Naive::Edge, Naive::EdgeCompare> edgeQueue;
 	std::vector<bool> vertexDeleted(vertices.size(), false);
@@ -374,7 +428,7 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 			break;
 		}
 
-		if (!Topology::isCollapseValid(shortestEdge.v1, shortestEdge.v2, vertices, indices, options, isBorderVertex, twinMap))
+		if (!Topology::isCollapseValid(shortestEdge.v1, shortestEdge.v2, vertices, indices, options, isBorderVertex, twinMap, allNeighborhoods))
 		{
 			continue;
 		}

@@ -154,47 +154,86 @@ namespace Topology
 		return twinMap;
 	}
 
-
-	std::vector<bool> findBorderVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<uint32_t>& representatives)
+	size_t countActiveFaces(const std::vector<uint32_t> indices, const std::vector<uint32_t>& reps)
 	{
-		std::vector<bool> isBorderVertex(vertices.size(), false);
-		std::map<std::pair<uint32_t, uint32_t>, int> edgeCount;
-		
+		size_t count = 0;
 		for (size_t i = 0; i < indices.size(); i += 3)
 		{
-			for (int j = 0; j < 3; j++)
+			// if the representatives of all three vertices of this triangle are different, it is an active face
+			uint32_t r0 = reps[indices[i]];
+			uint32_t r1 = reps[indices[i + 1]];
+			uint32_t r2 = reps[indices[i + 2]];
+
+			if (r0 != r1 && r1 != r2 && r0 != r2)
 			{
-				uint32_t r1 = representatives[indices[i + j]];
-				uint32_t r2 = representatives[indices[i + (j + 1) % 3]];
-
-				if (r1 == r2) continue;
-
-				std::pair<uint32_t, uint32_t> edge = std::minmax(r1, r2);
-				edgeCount[edge]++;
+				count++;
 			}
 		}
+		return count;
+	}
 
-		for (size_t i = 0; i < indices.size(); i += 3)
+	std::vector<bool> findLockedVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<uint32_t>& representatives, const CollapseOptions& options)
+	{
+		std::vector<bool> isLocked(vertices.size(), false);
+
+		// if preserving borders, lock all vertices that are connected by an edge that belongs to only one triangle
+		if (options.preserveBorders)
 		{
-			for (int j = 0; j < 3; j++)
+			std::map<std::pair<uint32_t, uint32_t>, int> edgeCount;
+
+			for (size_t i = 0; i < indices.size(); i += 3)
 			{
-				uint32_t rawV1 = indices[i + j];
-				uint32_t rawV2 = indices[i + (j + 1) % 3];
-
-				uint32_t r1 = representatives[rawV1];
-				uint32_t r2 = representatives[rawV2];
-
-				if (r1 == r2) continue;
-
-				if (edgeCount[std::minmax(r1, r2)] == 1)
+				for (int j = 0; j < 3; j++)
 				{
-					isBorderVertex[rawV1] = true;
-					isBorderVertex[rawV2] = true;
+					uint32_t r1 = representatives[indices[i + j]];
+					uint32_t r2 = representatives[indices[i + (j + 1) % 3]];
+
+					if (r1 == r2) continue;
+
+					std::pair<uint32_t, uint32_t> edge = std::minmax(r1, r2);
+					edgeCount[edge]++;
+				}
+			}
+
+			for (size_t i = 0; i < indices.size(); i += 3)
+			{
+				for (int j = 0; j < 3; j++)
+				{
+					uint32_t rawV1 = indices[i + j];
+					uint32_t rawV2 = indices[i + (j + 1) % 3];
+
+					uint32_t r1 = representatives[rawV1];
+					uint32_t r2 = representatives[rawV2];
+
+					if (r1 == r2) continue;
+
+					if (edgeCount[std::minmax(r1, r2)] == 1)
+					{
+						isLocked[rawV1] = true;
+						isLocked[rawV2] = true;
+					}
 				}
 			}
 		}
 
-		return isBorderVertex;
+		if (options.lockUVSeams)
+		{
+			std::vector<int> repCount(vertices.size(), 0);
+			for (uint32_t i = 0; i < vertices.size(); i++)
+			{
+				repCount[representatives[i]]++;
+			}
+
+			for (uint32_t i = 0; i < vertices.size(); i++)
+			{
+				if (repCount[representatives[i]] > 1)
+				{
+					isLocked[i] = true;
+				}
+			}
+		}
+
+		return isLocked;
 	}
 
 	bool checkFaceFlipping(glm::vec3 beforePos, glm::vec3 afterPos, uint32_t movingVertexIdx, std::vector<uint32_t>& indices, std::vector<Vertex>& vertices)
@@ -245,7 +284,7 @@ namespace Topology
 			normNew = glm::normalize(normNew);
 
 			// if normal flips by more than ~78 degrees, consider it a face flip
-			// both meshoptimizer by Arseny Kapoulkine
+			// meshoptimizer by Arseny Kapoulkine uses similar threshold of 0.2
 			if (glm::dot(normOld, normNew) < 0.2f)
 			{
 				return true;
@@ -255,35 +294,80 @@ namespace Topology
 		return false;
 	}
 
-	bool checkConnectivity(uint32_t v1, uint32_t v2, std::vector<uint32_t>& indices)
+	bool checkConnectivity(uint32_t v1, uint32_t v2, std::vector<uint32_t>& indices, const Neighborhood& n1, const Neighborhood& n2)
 	{
-		// get neighborhoods of both vertices
-		auto n1 = getVertexNeighborhood(v1, indices);
-		auto n2 = getVertexNeighborhood(v2, indices);
-
-		// get number of shared vertices
-		int sharedVertices = 0;
-		for (uint32_t a : n1.vertices)
+		// count shared faces
+		int sharedFaces = 0;
+		for (uint32_t t1 : n1.triangles)
 		{
-			for (uint32_t b : n2.vertices)
+			uint32_t idx0 = indices[t1];
+			uint32_t idx1 = indices[t1 + 1];
+			uint32_t idx2 = indices[t1 + 2];
+
+			if (idx0 == idx1 || idx1 == idx2 || idx2 == idx0)
 			{
-				if (a == b)
+				continue;
+			}
+
+			for (uint32_t t2 : n2.triangles)
+			{
+				if (t1 == t2)
 				{
-					sharedVertices++;
+					sharedFaces++;
 					break;
 				}
 			}
 		}
 
-		// get number of shared faces
-		int sharedFaces = 0;
-		for (uint32_t a : n1.triangles)
+		// count unique v1 vertices
+		std::vector<uint32_t> v1Vertices;
+		for (uint32_t t : n1.triangles)
 		{
-			for (uint32_t b : n2.triangles)
+			uint32_t idx0 = indices[t];
+			uint32_t idx1 = indices[t + 1];
+			uint32_t idx2 = indices[t + 2];
+			
+			if (idx0 == idx1 || idx1 == idx2 || idx2 == idx0)
 			{
-				if (a == b)
+				continue;
+			}
+
+			if (idx0 != v1) v1Vertices.push_back(idx0);
+			if (idx1 != v1) v1Vertices.push_back(idx1);
+			if (idx2 != v1) v1Vertices.push_back(idx2);
+		}
+		std::sort(v1Vertices.begin(), v1Vertices.end());
+		v1Vertices.erase(std::unique(v1Vertices.begin(), v1Vertices.end()), v1Vertices.end());
+
+		// count unique v2 faces
+		std::vector<uint32_t> v2Vertices;
+		for (uint32_t t : n2.triangles)
+		{
+			uint32_t idx0 = indices[t];
+			uint32_t idx1 = indices[t + 1];
+			uint32_t idx2 = indices[t + 2];
+
+			if (idx0 == idx1 || idx1 == idx2 || idx2 == idx0)
+			{
+				continue;
+			}
+
+			if (idx0 != v2) v2Vertices.push_back(idx0);
+			if (idx1 != v2) v2Vertices.push_back(idx1);
+			if (idx2 != v2) v2Vertices.push_back(idx2);
+		}
+		std::sort(v2Vertices.begin(), v2Vertices.end());
+		v2Vertices.erase(std::unique(v2Vertices.begin(), v2Vertices.end()), v2Vertices.end());
+
+		// count shared vertices
+		int sharedVertices = 0;
+		for (uint32_t v1v : v1Vertices)
+		{
+			for (uint32_t v2v : v2Vertices)
+			{
+				if (v1v == v2v)
 				{
-					sharedFaces++;
+					sharedVertices++;
 					break;
 				}
 			}
@@ -296,7 +380,7 @@ namespace Topology
 		return sharedVertices == sharedFaces;
 	}
 
-	bool isCollapseValid(uint32_t v1, uint32_t v2,std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, const std::vector<bool>& isBorderVertex, const std::vector<std::vector<uint32_t>>& twinMap)
+	bool isCollapseValid(uint32_t v1, uint32_t v2,std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, const std::vector<bool>& isBorderVertex, const std::vector<std::vector<uint32_t>>& twinMap, std::vector<Topology::Neighborhood>& allNeighborhoods)
 	{
 		if (options.preserveBorders)
 		{
@@ -316,7 +400,7 @@ namespace Topology
 
 		if (options.checkConnectivity)
 		{
-			if (checkConnectivity(v1, v2, indices))
+			if (!checkConnectivity(v1, v2, indices, allNeighborhoods[v1], allNeighborhoods[v2]))
 			{
 				return false;
 			}
@@ -342,47 +426,12 @@ namespace Topology
 						}
 					}
 
-					if (!checkConnectivity(bestTwinKeep, twinToRemove, indices))
+					if (!checkConnectivity(bestTwinKeep, twinToRemove, indices, allNeighborhoods[bestTwinKeep], allNeighborhoods[twinToRemove]))
 					{
 						return false;
 					}
 				}
-
 			}
-		}
-
-		return true;
-	}
-
-	bool isCollapseValidQEM(uint32_t v1, uint32_t v2, glm::vec3 optimalPos,
-		std::vector<Vertex>& vertices, std::vector<uint32_t>& indices,
-		CollapseOptions& options, const std::vector<bool>& isBorderVertex)
-	{
-		// preserve edges that only share one face
-		if (options.preserveBorders)
-		{
-			if (isBorderVertex[v1] || isBorderVertex[v2])
-			{
-				return false;
-			}
-		}
-
-		if (options.checkFaceFlipping)
-		{
-			// check flip for both (v1, optimalPos) and (v2, optimalPos), if either flips, the collapse is invalid
-			if (checkFaceFlipping(vertices[v1].pos, optimalPos, v1, indices, vertices))
-			{
-				return false;
-			}
-			if (checkFaceFlipping(vertices[v2].pos, optimalPos, v2, indices, vertices))
-			{
-				return false;
-			}
-		}
-
-		if (options.checkConnectivity)
-		{
-
 		}
 
 		return true;

@@ -110,6 +110,8 @@ namespace QEM {
 			glm::vec3 exactOptPos = -glm::inverse(MAT) * b;
 
 			outErr = q.evalError(exactOptPos);
+			if (outErr < 0.0) outErr = 0.0;
+
 			return exactOptPos;
 		}
 
@@ -169,7 +171,7 @@ namespace QEM {
 
 			if (isBorderVertex[v1] || isBorderVertex[v2])
 			{
-				qe.error = FLT_MAX; // do not collapse border edges for now
+				qe.error = FLT_MAX; // do not collapse border edges
 				qe.optimalPos = vertices[v1].pos;
 			}
 			else
@@ -182,106 +184,296 @@ namespace QEM {
 		return qedges;
 	}
 
-	bool getValidMinEdge(std::vector<Qedge>& edges, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Qedge& outEdge)
-	{
-		while (true)
-		{
-			// no more edges to collapse
-			if (edges.empty())
-			{
-				return false;
-			}
-
-			auto minErrEdge = std::min_element(edges.begin(), edges.end(),
-				[](const Qedge& a, const Qedge& b) {
-					return a.error < b.error;
-				});
-
-			// if error is too high, stop collapsing
-			if (minErrEdge->error > 1e7)
-			{
-				return false;
-			}
-
-			// check if collapse causes face flipping
-			bool willFlip = Topology::checkFaceFlipping(
-				vertices[minErrEdge->v1].pos,
-				minErrEdge->optimalPos,
-				minErrEdge->v1,
-				indices,
-				vertices
-			);
-
-			if (willFlip)
-			{
-				// set high error and continue with next edge
-				// TODO: fix this, since it flags indefinitely edges causing flipping
-				minErrEdge->error = 1e9;
-				continue;
-			}
-
-			// found valid edge to collapse
-			outEdge = *minErrEdge;
-			return true;
-		}
-	}
-
-	void collapseQedge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<Quadric>& quadrics, Qedge& edge, std::vector<std::vector<uint32_t>>& twinMap, bool syncUVSeams, std::vector<bool>& vertexDeleted)
+	uint32_t collapseQedge(QEMContext& context, Qedge& edge)
 	{
 		uint32_t keepIdx = edge.v1;
 		uint32_t removeIdx = edge.v2;
 
-		// update vertex position with optimal position
-		vertices[keepIdx].pos = edge.optimalPos;
+		// set vertex position with optimal position
+		context.vertices[keepIdx].pos = edge.optimalPos;
 
-		// update quadric
-		quadrics[keepIdx] = quadrics[keepIdx] + quadrics[removeIdx];
+		// update quadric of the kept vertex by adding the quadric of the removed vertex
+		context.quadrics[keepIdx] = context.quadrics[keepIdx] + context.quadrics[removeIdx];
 
-		// remap indices
-		Geometry::remapIndices(indices, removeIdx, keepIdx);
-		// mark removed vertex as deleted
-		vertexDeleted[removeIdx] = true;
-
-		// at last, remove degenerated triangles
-		Geometry::removeDegeneratedTriangles(indices);
-	}
-
-	void updateAfterCollapse(std::vector<Qedge>& edges, uint32_t idxToRemove, uint32_t idxToKeep, std::vector<Vertex>& vertices, std::vector<Quadric>& quadrics, std::vector<bool>& isBorderVertex)
-	{
-		// remap edges
-		for (auto& edge : edges)
+		// update all triangles in the neighborhood of the removed vertex
+		// update the neighborhood of the kept vertex
+		for (uint32_t tri : context.allNeighborhoods[removeIdx].triangles)
 		{
-			if (edge.v1 == idxToRemove) edge.v1 = idxToKeep;
-			if (edge.v2 == idxToRemove) edge.v2 = idxToKeep;
+			uint32_t idx0 = context.indices[tri];
+			uint32_t idx1 = context.indices[tri + 1];
+			uint32_t idx2 = context.indices[tri + 2];
+
+			// skip degenerate triangles
+			if (idx0 == idx1 || idx1 == idx2 || idx2 == idx0)
+			{
+				continue;
+			}
+
+			// if we replace removeIdx with keepIdx in this triangle, will it become degenerate?
+			bool willDegenerate = (idx0 == keepIdx || idx1 == keepIdx || idx2 == keepIdx);
+
+			// set removeIdx to keepIdx in this triangle
+			if (context.indices[tri] == removeIdx) context.indices[tri] = keepIdx;
+			if (context.indices[tri + 1] == removeIdx) context.indices[tri + 1] = keepIdx;
+			if (context.indices[tri + 2] == removeIdx) context.indices[tri + 2] = keepIdx;
+
+			// if not degenerate, add this triangle to the neighborhood of the kept vertex
+			if (!willDegenerate)
+			{
+				context.allNeighborhoods[keepIdx].triangles.push_back(tri);
+			}
 		}
 
-		// delete edges that involved idxToRemove or are now degenerated
-		edges.erase(
-			std::remove_if(edges.begin(), edges.end(),
-				[idxToKeep](const Qedge& e) {
-					// delete edge if it is degenerated
-					return e.v1 == idxToKeep && e.v2 == idxToKeep;
-				}),
-			edges.end()
-		);
+		// clear triangle neighborhood of the removed vertex
+		context.allNeighborhoods[removeIdx].triangles.clear();
 
-		// recompute edges involving idxToKeep
-		for (auto& edge : edges)
+		// remove degenerate triangles from the neighborhood of the kept vertex
+		auto& tris = context.allNeighborhoods[keepIdx].triangles;
+		tris.erase(std::remove_if(tris.begin(), tris.end(),
+			[&context](uint32_t tri) {
+				return context.indices[tri] == context.indices[tri + 1] ||
+					context.indices[tri + 1] == context.indices[tri + 2] ||
+					context.indices[tri + 2] == context.indices[tri];
+			}),
+			tris.end());
+		
+		// mark removed vertex as deleted
+		context.vertexDeleted[removeIdx] = true;
+
+		return keepIdx;
+	}
+
+	void syncSeamTwinsAfterCollapse(QEMContext& context, uint32_t keepIdx, uint32_t removeIdx, const glm::vec3& optimalPos)
+	{
+		std::vector<uint32_t> keepCandidates = context.twinMap[keepIdx];
+		keepCandidates.push_back(keepIdx);
+
+		std::vector<uint32_t> twinsToRemove = context.twinMap[removeIdx];
+
+		// collapse all twins of the removed vertex to the best matching twin of the kept vertex
+		for (uint32_t v2twin : twinsToRemove)
 		{
-			if (edge.v1 == idxToKeep || edge.v2 == idxToKeep)
+			if (context.vertexDeleted[v2twin]) continue;
+
+			// find the best matching twin of the kept vertex for this twin of the removed vertex
+			uint32_t bestV1twin = keepIdx;
+			float minDiff = FLT_MAX;
+			for (uint32_t candidate : keepCandidates)
 			{
-				if (isBorderVertex[edge.v1] || isBorderVertex[edge.v2])
+				if (context.vertexDeleted[candidate]) continue;
+
+				float diff = glm::length(context.vertices[candidate].texCoord - context.vertices[v2twin].texCoord)
+					       + glm::length(context.vertices[candidate].normal - context.vertices[v2twin].normal);
+
+				if (diff < minDiff)
 				{
-					edge.error = FLT_MAX;
-					edge.optimalPos = vertices[edge.v1].pos;
+					minDiff = diff;
+					bestV1twin = candidate;
 				}
-				else
+			}
+
+			// collapse the twin edge
+			Qedge twinEdge;
+			twinEdge.v1 = bestV1twin;
+			twinEdge.v2 = v2twin;
+			twinEdge.optimalPos = optimalPos;
+			collapseQedge(context, twinEdge);
+
+			// update cross-references in the twin map for the twins of the removed vertex
+			for (uint32_t grandTwin : context.twinMap[v2twin])
+			{
+				if (grandTwin == bestV1twin || context.vertexDeleted[grandTwin]) continue;
+
+				auto& bestTwinTwins = context.twinMap[bestV1twin];
+				if (std::find(bestTwinTwins.begin(), bestTwinTwins.end(), grandTwin) == bestTwinTwins.end())
 				{
-					uint32_t otherIdx = (edge.v1 == idxToKeep) ? edge.v2 : edge.v1;
-					edge.optimalPos = computeOptPos(quadrics[idxToKeep], quadrics[otherIdx], vertices[idxToKeep].pos, vertices[otherIdx].pos, edge.error);
+					bestTwinTwins.push_back(grandTwin);
+				}
+
+				auto& gtTwins = context.twinMap[grandTwin];
+				std::replace(gtTwins.begin(), gtTwins.end(), v2twin, bestV1twin);
+			}
+			context.twinMap[v2twin].clear();
+		}
+
+		// move remaining twins of the removed vertex to the kept vertex and update their references
+		std::vector<uint32_t> remainingTwins = context.twinMap[removeIdx];
+		for (uint32_t t : remainingTwins)
+		{
+			if (context.vertexDeleted[t] || t == keepIdx) continue;
+
+			auto& keepIdxTwin = context.twinMap[keepIdx];
+			if (std::find(keepIdxTwin.begin(), keepIdxTwin.end(), t) == keepIdxTwin.end())
+			{
+				keepIdxTwin.push_back(t);
+			}
+
+			auto& tTwins = context.twinMap[t];
+			std::replace(tTwins.begin(), tTwins.end(), removeIdx, keepIdx);
+		}
+		context.twinMap[removeIdx].clear();
+
+		// recompute quadrics and positions for all twins of the kept vertex
+		for (uint32_t twin : context.twinMap[keepIdx])
+		{
+			if (!context.vertexDeleted[twin])
+			{
+				context.quadrics[twin] = context.quadrics[keepIdx];
+				context.vertices[twin].pos = context.vertices[keepIdx].pos;
+			}
+		}
+	}
+
+	void enqueueAffectedEdges(QEMContext& context, uint32_t keepIdx, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, CollapseOptions options)
+	{
+		// collect all vertices that might be affected by the collapse
+		std::vector<uint32_t> affectedVertices = { keepIdx };
+		if (options.resolveUVSeams) // if solving UV seams, also consider all twins of the kept vertex as affected
+		{
+			for (uint32_t twin : context.twinMap[keepIdx])
+			{
+				if (!context.vertexDeleted[twin]) affectedVertices.push_back(twin);
+			}
+		}
+
+		// enqueue all edges in the neighborhood of the affected vertices
+		for (uint32_t affectedVertex : affectedVertices)
+		{
+			for (uint32_t tri : context.allNeighborhoods[affectedVertex].triangles)
+			{
+				// triangles are saved in triplets of vertex indices 
+				uint32_t idx0 = context.indices[tri];
+				uint32_t idx1 = context.indices[tri + 1];
+				uint32_t idx2 = context.indices[tri + 2];
+
+				// skip degenerate triangles
+				if (idx0 == idx1 || idx1 == idx2 || idx2 == idx0) continue;
+
+				// extract edges of this triangle
+				uint32_t edges[3][2] = {
+					{std::min(idx0, idx1), std::max(idx0, idx1)},
+					{std::min(idx1, idx2), std::max(idx1, idx2)},
+					{std::min(idx2, idx0), std::max(idx2, idx0)}
+				};
+
+				// enqueue each edge if not already deleted or locked
+				for (int j = 0; j < 3; j++)
+				{
+					uint32_t ev1 = edges[j][0];
+					uint32_t ev2 = edges[j][1];
+
+					QEM::Qedge newEdge;
+					newEdge.v1 = ev1;
+					newEdge.v2 = ev2;
+
+					if (context.isLockedVertex[ev1] || context.isLockedVertex[ev2])
+					{
+						newEdge.error = FLT_MAX;
+						newEdge.optimalPos = context.vertices[ev1].pos;
+					}
+					else
+					{
+						newEdge.optimalPos = QEM::computeOptPos(context.quadrics[ev1], context.quadrics[ev2], context.vertices[ev1].pos, context.vertices[ev2].pos, newEdge.error);
+					}
+
+					// push into lazy priority queue (validated when popped)
+					qedgeQueue.push(newEdge);
 				}
 			}
 		}
+	}
+
+	bool isEdgeValidForCollapse(QEMContext& context, const QEM::Qedge& e, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, CollapseOptions options)
+	{
+		// check if either vertex is already deleted or locked
+		if (context.vertexDeleted[e.v1] || context.vertexDeleted[e.v2]) return false;
+		if (context.isLockedVertex[e.v1] || context.isLockedVertex[e.v2]) return false;
+
+		// lazy priority queue validation
+		double currentError;
+		glm::vec3 currentOptPos = QEM::computeOptPos(context.quadrics[e.v1], context.quadrics[e.v2], context.vertices[e.v1].pos, context.vertices[e.v2].pos, currentError);
+		if (currentError > e.error + 1e-4)
+		{
+			// reinsert the edge with the updated error and optimal position
+			QEM::Qedge updatedEdge = e;
+			updatedEdge.error = currentError;
+			updatedEdge.optimalPos = currentOptPos;
+			qedgeQueue.push(updatedEdge);
+			return false;
+		}
+
+		// prevent collapsing edges that would break mesh connectivity
+		if (options.checkConnectivity && !Topology::checkConnectivity(e.v1, e.v2, context.indices, context.allNeighborhoods[e.v1], context.allNeighborhoods[e.v2])) return false;
+
+		// prevent face flipping
+		if (options.checkFaceFlipping)
+		{
+			// since it is a full edge collapse, check both vertices for potential face flipping
+			bool willFlip = Topology::checkFaceFlipping(context.vertices[e.v1].pos, currentOptPos, e.v1, context.indices, context.vertices) ||
+				Topology::checkFaceFlipping(context.vertices[e.v2].pos, currentOptPos, e.v2, context.indices, context.vertices);
+			
+			// prevent twin flipping 
+			if (options.resolveUVSeams && !willFlip)
+			{
+				// again - check both vertices, if either has a twin that would flip, the collapse is invalid
+				for (uint32_t twin : context.twinMap[e.v1])
+				{
+					if (!context.vertexDeleted[twin] && Topology::checkFaceFlipping(context.vertices[twin].pos, currentOptPos, twin, context.indices, context.vertices))
+					{
+						willFlip = true;
+						break;
+					}
+				}
+				if (!willFlip)
+				{
+					for (uint32_t twin : context.twinMap[e.v2])
+					{
+						if (!context.vertexDeleted[twin] && Topology::checkFaceFlipping(context.vertices[twin].pos, currentOptPos, twin, context.indices, context.vertices))
+						{
+							willFlip = true;
+							break;
+						}
+					}
+				}
+			}
+			if (willFlip) return false;
+		}
+
+		// prevent connectivity issues of UV seam twins
+		if (options.resolveUVSeams && options.checkConnectivity)
+		{
+			std::vector<uint32_t> keepCandidates = context.twinMap[e.v1];
+			keepCandidates.push_back(e.v1);
+
+			for (uint32_t v2Twin : context.twinMap[e.v2])
+			{
+				if (context.vertexDeleted[v2Twin]) continue;
+
+				// find the best matching twin of the kept vertex for this twin of the removed vertex
+				uint32_t bestV1Twin = e.v1;
+				float minDiff = FLT_MAX;
+				for (uint32_t candidate : keepCandidates)
+				{
+					if (context.vertexDeleted[candidate]) continue;
+
+					float diff = glm::length(context.vertices[candidate].texCoord - context.vertices[v2Twin].texCoord)
+						       + glm::length(context.vertices[candidate].normal - context.vertices[v2Twin].normal);
+					if (diff < minDiff)
+					{
+						minDiff = diff;
+						bestV1Twin = candidate;
+					}
+				}
+
+				// if any twin pair fails the connectivity check, the collapse is invalid
+				if (!Topology::checkConnectivity(bestV1Twin, v2Twin, context.indices, context.allNeighborhoods[bestV1Twin], context.allNeighborhoods[v2Twin]))
+				{
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 }
 

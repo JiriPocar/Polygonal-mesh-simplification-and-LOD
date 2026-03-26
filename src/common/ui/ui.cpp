@@ -258,7 +258,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	else
 	{
 		// slider for number of cells per axis
-		ImGui::SliderInt("Cells Per Axis", &cellsPerAxis, 2, 100);
+		ImGui::SliderInt("Cells Per Axis", &cellsPerAxis, 2, 300);
 		parameterValue = static_cast<float>(cellsPerAxis);
 
 		if (currentAlgorithm == Algorithm::VertexClustering)
@@ -297,8 +297,11 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		ImGui::Separator();
 
 		ImGui::Text("Holes and tearing prevention");
+		ImGui::Checkbox("Lock UV seams", &simplificator.options.lockUVSeams);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Locks edges on UV seam the same way 'Preserve border' locks border edges.");
 		ImGui::Checkbox("Simplify with UV seams", &simplificator.options.resolveUVSeams);
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("The simplification process will attempt to preserve UV seams. Use for models with textures.");
+
 		if (ImGui::Checkbox("Enable merging vertices", &simplificator.options.enableMerging))
 		{
 			if (simplificator.options.enableMerging)
@@ -393,7 +396,14 @@ void UserInterface::showSimplificationResults()
 
 		ImGui::Text("Time taken:");
 		ImGui::SameLine();
-		ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "%.2f ms", lastResult.timeTaken);
+		if (lastResult.timeTaken > 1000)
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.2f, 1.0f), "%.2f s", lastResult.timeTaken / 1000.0f);
+		}
+		else
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "%.2f ms", lastResult.timeTaken);
+		}
 
 		ImGui::Separator();
 
@@ -682,7 +692,6 @@ void UserInterface::showSpiralControls(SpiralScene& scene)
 	ImGui::Text("Animation Parameters");
 	ImGui::SliderFloat("Speed", &scene.config.speed, 0.0f, 500.0f);
 	ImGui::SliderFloat("Twist Speed", &scene.config.twistSpeed, 0.0f, 0.2f);
-	ImGui::SliderFloat("Arm Rotation", &scene.config.armSpread, 0.0f, 6.28f);
 	ImGui::Separator();
 
 	// reset

@@ -38,7 +38,6 @@ struct SpiralConfig {
 	float minRadius = 10.0f;
 	float coneFactor = 0.5f;
 	float twistSpeed = 0.02f;
-	float armSpread = 0.6f;
 
 	bool enableLOD = true;
 	float lodDist0 = 400.0f;
