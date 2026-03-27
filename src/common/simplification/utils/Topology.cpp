@@ -72,6 +72,11 @@ namespace Topology
 
 	std::vector<uint32_t> buildSamePlaceRepresentatives(const std::vector<Vertex>& vertices)
 	{
+		// optimization inspired by https://leanrada.com/notes/sweep-and-prune/
+		// briefly explained here http://parallel.vub.ac.be/documentation/pvm/Example/Marc_Ramaekers/node3.html
+		// sort vertices by x coordinate and only compare vertices that are close in x coordinate,
+		// since if they are far in x coordinate, they cannot be close in 3D space
+
 		std::vector<uint32_t> representatives(vertices.size());
 
 		// sort vertices by x coordinate to speed up the search for vertices in the same place
