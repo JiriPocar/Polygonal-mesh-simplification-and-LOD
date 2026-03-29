@@ -95,22 +95,25 @@ BP Pocarovsky
 - [ ] Simplification algorithms for LOD generation
 	- [x] Quadric Error Metrics
 		- [x] Research
-		- [ ] Optimized
+		- [x] Optimized
 		- [x] Compute optimal position 
+		- [x] Twin tracking
 	- [x] Vertex Clustering
 		- [x] Research
 		- [x] Optimized
 	- [x] Floating-cell Clustering
 		- [x] Research
-		- [ ] Optimized
+		- [x] Optimized
 		- [x] Implementation
-	- [x] Naive simplification
+	- [ ] Naive simplification
 		- [ ] Optimized
-	- [ ] Vertex decimation
+		- [ ] Twin tracking
+	- [x] Vertex decimation
 		- [x] Research
-		- [ ] Implementation
-		- [ ] Triangulating research
-		- [ ] Optimized
+		- [x] Implementation
+		- [x] Triangulating research
+			- [x] Ear clipping 
+		- [x] Optimized
 - [ ] Demo application
 	- [x] Remake project structure for multiple demo apps support 
 	- [x] CPU LOD switching
@@ -137,11 +140,7 @@ BP Pocarovsky
 		
 - [ ] General TODO's
 	- [x] Texture loading
-	- [ ] UV interpolation for texture coordinates in simplified models
-		- [ ] QEM
-			- [ ] Interpolation for texture coordinates and normals
-			- [ ] Usage of extended QEM
-	- [ ] QEM optimization via priority queue
+	- [x] QEM optimization via priority queue
 	- [ ] Pick a set of testing models
 	- [x] UI improvements
 		- [x] Debug (result) window
@@ -150,7 +149,6 @@ BP Pocarovsky
 	- [ ] Performance research
 	- [ ] (?) Export model option (.obj is trivial, .gltf is a bit tricky)
 	- [ ] (?) Use MeshLab for visual comparison of models
-	- [ ] 
 
 # Since last meeting
 - Theoretical part of the thesis
@@ -162,18 +160,28 @@ BP Pocarovsky
 - Implementation part of the thesis
 	- Looked for inspiration in existing theses
 	- Format of the design and implementation chapters to be decided
+		- Added Spiral app design
 - Application
 	- Added VMA (Spiral CPU-compute boost, tweaking desired comparison)
 		- Some thorough testing was done here, to assure that the performance boost is not a fluke
-	- Several UI and QoL Spiral app improvements (wireframe mode in particular)
 	- Refactored spaghetti ```main``` codes
+	- Added base python scripts for performance statistics visualization
+	- SPIRAL APP
+		- Several UI and QoL Spiral app improvements (wireframe mode in particular)
+	- SIMPLIFICATOR APP 
+		- Completed twin tracking for QEM simplification
+		- Completed Vertex Decimation simplification
+		- Several UI improvements in the simplificator app
 - Other
 	- Visited a lecture about computer graphics in KCD2
-	- 50 000 up to 100 000 triangles per character
-	- up to 10 milion triangles for a whole scene
-	- use of imposters (billboards)
-	- polygonal meshes with rasterization pipeline
-	- very specific profiler for frame times
+		- 50 000 up to 100 000 triangles per character
+		- up to 10 milion triangles for a whole scene
+		- use of imposters (billboards)
+		- polygonal meshes with rasterization pipeline
+		- very specific profiler for frame times
+	- Found out I was stuck on very damaged models
+		- Model with X meshes spread across the whole model 
+		- Only use apropriate models (fix in Blender) 
 
 # Known issues
 
