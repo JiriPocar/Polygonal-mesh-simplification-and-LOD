@@ -192,6 +192,43 @@ namespace Geometry
 		indices = flatIndices;
 	}
 
+	void recalculateSmoothNormals(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+	{
+		// reset normals
+		for (auto& v : vertices)
+		{
+			v.normal = glm::vec3(0.0f);
+		}
+
+		// for each triangle
+		for (size_t i = 0; i < indices.size(); i += 3)
+		{
+			uint32_t i0 = indices[i];
+			uint32_t i1 = indices[i + 1];
+			uint32_t i2 = indices[i + 2];
+
+			glm::vec3 p0 = vertices[i0].pos;
+			glm::vec3 p1 = vertices[i1].pos;
+			glm::vec3 p2 = vertices[i2].pos;
+
+			// compute face normal and add it to each vertex normal
+			glm::vec3 faceNormal = glm::cross(p1 - p0, p2 - p0);
+
+			vertices[i0].normal += faceNormal;
+			vertices[i1].normal += faceNormal;
+			vertices[i2].normal += faceNormal;
+		}
+
+		// normalize normals
+		for (auto& v : vertices)
+		{
+			if (glm::length(v.normal) > 1e-6f)
+			{
+				v.normal = glm::normalize(v.normal);
+			}
+		}
+	}
+
 	void finalizeVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 	{
 		std::unordered_map<uint32_t, uint32_t> oldToNew;
@@ -211,6 +248,61 @@ namespace Geometry
 
 		vertices = std::move(newVertices);
 		indices = std::move(newIndices);
+	}
+
+	bool computeAveragePlane(const std::vector<uint32_t>& orderedLoop, const std::vector<Vertex>& vertices, glm::vec3& outCenter, glm::vec3& outNormal)
+	{
+		/*
+		* Inspired by https://www.realtimerendering.com/resources/GraphicsGems/gemsiii/newell.c
+		* 
+		* @author Filippo Tampieri, Cornell University
+		* @in Graphics Gems III, David Kirk (editor), Academic Press, 1992, ISBN: 0124096735
+		* 
+		* Adapted for this vertex structure and loop representation.
+		*/
+
+		if (orderedLoop.size() < 3) return false;
+
+		glm::vec3 center(0.0f);
+		glm::vec3 normal(0.0f);
+
+		for (int i = 0; i < orderedLoop.size(); i++)
+		{
+			glm::vec3 p1 = vertices[orderedLoop[i]].pos;
+			glm::vec3 p2 = vertices[orderedLoop[(i + 1) % orderedLoop.size()]].pos;
+			center += p1;
+			normal.x += (p1.y - p2.y) * (p1.z + p2.z);
+			normal.y += (p1.z - p2.z) * (p1.x + p2.x);
+			normal.z += (p1.x - p2.x) * (p1.y + p2.y);
+		}
+
+		float length = glm::length(normal);
+		if (length < 1e-6f) return false;
+
+		outNormal = normal / length;
+		outCenter = center / static_cast<float>(orderedLoop.size());
+
+		return true;
+	}
+
+	bool isPointInTriangle2D(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b, const glm::vec2& c)
+	{
+		/**
+		* Inspired by https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
+		*/
+
+		// Computes the Z-component of the cross product to determine on which side of a line a point lies
+		auto edgeSign = [](const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3) {
+			return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+			};
+
+		// check the sign of the point with respect to each edge of the triangle
+		bool e1 = edgeSign(p, a, b) < 0.0f;
+		bool e2 = edgeSign(p, b, c) < 0.0f;
+		bool e3 = edgeSign(p, c, a) < 0.0f;
+
+		// if the point is on the same side of all edges, it is inside the triangle
+		return ((e1 == e2) && (e2 == e3));
 	}
 }
  /* End of the Geometry.cpp file */

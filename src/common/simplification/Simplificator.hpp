@@ -2,6 +2,8 @@
 
 #include "../resources/Model.hpp"
 
+#define DONT_DECIMATE_ERROR 1e9
+
 enum class Algorithm {
 	QEM,
 	VertexClustering,
@@ -42,6 +44,7 @@ struct CollapseOptions {
 	bool mergeCloseVertivesPos = false;
 	bool mergeCloseVerticesUV = false;
 	bool mergeCloseVerticesNormal = false;
+	float featureAngleThreshold = 30.0f;
 };
 
 class Simplificator {

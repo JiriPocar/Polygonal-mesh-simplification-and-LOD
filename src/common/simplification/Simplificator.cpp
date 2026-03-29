@@ -56,17 +56,22 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		MeshData simplifiedMesh;
 		switch (currentAlgorithm)
 		{
-		case Algorithm::QEM: simplifiedMesh = simplifyQEM(vertices, indices, targetFaceCount); break;
-		case Algorithm::VertexClustering: simplifiedMesh = simplifyVertexClustering(vertices, indices, targetFaceCount); break;
-		case Algorithm::Naive: simplifiedMesh = simplifyNaive(vertices, indices, targetFaceCount); break;
-		case Algorithm::FloatingCellClustering: simplifiedMesh = simplifyFloatingCellClustering(vertices, indices, targetFaceCount); break;
-		case Algorithm::VertexDecimation: simplifiedMesh = simplifyVertexDecimation(vertices, indices, targetFaceCount); break;
+			case Algorithm::QEM: simplifiedMesh = simplifyQEM(vertices, indices, targetFaceCount); break;
+			case Algorithm::VertexClustering: simplifiedMesh = simplifyVertexClustering(vertices, indices, targetFaceCount); break;
+			case Algorithm::Naive: simplifiedMesh = simplifyNaive(vertices, indices, targetFaceCount); break;
+			case Algorithm::FloatingCellClustering: simplifiedMesh = simplifyFloatingCellClustering(vertices, indices, targetFaceCount); break;
+			case Algorithm::VertexDecimation: simplifiedMesh = simplifyVertexDecimation(vertices, indices, targetFaceCount); break;
 		}
 
 		Geometry::finalizeVertices(simplifiedMesh.vertices, simplifiedMesh.indices);
+
 		if (flatShading)
 		{
 			Geometry::makeFlatShaded(simplifiedMesh.vertices, simplifiedMesh.indices);
+		}
+		else
+		{
+			Geometry::recalculateSmoothNormals(simplifiedMesh.vertices, simplifiedMesh.indices);
 		}
 
 		result.originalFaceCount += originalFaceCount;
@@ -94,7 +99,6 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 	if (options.enableMerging)
 	{
 		Geometry::mergeCloseVertices(vertices, indices, options);
-		//Geometry::removeDegeneratedTriangles(indices);
 	}
 
 	auto reps = Topology::buildSamePlaceRepresentatives(vertices);
@@ -252,53 +256,75 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 		return result;
 	}
 
-	auto vertexInfo = VertexDecimation::computeVertexInfo(indices, vertices.size());
-	std::vector<VertexDecimation::DecimationCandidate> candidates;
-	candidates.reserve(vertices.size());
+	auto reps = Topology::buildSamePlaceRepresentatives(vertices);
+	std::vector<bool> isLockedVertex = Topology::findLockedVertices(vertices, indices, reps, options);
 
+	auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
+	std::vector<VertexDecimation::VertexInfo> vInfo(vertices.size());
 	for (uint32_t i = 0; i < vertices.size(); i++)
 	{
-		vertexInfo[i].classification = VertexDecimation::classifyVertex(i, vertices, indices, vertexInfo[i]);
-		if (vertexInfo[i].classification != VertexDecimation::VertexClassification::Complex &&
-			vertexInfo[i].classification != VertexDecimation::VertexClassification::Undefined)
+		vInfo[i].neighborhood = allNeighborhoods[i];
+		vInfo[i].classification = VertexDecimation::VertexClassification::Undefined;
+		vInfo[i].isActive = true;
+	}
+
+	// init priority queue
+	LazyPriorityQueue<VertexDecimation::DecimationCandidate, VertexDecimation::DecimationCompare> candidatesQueue;
+	// fill with initial candidates
+	for (uint32_t i = 0; i < vertices.size(); i++)
+	{
+		vInfo[i].classification = VertexDecimation::classifyVertex(i, vertices, indices, vInfo[i], options);
+		if (vInfo[i].classification != VertexDecimation::VertexClassification::Complex && vInfo[i].classification != VertexDecimation::VertexClassification::Undefined)
 		{
-			double err = VertexDecimation::computeVertexError(i, vertices, indices, vertexInfo[i]);
-			candidates.push_back({ i, err });
+			double err = VertexDecimation::computeVertexError(i, vertices, indices, vInfo[i], options, isLockedVertex);
+			candidatesQueue.push({ i, err });
 		}
 	}
 
-	while (currentFaceCount > targetFaceCount && !candidates.empty())
+	while (currentFaceCount > targetFaceCount)
 	{
-		auto minErr = std::min_element(candidates.begin(), candidates.end(),
-			[](const VertexDecimation::DecimationCandidate& a, const VertexDecimation::DecimationCandidate& b) {
-				return a.error < b.error;
+		VertexDecimation::DecimationCandidate minErrCandidate;
+
+		bool foundValid = candidatesQueue.popValid(minErrCandidate, [&](const VertexDecimation::DecimationCandidate& c) {
+			// skip inactive
+			if (!vInfo[c.vertexIdx].isActive) return false;
+
+			// compare stored error with actual error to detect outdated candidates
+			double actualError = VertexDecimation::computeVertexError(c.vertexIdx, vertices, indices, vInfo[c.vertexIdx], options, isLockedVertex);
+			if (std::abs(c.error - actualError) > 1e-5)
+			{
+				return false;
+			}
+
+			return true;
 			});
 
-		if (minErr->error > 1e7) break;
-
-		uint32_t vIdx = minErr->vertexIdx;
-
-		if (!vertexInfo[vIdx].isActive)
+		// if not another valid candidate was found or the error is too high, stop the decimation
+		if (!foundValid || minErrCandidate.error > 1e7)
 		{
-			minErr->error = 1e9;
-			continue;
+			std::cout << "Abrupt stop - no more valid candidates for decimation." << std::endl;
+			break;
 		}
 
-		std::vector<uint32_t> newTriangles = VertexDecimation::triangulateHole(vIdx, vertices, indices, vertexInfo[vIdx]);
+		uint32_t vIdx = minErrCandidate.vertexIdx;
+		std::vector<uint32_t> newTriangles = VertexDecimation::triangulateHole(vIdx, vertices, indices, vInfo[vIdx]);
+
+		// if triangulation failed, mark vertex as complex to avoid trying to delete it again
 		if (newTriangles.empty())
 		{
-			minErr->error = 1e9;
+			vInfo[vIdx].classification = VertexDecimation::VertexClassification::Complex;
 			continue;
 		}
 
-		size_t removedFaces = vertexInfo[vIdx].neighborhood.triangles.size();
-		size_t createdFaces = newTriangles.size() / 3;
+		// every triangle of the removed vertex is removed
+		size_t deletedFaces = vInfo[vIdx].neighborhood.triangles.size();
+		// every triangle in the triangulated hole is added
+		size_t addedFaces = newTriangles.size() / 3;
 
-		VertexDecimation::updateLocalTopology(vertexInfo, candidates, newTriangles, indices, vIdx, vertices);
-		
-		currentFaceCount = currentFaceCount - removedFaces + createdFaces;
+		// readd to lazy pqueue and update topology
+		VertexDecimation::updateLocalTopology(vInfo, candidatesQueue, newTriangles, indices, vIdx, vertices, options, isLockedVertex);
 
-		minErr->error = 1e9; // mark as processed
+		currentFaceCount = currentFaceCount - deletedFaces + addedFaces;
 	}
 
 	Geometry::removeDegeneratedTriangles(indices);

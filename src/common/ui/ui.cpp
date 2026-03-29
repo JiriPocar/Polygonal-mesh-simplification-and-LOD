@@ -285,7 +285,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	
 	ImGui::Separator();
 
-	if (currentAlgorithm != Algorithm::VertexClustering && currentAlgorithm != Algorithm::FloatingCellClustering)
+	if (currentAlgorithm == Algorithm::Naive || currentAlgorithm == Algorithm::QEM)
 	{
 		ImGui::Text("Edge collapse constraints");
 		ImGui::Checkbox("Check face flipping", &simplificator.options.checkFaceFlipping);
@@ -343,9 +343,60 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		}
 		ImGui::Unindent();
 	}
-	else
+	else if (currentAlgorithm == Algorithm::VertexClustering || currentAlgorithm == Algorithm::FloatingCellClustering)
 	{
-		ImGui::Text("By definition clustering algorithms do not consider topology or face flipping");
+		ImGui::Text("Clustering algorithms do not consider topology or face flipping");
+	}
+	else if (currentAlgorithm == Algorithm::VertexDecimation)
+	{
+		ImGui::Checkbox("Preserve borders", &simplificator.options.preserveBorders);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Prevents collapsing edges that are on the border of the mesh, maintaining the overall shape.");
+		ImGui::Checkbox("Lock UV seams", &simplificator.options.lockUVSeams);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Locks edges on UV seam the same way 'Preserve border' locks border edges.");
+		
+		if (ImGui::Checkbox("Enable merging vertices", &simplificator.options.enableMerging))
+		{
+			if (simplificator.options.enableMerging)
+			{
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+			else
+			{
+				simplificator.options.mergeCloseVertivesPos = false;
+				simplificator.options.mergeCloseVerticesUV = false;
+				simplificator.options.mergeCloseVerticesNormal = false;
+			}
+		}
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Vertices with the selected criteria will be merged. Use when textures dont matter.");
+		ImGui::Indent();
+
+		if (ImGui::Checkbox("Merge by position", &simplificator.options.mergeCloseVertivesPos))
+		{
+			if (simplificator.options.mergeCloseVertivesPos) simplificator.options.enableMerging = true;
+		}
+
+		if (ImGui::Checkbox("Merge by UV", &simplificator.options.mergeCloseVerticesUV))
+		{
+			if (simplificator.options.mergeCloseVerticesUV)
+			{
+				simplificator.options.enableMerging = true;
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+		}
+
+		if (ImGui::Checkbox("Merge by normal", &simplificator.options.mergeCloseVerticesNormal))
+		{
+			if (simplificator.options.mergeCloseVerticesNormal)
+			{
+				simplificator.options.enableMerging = true;
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+		}
+		ImGui::Unindent();
+
+		ImGui::Separator();
+		ImGui::SliderFloat("Feature angle", &simplificator.options.featureAngleThreshold, 0.0f, 180.0f, "%.1f degrees");
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Maximum angle between adjacent face normals to be considered a smooth surface. Lower values preserve more sharp edges.");
 	}
 	
 
