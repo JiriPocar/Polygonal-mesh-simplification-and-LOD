@@ -54,6 +54,7 @@ set(ENGINE_SOURCES
     "src/common/simplification/Simplificator.cpp"
     "src/common/simplification/utils/Topology.cpp"
     "src/common/simplification/utils/Geometry.cpp"
+    "src/common/simplification/utils/SurfApprox.cpp"
     "src/common/simplification/algorithms/QEM.cpp"
     "src/common/simplification/algorithms/VertexClustering.cpp"
     "src/common/simplification/algorithms/FloatingCellClustering.cpp"

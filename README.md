@@ -108,6 +108,8 @@ BP Pocarovsky
 	- [ ] Naive simplification
 		- [ ] Optimized
 		- [ ] Twin tracking
+	- [ ] Random edge collapse
+		- [ ] Implementation 
 	- [x] Vertex decimation
 		- [x] Research
 		- [x] Implementation
@@ -131,9 +133,9 @@ BP Pocarovsky
 		- [ ] Save performance statistics to file
 		- [ ] Create graphs using ```python```, ```matplotlib```, ...
 	- [ ] Visual comparison
-		- [ ] Hausdorff Distance [here](https://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html])
-		- [ ] Root Mean Square Error
-		- [ ] Use MeshLab for visual comparison of models (?)
+		- [x] Hausdorff Distance
+		- [x] Mean Squared Error
+		- [ ] Use MeshLab for visual comparison of models
 	- [ ] Moving scene(s) with dynamic LOD adjustment
 		- [x] Spiral scene with moving parts
 		- [ ] Simple scene with car driving through "mountains"
@@ -147,8 +149,8 @@ BP Pocarovsky
 		- [x] Spiral scene - LOD threshold controls
 		- [x] Enable / disable UI option
 	- [ ] Performance research
-	- [ ] (?) Export model option (.obj is trivial, .gltf is a bit tricky)
-	- [ ] (?) Use MeshLab for visual comparison of models
+	- [ ] Export model option (.obj is trivial, .gltf is a bit tricky)
+	- [ ] Use MeshLab for visual comparison of models
 
 # Since last meeting
 - Theoretical part of the thesis
@@ -161,6 +163,7 @@ BP Pocarovsky
 	- Looked for inspiration in existing theses
 	- Format of the design and implementation chapters to be decided
 		- Added Spiral app design
+		- Added Simplificator app design
 - Application
 	- Added VMA (Spiral CPU-compute boost, tweaking desired comparison)
 		- Some thorough testing was done here, to assure that the performance boost is not a fluke
@@ -172,6 +175,7 @@ BP Pocarovsky
 		- Completed twin tracking for QEM simplification
 		- Completed Vertex Decimation simplification
 		- Several UI improvements in the simplificator app
+		- Added 'basic' Hausdorff distance and MSE calculations
 - Other
 	- Visited a lecture about computer graphics in KCD2
 		- 50 000 up to 100 000 triangles per character

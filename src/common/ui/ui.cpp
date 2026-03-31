@@ -86,6 +86,7 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 		showModelPerspectiveControls(transform);
 		showWireframeControls(renderer);
 		showSmoothingControls();
+		showSurfaceApproximationErrorControls();
 	}
 	
 }
@@ -222,7 +223,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	}
 
 	ImGui::SetNextWindowPos(ImVec2(1490, 10));
-	ImGui::SetNextWindowSize(ImVec2(300, 355));
+	ImGui::SetNextWindowSize(ImVec2(300, 380));
 
 	ImGui::Begin("Simplification");
 
@@ -432,8 +433,8 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 
 void UserInterface::showSimplificationResults()
 {
-	ImGui::SetNextWindowPos(ImVec2(1490, 670));
-	ImGui::SetNextWindowSize(ImVec2(300, 220));
+	ImGui::SetNextWindowPos(ImVec2(1490, 630));
+	ImGui::SetNextWindowSize(ImVec2(300, 260));
 
 	ImGui::Begin("Simplification Results");
 
@@ -496,6 +497,23 @@ void UserInterface::showSimplificationResults()
 		ImGui::Text("Final Memory:");
 		ImGui::SameLine();
 		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "%.2f MB", simpMB);
+
+		ImGui::Separator();
+		if (simplificator.options.computeHausdorff)
+		{
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Maximum distance from any vertex in either mesh to the closest point on the other mesh.");
+			ImGui::Text("Hausdorf distance:");
+			ImGui::SameLine();
+			ImGui::Text("%.2f", lastResult.hausdorffDistance);
+		}
+
+		if (simplificator.options.computeMSE)
+		{
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Symmetric mean squared distance from each vertex in the first mesh to the closest point on the second mesh.");
+			ImGui::Text("Mean squared error:");
+			ImGui::SameLine();
+			ImGui::Text("%.5f", lastResult.mseError);
+		}
 	}
 	else
 	{
@@ -556,6 +574,23 @@ void UserInterface::showSmoothingControls()
 		simplificator.enableFlatShading(flatShading);
 	}
 	
+	ImGui::End();
+}
+
+void UserInterface::showSurfaceApproximationErrorControls()
+{
+	ImGui::SetNextWindowPos(ImVec2(1490, 530));
+	ImGui::SetNextWindowSize(ImVec2(300, 90));
+	
+	ImGui::Begin("Compute approximation error");
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("TEST PURPOSES ONLY - Enable computation of one of the following. Slows down the simplification process quite significantly.");
+
+	ImGui::Checkbox("Hausdorff distance", &simplificator.options.computeHausdorff);
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enables Hausdorff distance computation during simplification.");
+
+	ImGui::Checkbox("Mean squared error", &simplificator.options.computeMSE);
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enables Mean squared error computation during simplification.");
+
 	ImGui::End();
 }
 

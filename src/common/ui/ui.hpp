@@ -63,6 +63,7 @@ private:
 	void showWireframeControls(Renderer& renderer);
 	void showSmoothingControls();
 	void showSimplificationResults();
+	void showSurfaceApproximationErrorControls();
 
 	// spiral app interface
 	void showSpiralControls(SpiralScene& scene);

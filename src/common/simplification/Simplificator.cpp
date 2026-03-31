@@ -2,6 +2,7 @@
 #include "utils/Geometry.hpp"
 #include "utils/Topology.hpp"
 #include "utils/LazyPriorityQueue.hpp"
+#include "utils/SurfApprox.hpp"
 #include "algorithms/QEM.hpp"
 #include "algorithms/VertexClustering.hpp"
 #include "algorithms/FloatingCellClustering.hpp"
@@ -25,6 +26,7 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 {
 	SimplificatorResult result;
 	auto start = std::chrono::high_resolution_clock::now();
+	float scale = model.getScaleIndex();
 
 	result.originalFaceCount = 0;
 	result.simplifiedFaceCount = 0;
@@ -32,6 +34,11 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 	result.simplifiedVertexCount = 0;
 	result.originalMemoryBytes = 0;
 	result.simplifiedMemoryBytes = 0;
+	result.hausdorffDistance = 0.0f;
+	result.mseError = 0.0f;
+
+	float totalSquaredErrorSum = 0.0f;
+	size_t totalVertexCount = 0;
 
 	std::cout << "Simplify called with parameter: " << targetFaceCountRatio << std::endl;
 
@@ -65,6 +72,27 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 
 		Geometry::finalizeVertices(simplifiedMesh.vertices, simplifiedMesh.indices);
 
+		if (options.computeHausdorff)
+		{
+			float hausdorffDistance = SurfApprox::getHausdorffDistance(vertices, indices, simplifiedMesh.vertices, simplifiedMesh.indices);
+			
+			// normalize via scaling factor
+			float normalizedHausdorff = hausdorffDistance * scale;
+			result.hausdorffDistance = std::max(result.hausdorffDistance, normalizedHausdorff);
+		}
+
+		if (options.computeMSE)
+		{
+			// have to do it like this since simplifiying each mesh separately
+			float rawSquaredErrorSumAB = SurfApprox::computeOneSideSquaredDistance(vertices, simplifiedMesh.vertices, simplifiedMesh.indices);
+			float rawSquaredErrorSumBA = SurfApprox::computeOneSideSquaredDistance(simplifiedMesh.vertices, vertices, indices);
+			
+			// normalize via scaling factor and accumulate
+			totalSquaredErrorSum += (rawSquaredErrorSumAB + rawSquaredErrorSumBA) * (scale * scale);
+			
+			totalVertexCount += vertices.size() + simplifiedMesh.vertices.size();
+		}
+
 		if (flatShading)
 		{
 			Geometry::makeFlatShaded(simplifiedMesh.vertices, simplifiedMesh.indices);
@@ -82,6 +110,11 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		result.simplifiedMemoryBytes += (simplifiedMesh.vertices.size() * sizeof(Vertex)) + (simplifiedMesh.indices.size() * sizeof(uint32_t));
 	
 		result.meshesData.push_back(std::move(simplifiedMesh));
+	}
+
+	if (options.computeMSE && totalVertexCount > 0)
+	{
+		result.mseError = totalSquaredErrorSum / totalVertexCount;
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();

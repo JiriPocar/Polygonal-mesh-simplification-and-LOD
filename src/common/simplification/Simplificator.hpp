@@ -31,6 +31,9 @@ struct SimplificatorResult {
 	size_t simplifiedVertexCount;
 	size_t originalMemoryBytes;
 	size_t simplifiedMemoryBytes;
+
+	float hausdorffDistance;
+	float mseError;
 };
 
 struct CollapseOptions {
@@ -45,6 +48,9 @@ struct CollapseOptions {
 	bool mergeCloseVerticesUV = false;
 	bool mergeCloseVerticesNormal = false;
 	float featureAngleThreshold = 30.0f;
+
+	bool computeHausdorff = false;
+	bool computeMSE = false;
 };
 
 class Simplificator {
