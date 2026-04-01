@@ -3,7 +3,11 @@
  * @file Geometry.cpp
  * @brief Utility functions for mesh geometry and geometry manipulations.
  *
- * This file contains ...
+ * This file contains various utility functions used for mesh geometry processing and manipulations along
+ * with the pure geometry functions. These include functions for computing bounding boxes, edge lengths,
+ * average plane or point-in-triangle tests.
+ * 
+ * Inspirations and adapted codes are specified in the Geometry.cpp file in their respective functions.
  */
 
 #include "Geometry.hpp"
@@ -12,10 +16,6 @@
 
 namespace Geometry
 {
-	float getEdgeLength(const glm::vec3& v1, const glm::vec3& v2)
-	{
-		return glm::length(v2 - v1);
-	}
 
 	void remapIndices(std::vector<uint32_t>& indices, uint32_t oldIdx, uint32_t newIdx)
 	{
@@ -137,7 +137,15 @@ namespace Geometry
 
 				if (canMerge && options.mergeCloseVerticesNormal)
 				{
-					if (glm::length2(vertices[idx1].normal - vertices[idx2].normal) > 0.01f * 0.01f)
+					// normalize normals before comparing since they may not be normalized
+					glm::vec3 n1 = glm::normalize(vertices[idx1].normal);
+					glm::vec3 n2 = glm::normalize(vertices[idx2].normal);
+
+					// use dot product to compare angle
+					float cosAngle = glm::dot(n1, n2);
+
+					// if angle is greater than 8 degrees, do not merge (cos(8 degrees) = 0.99)
+					if (cosAngle < 0.99f)
 					{
 						canMerge = false;
 					}
@@ -194,6 +202,8 @@ namespace Geometry
 
 	void recalculateSmoothNormals(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 	{
+		// TODO: (?) resolve this for UV seams (disconnected parts of meshes)
+
 		// reset normals
 		for (auto& v : vertices)
 		{
@@ -253,7 +263,7 @@ namespace Geometry
 	bool computeAveragePlane(const std::vector<uint32_t>& orderedLoop, const std::vector<Vertex>& vertices, glm::vec3& outCenter, glm::vec3& outNormal)
 	{
 		/*
-		* Inspired by https://www.realtimerendering.com/resources/GraphicsGems/gemsiii/newell.c
+		* Inspired by https://github.com/erich666/GraphicsGems/blob/master/gemsiii/newell.c
 		* 
 		* @author Filippo Tampieri, Cornell University
 		* @in Graphics Gems III, David Kirk (editor), Academic Press, 1992, ISBN: 0124096735

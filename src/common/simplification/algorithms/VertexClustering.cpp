@@ -1,9 +1,27 @@
 /**
  * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
- * @file VertexClustering.hpp
+ * @file VertexClustering.cpp
  * @brief Vertex clustering algorithm implementation.
  *
- * This file contains ...
+ * This file contains the implementation of the vertex clustering algorithm, including
+ * the structure of the cluster grid, functions for creating and filling the grid,
+ * grading vertices based on their neighborhood, and different strategies for selecting
+ * representative vertices for each cluster.
+ *
+ * =======================================================================================
+ *
+ * Inspirations and sources:
+ *      - The very original Vertex clustering algorithm definition
+ *		    - "Multi-resolution 3D approximation for rendering complex scenes" by Jarek Rossignac and Paul Borrel
+ *              - @url https://www.researchgate.net/publication/225075920_Multi-resolution_3D_approximation_for_rendering_complex_scenes
+ *      - Vertex weight calculation
+ *          - "Model Simplification Using Vertex-Clustering" by Kok-Lim Low and Tiow-Seng Tan
+ *              - @url https://www.comp.nus.edu.sg/~tants/Paper/simplify.pdf
+ *      - Modification using QEM for representative selection
+ *          - "Out-of-Core Simplification of Large Polygonal Models" by Peter Lindstrom
+ *              - @url http://www-evasion.imag.fr/Membres/Franck.Hetroy/Teaching/Geo3D/Articles/lindstrom2000.pdf
+ *
+ * =======================================================================================
  */
 
 #include "VertexClustering.hpp"

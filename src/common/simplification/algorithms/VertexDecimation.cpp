@@ -3,24 +3,26 @@
  * @file VertexDecimation.cpp
  * @brief Vertex decimation algorithm implementation.
  *
+ * =======================================================================================
+ * 
+ * Inspirations and sources:
  * 
  * Algorithm is based on "Decimation of Triangle Meshes" by William J. Schroeder et al.
  * at https://www.cs.columbia.edu/~allen/PHOTOPAPERS/Schroeder-etal-sg92.pdf
- * 
+ *
  * This file implements modified version of the algortihm, partly inspired by the Vertex decimation
  * in the VTK library at https://github.com/Kitware/VTK/blob/master/Filters/Core/vtkDecimatePro.cxx.
- * 
+ *
  * Kept from the original paper:
  *		- Classification of vertices
  *		- Error metrics based on classification
  *		- Concept of vertex removal, hole triangulation, local topology update
- *		- Feature preservation by not removing 'Complex' and 'Corner' vertices implicitly
- *		- Strict topology preservation by optionally locking border vertices
- * 
+ *		- Feature preservation by not removing 'Complex' vertices implicitly or optionally locking border vertices
+ *
  * Following parts of the algorithm are inspired by the VTK library implementation:
  *		- Finalizing classification using feature edge count
  *		- Using a priority queue to prevent multiple passes approach
- * 
+ *
  * Different approaches to the topics in the original paper
  *		- Hole triangulation: originally "Recursive loop splitting" is used, I chose ear clipping instead
  *			- Coming out of: https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
@@ -28,7 +30,9 @@
  *			- Ear is defined by three consecutive vertices in the loop, where any other vertex of the loop is not inside
  *			- Best ear is chosen based on (signed area) / (sum of squared edges) for better quality triangles after trianglutaion
  *		- Maintaining the error order using lazy priority queue instead of multiple passes
- *		- Simplified directed edge graph for classification and getting order loop for triangulation
+ *		- Directed edge graph for classification and getting order loop for triangulation
+ * 
+ *  =======================================================================================
  */
 
 #include "VertexDecimation.hpp"

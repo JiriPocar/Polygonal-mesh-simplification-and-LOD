@@ -3,7 +3,27 @@
  * @file QEM.cpp
  * @brief Quadric error metrics implementation.
  *
- * This file contains ...
+ * This file contains the imeplemmentation of the QEM simplification algorithm, including
+ * the definition of quadrics, quadric edges meant to be collapsed and overall functions
+ * for initializing quadrics, creating quadric edges, collapsing edges and updating the mesh.
+ *
+ * =======================================================================================
+ *
+ * Inspirations and sources:
+ * 	- The overall algorithm and mathematical definitions of quadrics
+ *      - "Surface simplification using quadric error metrics." by Michael Garland and Paul Heckbert
+ *          - @url https://www.cs.cmu.edu/~garland/Papers/quadrics.pdf
+ *      - "Simplifying surfaces with color and texture using quadric error metrics" by Michael Garland and Paul Heckbert
+ *          - @url https://www.cs.cmu.edu/~garland/Papers/quadric2.pdf
+ *      - "Quadric-Based Polygonal Surface Simplification" by Michael Garland
+ *          - @url https://www.cs.cmu.edu/~garland/thesis/thesis-onscreen.pdf
+ *  - Edge collapse
+ *      - "Mesh Optimization" by Hugues Hoppe
+ *          - @url https://hhoppe.com/meshopt.pdf
+ *		- Validity of edge collapse
+ *			- @url [answer]https://stackoverflow.com/questions/27049163/mesh-simplification-edge-collapse-conditions
+ * 
+ * =======================================================================================
  */
 
 #include "QEM.hpp"

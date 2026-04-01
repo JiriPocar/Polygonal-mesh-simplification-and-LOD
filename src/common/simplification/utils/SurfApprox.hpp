@@ -15,8 +15,9 @@
  *		 errors at the same reduction ratio, regardless of algorithm quality.
  * 
  *		 Sampling is only done on vertices of the meshes, which means that the error is not
- *		 measured on the whole surface, but only at discrete points. This can lead to underestimation
- *		 of the error, especially for models with large triangles or significant curvature. 
+ *		 measured on the whole surface, but only at set of sampling points (vertices).
+ *		 This can lead to underestimation of the error, especially for models with large
+ *		 triangles or significant curvature. 
  * 
  *		 Use these metrics accordingly:
  *			- Same model, different algorithm, different reduction ratio

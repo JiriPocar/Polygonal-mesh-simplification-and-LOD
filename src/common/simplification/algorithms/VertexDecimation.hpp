@@ -3,6 +3,9 @@
  * @file VertexDecimation.hpp
  * @brief Vertex decimation algorithm implementation.
  *
+ * =======================================================================================
+ * 
+ * Inspirations and sources:
  * 
  * Algorithm is based on "Decimation of Triangle Meshes" by William J. Schroeder et al.
  * at https://www.cs.columbia.edu/~allen/PHOTOPAPERS/Schroeder-etal-sg92.pdf
@@ -28,6 +31,8 @@
  *			- Best ear is chosen based on (signed area) / (sum of squared edges) for better quality triangles after trianglutaion
  *		- Maintaining the error order using lazy priority queue instead of multiple passes
  *		- Directed edge graph for classification and getting order loop for triangulation
+ * 
+ *  =======================================================================================
  */
 
 #pragma once
@@ -39,6 +44,7 @@
 
 namespace VertexDecimation {
 
+	// classification of vertices based on their neighborhood
     enum class VertexClassification {
         Simple,
         Complex,
@@ -48,6 +54,7 @@ namespace VertexDecimation {
         Undefined
     };
 
+    // vertex metadata for decimation
     struct VertexInfo {
         Topology::Neighborhood neighborhood;
         VertexClassification classification = VertexClassification::Undefined;
@@ -55,6 +62,7 @@ namespace VertexDecimation {
         std::vector<uint32_t> orderedLoop;
     };
 
+	// lazy priority queue element for vertex decimation candidates
     struct DecimationCandidate {
         uint32_t vertexIdx;
         double error;
@@ -64,16 +72,61 @@ namespace VertexDecimation {
         }
     };
 
+	// comparator for the priority queue of decimation candidates
     struct DecimationCompare {
 		bool operator()(const DecimationCandidate& a, const DecimationCandidate& b) const {
 			return a.error > b.error;
 		}
     };
 
+    /**
+	* @brief Computes the error of collapsing a vertex based on its classification and neighborhood.
+    * 
+	* @param vertexIdx The index of the vertex being evaluated for collapse
+	* @param vertices The vertices of the mesh
+	* @param indices The triangle indices of the mesh
+	* @param info The vertex metadata containing neighborhood and classification
+    * @param options The simplification options
+	* @param isLocked Vector indicating which vertices are locked and cannot be removed
+    * 
+    * @return error value of vertex at vertexIdx
+    */
     double computeVertexError(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, CollapseOptions& options, std::vector<bool>& isLocked);
+    
+    /**
+    * @brief Classifies a vertex based on its neighborhood using directed edge graph.
+	*        Fills CCW ordered loop of neighboring vertices for later potential use in hole triangulation.
+    * 
+	* @param vertexIdx The index of the vertex being classified
+	* @param vertices The vertices of the mesh
+	* @param indices The triangle indices of the mesh
+	* @param info The vertex metadata containing neighborhood and classification
+	* @param options The simplification options
+    * 
+	* @return classification of the vertex at vertexIdx
+    */
     VertexClassification classifyVertex(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, CollapseOptions& options);
 
+    /**
+	* @brief Computes the vertex metadata for ALL vertices in the mesh, including their neighborhood and classification.
+    * 
+	* @param indices The triangle indices of the mesh
+	* @param vertexCount The total number of vertices in the mesh
+    * 
+	* @return vector of vertex metadata corresponding to each vertex in the mesh
+    */
     std::vector<VertexInfo> computeVertexInfo(std::vector<uint32_t>& indices, size_t vertexCount);
+
+    /**
+	* @brief Triangulates hole created by removing a vertex using ear clipping method.
+    * 
+	* @param vertexIdx The index of the removed vertex that created the hole
+	* @param vertices The vertices of the mesh
+	* @param indices The triangle indices of the mesh
+	* @param info The vertex metadata containing neighborhood and classification of the removed vertex
+    * 
+	* @return vector of new triangle indices created by triangulating the hole
+    */
     std::vector<uint32_t> triangulateHole(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info);
 
     void updateLocalTopology(

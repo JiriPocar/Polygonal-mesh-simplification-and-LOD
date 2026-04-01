@@ -472,7 +472,7 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 	auto startEdges = Naive::getEdgesInModel(indices);
 	for (auto& edge : startEdges)
 	{
-		edge.length = Geometry::getEdgeLength(vertices[edge.v1].pos, vertices[edge.v2].pos);
+		edge.length = glm::length(vertices[edge.v1].pos - vertices[edge.v2].pos);
 		edgeQueue.push(edge);
 	}
 
@@ -541,9 +541,9 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 				Naive::Edge e2 = { std::min(i1, i2), std::max(i1, i2), 0.0f };
 				Naive::Edge e3 = { std::min(i2, i0), std::max(i2, i0), 0.0f };
 
-				e1.length = Geometry::getEdgeLength(vertices[e1.v1].pos, vertices[e1.v2].pos);
-				e2.length = Geometry::getEdgeLength(vertices[e2.v1].pos, vertices[e2.v2].pos);
-				e3.length = Geometry::getEdgeLength(vertices[e3.v1].pos, vertices[e3.v2].pos);
+				e1.length = glm::length(vertices[e1.v1].pos - vertices[e1.v2].pos);
+				e2.length = glm::length(vertices[e2.v1].pos - vertices[e2.v2].pos);
+				e3.length = glm::length(vertices[e3.v1].pos - vertices[e3.v2].pos);
 
 				edgeQueue.push(e1);
 				edgeQueue.push(e2);

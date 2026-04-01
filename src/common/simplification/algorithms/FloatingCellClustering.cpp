@@ -3,10 +3,25 @@
  * @file FloatingCellClustering.cpp
  * @brief Floating cell clustering algorithm implementation.
  *
- * This file contains ...
+ * This file contains implementation of Vertex clustering modification called
+ * Floating cell clustering, which is based on the original vertex clustering
+ * algorithm, but uses floating cells instead of fixed 3D grid.
+ * 
+ * =======================================================================================
+ * 
+ * Inspirations and sources:
+ *		- The very original Vertex clustering algorithm definition
+ *		    - "Multi-resolution 3D approximation for rendering complex scenes" by Jarek Rossignac and Paul Borrel
+ *              - @url https://www.researchgate.net/publication/225075920_Multi-resolution_3D_approximation_for_rendering_complex_scenes
+ *		- Floating cell clustering modification
+ *			- "Model Simplification Using Vertex-Clustering" by Kok-Lim Low and Tiow-Seng Tan
+ *              - @url https://www.comp.nus.edu.sg/~tants/Paper/simplify.pdf
+ *		- Optimization
+ *			- Sweep and prune for finding close vertices in 3D space
+ *				- @url https://leanrada.com/notes/sweep-and-prune/
+ * 
+ * =======================================================================================
  */
-
- /* End of the FloatingCellCLustering.cpp file */
 
 #include "FloatingCellClustering.hpp"
 #include <algorithm>
@@ -133,3 +148,5 @@ namespace FloatingCellClustering {
 		return indexRemap;
 	}
 }
+
+/* End of the FloatingCellCLustering.cpp file */

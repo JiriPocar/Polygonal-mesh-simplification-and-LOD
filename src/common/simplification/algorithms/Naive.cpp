@@ -54,7 +54,8 @@ namespace Naive {
 
 		for (auto& edge : edges)
 		{
-			float len = Geometry::getEdgeLength(vertices[edge.v1].pos, vertices[edge.v2].pos);
+			// can use squared length for comparison to avoid unnecessary sqrt
+			float len = glm::length2(vertices[edge.v1].pos - vertices[edge.v2].pos);
 			if (len < minLen)
 			{
 				minLen = len;
