@@ -67,15 +67,7 @@ void SpiralApp::update(float deltaTime)
 
 void SpiralApp::drawFrame()
 {
-    try {
-        renderer->drawFrame(camera, ui);
-    }
-    catch (const vk::OutOfDateKHRError&) {
-        renderer->recreateSwapchain();
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Error during frame rendering: " << e.what() << std::endl;
-    }
+    renderer->drawFrame(camera, ui);
 }
 
 /* End of the SpiralApp.cpp file */

@@ -10,9 +10,9 @@
 #pragma once
 #include "../../common/core/VulkanApp.hpp"
 #include "../../common/core/Pipeline.hpp"
-#include "../../common/rendering/Renderer.hpp"
 #include "../../common/resources/DualModel.hpp"
 #include "../../common/scene/Transform.hpp"
+#include "SimplificatorRenderer.hpp"
 
 class SimplificatorApp : public VulkanApp {
 public:
@@ -27,7 +27,7 @@ private:
 	std::unique_ptr<Pipeline> pipeline;
 	std::unique_ptr<Pipeline> wireframePipeline;
 	std::unique_ptr<DualModel> dualModel;
-	std::unique_ptr<Renderer> renderer;
+	std::unique_ptr<SimplificatorRenderer> renderer;
 
 	Transform transform;
 	float xRotation = 0.0f;

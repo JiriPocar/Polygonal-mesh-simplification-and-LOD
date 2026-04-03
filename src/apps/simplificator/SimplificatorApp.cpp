@@ -27,7 +27,7 @@ void SimplificatorApp::init()
     float modelScale = dualModel->getOriginalModel().getScaleIndex();
     transform.setScale(glm::vec3(modelScale, modelScale, modelScale));
 
-    renderer = std::make_unique<Renderer>(
+    renderer = std::make_unique<SimplificatorRenderer>(
         device,
         swapchain,
         renderPass,

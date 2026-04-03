@@ -1,9 +1,16 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file ui.cpp
+ * @brief User interface integration via ImGui.
+ *
+ * This file contains the UserInterface class, which integrates ImGui into the Vulkan application.
+ * Provides methods for initializing ImGui, creating a descriptor pool, and rendering the UI elements each frame.
+*/
+
 #include "ui.hpp"
 #include <filesystem>
 #include <iostream>
 #include <chrono>
-#include "../rendering/Renderer.hpp"
-#include "../rendering/SpiralRenderer.hpp"
 #include "../scene/SpiralScene.hpp"
 
 UserInterface::UserInterface(Instance &instance, Device& dev, Swapchain& swapchain, RenderPass& renderPass, Window& window, CommandManager& cmdManager)
@@ -71,7 +78,7 @@ void UserInterface::createDescriptorPool()
 	descriptorPool = uiDevice.operator*().createDescriptorPoolUnique(poolInfo);
 }
 
-void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform, bool show)
+void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, SimplificatorRenderer& renderer, Transform& transform, bool show)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -172,7 +179,7 @@ void UserInterface::showStatistics()
 	ImGui::End();
 }
 
-void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform)  
+void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& device, SimplificatorRenderer& renderer, Transform& transform)
 {  
 	ImGui::SetNextWindowPos(ImVec2(10, 490));
 	ImGui::SetNextWindowSize(ImVec2(250, 400));
@@ -594,7 +601,7 @@ void UserInterface::showSurfaceApproximationErrorControls()
 	ImGui::End();
 }
 
-void UserInterface::showWireframeControls(Renderer& renderer)
+void UserInterface::showWireframeControls(SimplificatorRenderer& renderer)
 {
 	static bool wireframe = false;
 	
@@ -819,3 +826,5 @@ void UserInterface::cleanUp()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
+
+/* End of the ui.cpp file */

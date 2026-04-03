@@ -3,7 +3,8 @@
  * @file ui.hpp
  * @brief User interface integration via ImGui.
  * 
- * This file contains the UserInterface class which manages the integration of ImGui
+ * This file contains the UserInterface class, which integrates ImGui into the Vulkan application.
+ * Provides methods for initializing ImGui, creating a descriptor pool, and rendering the UI elements each frame.
 */
 
 #pragma once
@@ -25,10 +26,13 @@
 #include "../resources/Model.hpp"
 #include "../resources/DualModel.hpp"
 #include "../simplification/Simplificator.hpp"
+#include "../apps/simplificator/SimplificatorRenderer.hpp"
+#include "../apps/demo/SpiralRenderer.hpp"
 
-class Renderer;
 class SpiralRenderer;
 class SpiralScene;
+class SimplificatorRenderer;
+class SpiralRenderer;
 
 class UserInterface {
 public:
@@ -36,7 +40,7 @@ public:
 	~UserInterface();
 
 	void init();
-	void beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, Renderer& renderer, Transform& transform, bool show);
+	void beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, SimplificatorRenderer& renderer, Transform& transform, bool show);
 	void beginFrame2(SpiralScene& scene, SpiralRenderer& renderer, bool show);
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);
@@ -56,11 +60,11 @@ private:
 	// simplificator app interface
 	std::vector<std::string> menuModels;
 	void scanModels();
-	void showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& devices, Renderer& renderer, Transform& transform);
+	void showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& devices, SimplificatorRenderer& renderer, Transform& transform);
 	void showStatistics();
 	void showSimplificationControls(std::unique_ptr<DualModel>& currentDualModel, Device& device);
 	void showModelPerspectiveControls(Transform& transform);
-	void showWireframeControls(Renderer& renderer);
+	void showWireframeControls(SimplificatorRenderer& renderer);
 	void showSmoothingControls();
 	void showSimplificationResults();
 	void showSurfaceApproximationErrorControls();

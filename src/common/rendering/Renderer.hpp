@@ -1,81 +1,69 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Renderer.hpp
+ * @brief Source file for the base Renderer class.
+ *
+ * This file implements the Renderer class, which serves as a base for specific
+ * renderers in the application. It manages common Vulkan rendering tasks such as
+ * synchronization, command buffer management, and swapchain recreation on window resize.
+ */
+
 #pragma once
+
 #include <vulkan/vulkan.hpp>
+#include <vector>
 #include <memory>
 
 #include "RenderPass.hpp"
 #include "FrameBuffer.hpp"
 #include "CommandManager.hpp"
-#include "UniformBuffer.hpp"
-#include "Descriptors.hpp"
 #include "../window.h"
 #include "../core/Device.hpp"
 #include "../core/Swapchain.hpp"
-#include "../core/Pipeline.hpp"
-#include "../resources/Model.hpp"
-#include "../scene/Camera.hpp"
-#include "../scene/Transform.hpp"
-#include "../resources/DualModel.hpp"
-
-class UserInterface;
 
 class Renderer {
 public:
-	Renderer(
-		Device& device,
-		Swapchain& swapchain,
-		RenderPass& renderPass,
-		Pipeline& pipeline,
-		FrameBuffer& framebuffer,
-		CommandManager& commandManager,
-		Window& window,
-		vk::SurfaceKHR surface,
-		Model& model,
-		UniformBuffer& uniformBuffer,
-		Descriptor& descriptor
-	);
+    Renderer(
+        Device& device,
+        Swapchain& swapchain,
+        RenderPass& renderPass,
+        FrameBuffer& framebuffer,
+        CommandManager& commandManager,
+        Window& window,
+        vk::SurfaceKHR surface
+    );
 
-	~Renderer();
+    virtual ~Renderer();
 
-	void drawFrame(const Camera& camera, const Transform& transform, UserInterface& ui);
-	void drawSplitScreen(const Camera& camera, const Transform& transform, UserInterface& ui);
-	
-	void recreateSwapchain();
+    void recreateSwapchain();
 
-	void setModel(Model& newModel) { m_model = &newModel; }
-	void setDualModel(DualModel& newDualModel) { m_dualModel = &newDualModel; }
+    static const int MAX_FRAMES_IN_FLIGHT = 2;
 
-	void setShowWireframe(bool show) { showWireframe = show; }
-	void setWireframePipeline(Pipeline& pipeline) { m_wireframePipeline = &pipeline; }
+protected:
+    vk::CommandBuffer beginFrame(uint32_t& outImgIdx);
+    void endFrame(vk::CommandBuffer cmd, uint32_t imgIdx);
 
-	static const int MAX_FRAMES_IN_FLIGHT = 2;
+    Device& m_device;
+    Swapchain& m_swapchain;
+    RenderPass& m_renderPass;
+    FrameBuffer& m_framebuffer;
+    CommandManager& m_commandManager;
+    Window& m_window;
+    vk::SurfaceKHR m_surface;
+
+    // swaps between 0/1 to track current frame in flight
+    uint32_t currentFrame = 0;
+    bool framebufferResized = false;
 
 private:
-	void createSyncObjects();
-	void cleanupSyncObjects();
-	void recreateFramebuffers();
+    void createSyncObjects();
+    void cleanupSyncObjects();
+    void recreateFramebuffers();
 
-	void setupViewportScissor(vk::CommandBuffer cmd, vk::Extent2D extent, uint32_t width, int side);
-
-	Device& m_device;
-	Swapchain& m_swapchain;
-	RenderPass& m_renderPass;
-	Pipeline& m_pipeline;
-	FrameBuffer& m_framebuffer;
-	CommandManager& m_commandManager;
-	Window& m_window;
-	vk::SurfaceKHR m_surface;
-	Model* m_model;
-	UniformBuffer& m_uniformBuffer;
-	Descriptor& m_descriptor;
-	DualModel* m_dualModel;
-	Pipeline* m_wireframePipeline = nullptr;
-
-	vk::UniqueSemaphore imageAvailableSemaphores;
-	vk::UniqueSemaphore renderFinishedSemaphores;
-	vk::UniqueFence inFlightFence;
-
-	bool framebufferResized = false;
-	bool showWireframe = false;
-
-	uint32_t currentFrame = 0;
+    std::vector<vk::UniqueSemaphore> imageAvailableSemaphores;
+    std::vector<vk::UniqueSemaphore> renderFinishedSemaphores;
+    std::vector<vk::UniqueFence> inFlightFence;
+    std::vector<vk::Fence> imagesInFlight;
 };
+
+/* End of the Renderer.hpp file */

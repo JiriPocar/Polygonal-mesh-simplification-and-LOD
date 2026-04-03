@@ -14,8 +14,8 @@
 #include "../../common/core/VulkanApp.hpp"
 #include "../../common/core/SpiralPipeline.hpp"
 #include "../../common/core/SpiralComputePipeline.hpp"
-#include "../../common/rendering/SpiralRenderer.hpp"
 #include "../../common/scene/SpiralScene.hpp"
+#include "SpiralRenderer.hpp"
 
 class SpiralApp : public VulkanApp {
 public:

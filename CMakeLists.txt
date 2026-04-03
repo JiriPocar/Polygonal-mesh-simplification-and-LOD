@@ -28,13 +28,13 @@ set(ENGINE_SOURCES
     "src/common/core/VulkanApp.cpp"
 
     # Rendering
-    "src/common/rendering/Renderer.cpp"
-    "src/common/rendering/SpiralRenderer.cpp"
+    
     "src/common/rendering/RenderPass.cpp"
     "src/common/rendering/Descriptors.cpp"
     "src/common/rendering/CommandManager.cpp"
     "src/common/rendering/FrameBuffer.cpp"
     "src/common/rendering/UniformBuffer.cpp"
+    "src/common/rendering/Renderer.cpp"
 
     # Resources
     "src/common/resources/Buffer.cpp"
