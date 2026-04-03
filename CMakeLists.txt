@@ -18,6 +18,9 @@ set(ENGINE_SOURCES
     "src/common/window.cpp"
     "src/common/window.h"
 
+    "src/apps/demo/SpiralRenderer.cpp"
+    "src/apps/simplificator/SimplificatorRenderer.cpp"
+
     # Core
     "src/common/core/Device.cpp"
     "src/common/core/Instance.cpp"
@@ -28,7 +31,6 @@ set(ENGINE_SOURCES
     "src/common/core/VulkanApp.cpp"
 
     # Rendering
-    
     "src/common/rendering/RenderPass.cpp"
     "src/common/rendering/Descriptors.cpp"
     "src/common/rendering/CommandManager.cpp"
@@ -81,6 +83,7 @@ target_compile_features(BPEngine PUBLIC cxx_std_17)
 # COMMON INCLUDE DIRECTORIES
 target_include_directories(BPEngine PUBLIC 
     src/common
+    src/apps
     external
     external/glfw/include
     external/tinygltf

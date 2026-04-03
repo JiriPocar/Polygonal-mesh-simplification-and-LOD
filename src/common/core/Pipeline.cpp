@@ -182,6 +182,14 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		1.0f
 	);
 
+	// dynamic state for viewport and scissor
+	std::vector<vk::DynamicState> dynamicStates = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	vk::PipelineDynamicStateCreateInfo dynamicStateInfo(
+		{},
+		static_cast<uint32_t>(dynamicStates.size()),
+		dynamicStates.data()
+	);
+
 	// create the graphics pipeline
 	vk::GraphicsPipelineCreateInfo pipelineInfo(
 		{},						// flags
@@ -194,7 +202,7 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		&multisampling,			// multisampling
 		&depthStencil,			// depth stencil
 		&colorBlending,			// color blending
-		nullptr,				// dynamic state
+		&dynamicStateInfo,		// dynamic state
 		*pipelineLayout,		// pipeline layout
 		renderPass.get(),		// render pass
 		0,						// subpass

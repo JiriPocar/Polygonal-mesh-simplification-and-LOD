@@ -26,10 +26,17 @@ class SpiralComputePipeline;
 class SpiralRenderer : public Renderer {
 public:
     SpiralRenderer(
-        Device& device, Swapchain& swapchain, RenderPass& renderPass,
-        SpiralPipeline& pipeline, FrameBuffer& framebuffer, CommandManager& commandManager,
-        Window& window, vk::SurfaceKHR surface, SpiralScene& spiralScene,
-        UniformBuffer& uniformBuffer, Descriptor& descriptor
+        Device& device,
+        Swapchain& swapchain,
+        RenderPass& renderPass,
+        SpiralPipeline& pipeline,
+        FrameBuffer& framebuffer,
+        CommandManager& commandManager,
+        Window& window,
+        vk::SurfaceKHR surface,
+        SpiralScene& spiralScene,
+        UniformBuffer& uniformBuffer,
+        Descriptor& descriptor
     );
 
     ~SpiralRenderer() override = default;
@@ -39,6 +46,8 @@ public:
     void setWireframePipeline(SpiralPipeline& pipeline) { m_wireframePipeline = &pipeline; }
     void setShowWireframe(bool show) { showWireframe = show; }
     void setComputePipeline(SpiralComputePipeline& pipeline) { m_computePipeline = &pipeline; }
+
+    void refreshTextureDescriptors();
 
     void setUseGPULODCompute(bool use)
     {

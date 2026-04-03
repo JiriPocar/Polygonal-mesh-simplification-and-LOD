@@ -726,8 +726,10 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 		if (selectedInstanceCount < 0) selectedInstanceCount = 0;
 
 		if (selectedInstanceCount > static_cast<int>(scene.getMaxInstanceCount()))
+		{
 			selectedInstanceCount = scene.getMaxInstanceCount();
-
+		}
+		
 		scene.config.instanceCount = static_cast<uint32_t>(selectedInstanceCount);
 		scene.updateSpiralPositions(0.0f, false); // reset positions
 		renderer.setUseGPULODCompute(false);
@@ -760,6 +762,7 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 		if (ImGui::Button("Apply and regenerate meshes"))
 		{
 			scene.rebuildLODs(uiCmdManager);
+			renderer.refreshTextureDescriptors();
 		}
 	}
 

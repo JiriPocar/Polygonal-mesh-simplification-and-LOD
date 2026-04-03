@@ -28,14 +28,7 @@ SpiralRenderer::SpiralRenderer(Device& device, Swapchain& swapchain, RenderPass&
         m_uniformBuffer(uniformBuffer),
         m_descriptor(descriptor)
 {
-    Texture* texture = m_spiralScene.getModelLODSet(0).getLOD(0).getTexture();
-    if (texture)
-    {
-        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            m_descriptor.updateTexture(i, *texture);
-        }
-    }
+	refreshTextureDescriptors();
 }
 
 void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
@@ -254,6 +247,18 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 
 	// present and sync
     endFrame(cmdBuffer, imgIdx);
+}
+
+void SpiralRenderer::refreshTextureDescriptors()
+{
+    Texture* texture = m_spiralScene.getModelLODSet(0).getLOD(0).getTexture();
+    if (texture)
+    {
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            m_descriptor.updateTexture(i, *texture);
+        }
+    }
 }
 
 /* End of the SpiralRenderer.cpp file */

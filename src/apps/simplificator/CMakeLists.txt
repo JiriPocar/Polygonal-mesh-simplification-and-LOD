@@ -1,6 +1,6 @@
 set(APP_NAME Simplificator)
 
-add_executable(${APP_NAME} main.cpp SimplificatorApp.cpp "SimplificatorRenderer.cpp")
+add_executable(${APP_NAME} main.cpp SimplificatorApp.cpp)
 
 # LINK ENGINE
 target_link_libraries(${APP_NAME} PRIVATE BPEngine)

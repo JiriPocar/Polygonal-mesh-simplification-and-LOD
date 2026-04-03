@@ -29,7 +29,6 @@
 #include "../apps/simplificator/SimplificatorRenderer.hpp"
 #include "../apps/demo/SpiralRenderer.hpp"
 
-class SpiralRenderer;
 class SpiralScene;
 class SimplificatorRenderer;
 class SpiralRenderer;
