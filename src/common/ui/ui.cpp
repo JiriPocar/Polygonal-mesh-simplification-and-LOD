@@ -98,7 +98,7 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	
 }
 
-void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer, bool show)
+void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer, Benchmark& benchmark, bool show)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -113,6 +113,11 @@ void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer, b
 		showWireframeControls2(renderer);
 		showUseGPUCPUControls(renderer);
 		showSceneInfo(spiral);
+		showBenchmarkStart(benchmark);
+	}
+	else
+	{
+		showBenchmarkStatus(benchmark);
 	}
 }
 
@@ -558,6 +563,66 @@ void UserInterface::showModelPerspectiveControls(Transform& transform)
 	ImGui::End();
 }
 
+void UserInterface::showBenchmarkStart(Benchmark& benchmark)
+{
+	// make a button
+	ImGui::SetNextWindowPos(ImVec2(1660, 855)); // 920 - 55+10
+	ImGui::SetNextWindowSize(ImVec2(130, 55));
+	ImGui::Begin("Benchmark");
+	if (ImGui::Button("Start Benchmark"))
+	{
+		if (!benchmark.isRunning())
+		{
+			benchmark.start();
+		}
+	}
+
+	ImGui::End();
+}
+
+void UserInterface::showBenchmarkStatus(Benchmark& benchmark)
+{
+	ImGui::SetNextWindowPos(ImVec2(10, 10));
+	ImGui::SetNextWindowSize(ImVec2(330, 335));
+	ImGui::Begin("Benchmark Status");
+	if (benchmark.isRunning())
+	{
+		if (ImGui::BeginTable("Benchmark information", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+		{
+			ImGui::TableSetupColumn("Config");
+			ImGui::TableSetupColumn("Value");
+			ImGui::TableHeadersRow();
+			ImGui::TableNextRow();
+
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Current config index");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("%d", benchmark.getCurrentConfigIndex());
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Instances");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("%d", benchmark.getCurrentConfig().instances);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("GPU LOD compute");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("%s", benchmark.getCurrentConfig().useGPULOD ? "Yes" : "No");
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("GPU Spiral compute");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("%s", benchmark.getCurrentConfig().useGPUSpiral ? "Yes" : "No");
+
+			ImGui::EndTable();
+		}
+	}
+	ImGui::End();
+}
+
 Transform UserInterface::fetchTransform()
 {
 	return uiTransform;
@@ -635,8 +700,8 @@ void UserInterface::showWireframeControls2(SpiralRenderer& renderer)
 
 void UserInterface::showUseGPUCPUControls(SpiralRenderer& renderer)
 {
-	ImGui::SetNextWindowPos(ImVec2(1550, 10), ImGuiCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(260, 80), ImGuiCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(1495, 220), ImGuiCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(300, 80), ImGuiCond_Once);
 
 	ImGui::Begin("Compute controls");
 
@@ -657,8 +722,11 @@ void UserInterface::showUseGPUCPUControls(SpiralRenderer& renderer)
 
 void UserInterface::showSceneInfo(SpiralScene& scene)
 {
-	ImGui::SetNextWindowPos(ImVec2(1505, 670));
-	ImGui::SetNextWindowSize(ImVec2(300, 300));
+	//ImGui::SetNextWindowPos(ImVec2(1535, 10), ImGuiCond_Once);
+	//ImGui::SetNextWindowSize(ImVec2(260, 80), ImGuiCond_Once);
+
+	ImGui::SetNextWindowPos(ImVec2(1495, 10));
+	ImGui::SetNextWindowSize(ImVec2(300, 200));
 
 	ImGui::Begin("Scene Info");
 
@@ -772,7 +840,7 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 void UserInterface::showSpiralControls(SpiralScene& scene)
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 660));
-	ImGui::SetNextWindowSize(ImVec2(400, 300));
+	ImGui::SetNextWindowSize(ImVec2(400, 240));
 
 	ImGui::Begin("Spiral settings");
 

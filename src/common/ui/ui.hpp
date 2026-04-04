@@ -28,6 +28,7 @@
 #include "../simplification/Simplificator.hpp"
 #include "../apps/simplificator/SimplificatorRenderer.hpp"
 #include "../apps/demo/SpiralRenderer.hpp"
+#include "../apps/demo/Benchmark.hpp"
 
 class SpiralScene;
 class SimplificatorRenderer;
@@ -40,7 +41,7 @@ public:
 
 	void init();
 	void beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, SimplificatorRenderer& renderer, Transform& transform, bool show);
-	void beginFrame2(SpiralScene& scene, SpiralRenderer& renderer, bool show);
+	void beginFrame2(SpiralScene& scene, SpiralRenderer& renderer, Benchmark& benchmark, bool show);
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);
 
@@ -74,6 +75,8 @@ private:
 	void showWireframeControls2(SpiralRenderer& renderer);
 	void showUseGPUCPUControls(SpiralRenderer& renderer);
 	void showSceneInfo(SpiralScene& scene);
+	void showBenchmarkStart(Benchmark& benchmark);
+	void showBenchmarkStatus(Benchmark& benchmark);
 
 	Instance& uiInstance;
 	Device& uiDevice;

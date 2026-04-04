@@ -36,6 +36,7 @@ public:
     virtual ~Renderer();
 
     void recreateSwapchain();
+	uint32_t getCurrentFrame() const { return currentFrame; }
 
     static const int MAX_FRAMES_IN_FLIGHT = 2;
 

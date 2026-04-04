@@ -16,6 +16,7 @@
 #include "../../common/core/SpiralComputePipeline.hpp"
 #include "../../common/scene/SpiralScene.hpp"
 #include "SpiralRenderer.hpp"
+#include "Benchmark.hpp"
 
 class SpiralApp : public VulkanApp {
 public:
@@ -32,6 +33,8 @@ private:
 	std::unique_ptr<SpiralComputePipeline> computePipeline;
 	std::unique_ptr<SpiralScene> spiralScene;
 	std::unique_ptr<SpiralRenderer> renderer;
+
+	Benchmark benchmark;
 };
 
 /* End of the SpiralApp.hpp file */

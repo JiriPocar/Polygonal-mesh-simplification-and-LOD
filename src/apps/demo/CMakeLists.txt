@@ -1,6 +1,6 @@
 set(APP_NAME Spiral)
 
-add_executable(${APP_NAME} main.cpp SpiralApp.cpp)
+add_executable(${APP_NAME} main.cpp SpiralApp.cpp "Benchmark.cpp")
 
 # LINK ENGINE
 target_link_libraries(${APP_NAME} PRIVATE BPEngine)

@@ -14,7 +14,7 @@
 #include <iostream>
 
 SpiralApp::SpiralApp() 
-	: VulkanApp(1800, 900, "Spiral scene")
+	: VulkanApp(1800, 920, "Spiral scene")
 {
 
 }
@@ -54,14 +54,45 @@ void SpiralApp::init()
 
 void SpiralApp::update(float deltaTime)
 {
+    if (benchmark.isRunning() && benchmark.needsApplyConfig())
+    {
+		// apply benchmark config to the scene and renderer
+		BenchmarkConfig cfg = benchmark.getCurrentConfig();
+		spiralScene->config.instanceCount = cfg.instances;
+		spiralScene->config.enableLOD = cfg.enableLOD;
+		renderer->setUseGPULODCompute(cfg.useGPULOD);
+		renderer->setUseGPUSpiralCompute(cfg.useGPUSpiral);
+
+        // reset positions when changing instance count
+		spiralScene->updateSpiralPositions(0.0f, false);
+
+		benchmark.clearApplyConfigFlag();
+    }
+
+	// update spiral positions and LODs
     spiralScene->updateSpiralPositions(deltaTime, renderer->getUseGPUSpiralCompute());
-    ui.beginFrame2(*spiralScene, *renderer, showUI);
+    spiralScene->updateLODs(camera.getPosition(), renderer->getCurrentFrame(), renderer->getUseGPULODCompute(), renderer->getUseGPUSpiralCompute());
+    
+    if (benchmark.isRunning())
+    {
+        // disable main ui during benchmark
+        ui.beginFrame2(*spiralScene, *renderer, benchmark, false);
+    }
+    else
+    {
+        ui.beginFrame2(*spiralScene, *renderer, benchmark, showUI);
+    }
 
     // handle window resizing
     if (window.wasResized())
     {
         window.resetResizedFlag();
         camera.setPerspective(60.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 20000.0f);
+    }
+
+    if (benchmark.isRunning())
+    {
+		benchmark.update(deltaTime);
     }
 }
 
