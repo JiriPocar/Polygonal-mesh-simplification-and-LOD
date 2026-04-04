@@ -23,7 +23,7 @@ void Benchmark::start()
 		return;
 	}
 
-	csvFile << "Instances,GPULOD,GPUSpiral,EnableLOD,AvgFrameTimeMs\n";
+	csvFile << "Instances,GPULOD,GPUSpiral,EnableLOD,SceneFaces,AvgFrameTimeMs\n";
 
 	running = true;
 	currentConfigIdx = 0;
@@ -32,7 +32,7 @@ void Benchmark::start()
 	currentTimer = 0.0f;
 }
 
-void Benchmark::update(float deltaTime)
+void Benchmark::update(float deltaTime, SpiralScene& spiralScene, glm::vec3& camPos)
 {
 	if (!isRunning())
 	{
@@ -52,6 +52,7 @@ void Benchmark::update(float deltaTime)
 			currentTimer = 0.0f;
 			currentConfigData.cumulatedTime = 0.0f;
 			currentConfigData.framesMeasured = 0;
+			currentConfigData.drawnTriangles = spiralScene.calculateCurrentDrawnTriangles(camPos);
 		}
 	}
 	else
@@ -124,6 +125,7 @@ void Benchmark::saveToCSV()
 		<< (c.useGPULOD ? "GPU" : "CPU") << ","
 		<< (c.useGPUSpiral ? "GPU" : "CPU") << ","
 		<< (c.enableLOD ? "Enabled" : "Disabled") << ","
+		<< currentConfigData.drawnTriangles << ","
 		<< avgTime << "\n";
 }
 

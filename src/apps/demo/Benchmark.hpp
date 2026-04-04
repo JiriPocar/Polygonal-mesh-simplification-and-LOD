@@ -5,6 +5,7 @@
  */
 
 #pragma once
+#include "../common/scene/SpiralScene.hpp"
 #include <vector>
 #include <string>
 #include <fstream>
@@ -24,6 +25,7 @@ struct BenchmarkConfig {
 struct BenchmarkConfigData {
 	uint32_t framesMeasured;
 	float cumulatedTime;
+	uint32_t drawnTriangles;
 };
 
 class Benchmark {
@@ -45,7 +47,7 @@ public:
 	* 
 	* @param deltaTime Time elapsed since the last frame in seconds.
 	*/
-	void update(float deltaTime);
+	void update(float deltaTime, SpiralScene& spiralScene, glm::vec3& camPos);
 
 	/**
 	* @brief Transitions into the next config. If no more configs are left,
@@ -77,7 +79,7 @@ private:
 	std::vector<BenchmarkConfig> configs;
 	uint32_t currentConfigIdx;
 
-	BenchmarkConfigData currentConfigData = { 0, 0.0f };
+	BenchmarkConfigData currentConfigData = { 0, 0.0f, 0 };
 	float currentTimer = 0.0f;
 
 	bool running = false;

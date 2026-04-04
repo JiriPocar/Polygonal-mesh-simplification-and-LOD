@@ -76,11 +76,11 @@ void SpiralApp::update(float deltaTime)
     if (benchmark.isRunning())
     {
         // disable main ui during benchmark
-        ui.beginFrame2(*spiralScene, *renderer, benchmark, false);
+        ui.beginFrame2(*spiralScene, *renderer, camera.getPosition(), benchmark, false);
     }
     else
     {
-        ui.beginFrame2(*spiralScene, *renderer, benchmark, showUI);
+        ui.beginFrame2(*spiralScene, *renderer, camera.getPosition(), benchmark, showUI);
     }
 
     // handle window resizing
@@ -92,7 +92,7 @@ void SpiralApp::update(float deltaTime)
 
     if (benchmark.isRunning())
     {
-		benchmark.update(deltaTime);
+		benchmark.update(deltaTime, *spiralScene, camera.getPosition());
     }
 }
 

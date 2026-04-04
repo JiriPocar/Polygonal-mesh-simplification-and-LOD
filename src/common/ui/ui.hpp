@@ -41,7 +41,7 @@ public:
 
 	void init();
 	void beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, SimplificatorRenderer& renderer, Transform& transform, bool show);
-	void beginFrame2(SpiralScene& scene, SpiralRenderer& renderer, Benchmark& benchmark, bool show);
+	void beginFrame2(SpiralScene& scene, SpiralRenderer& renderer, glm::vec3 camPos, Benchmark& benchmark, bool show);
 	void render(vk::CommandBuffer cmdBuffer);
 	void handleMouseMove(double x, double y);
 
@@ -74,7 +74,7 @@ private:
 	void showGeneralControls(SpiralScene& scene, SpiralRenderer& renderer);
 	void showWireframeControls2(SpiralRenderer& renderer);
 	void showUseGPUCPUControls(SpiralRenderer& renderer);
-	void showSceneInfo(SpiralScene& scene);
+	void showSceneInfo(SpiralScene& scene, glm::vec3 camPos);
 	void showBenchmarkStart(Benchmark& benchmark);
 	void showBenchmarkStatus(Benchmark& benchmark);
 

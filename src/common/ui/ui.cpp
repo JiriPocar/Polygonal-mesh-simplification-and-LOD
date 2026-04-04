@@ -98,7 +98,7 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	
 }
 
-void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer, Benchmark& benchmark, bool show)
+void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer, glm::vec3 camPos, Benchmark& benchmark, bool show)
 {
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -112,7 +112,7 @@ void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer, B
 		showGeneralControls(spiral, renderer);
 		showWireframeControls2(renderer);
 		showUseGPUCPUControls(renderer);
-		showSceneInfo(spiral);
+		showSceneInfo(spiral, camPos);
 		showBenchmarkStart(benchmark);
 	}
 	else
@@ -720,11 +720,8 @@ void UserInterface::showUseGPUCPUControls(SpiralRenderer& renderer)
 	ImGui::End();
 }
 
-void UserInterface::showSceneInfo(SpiralScene& scene)
+void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 {
-	//ImGui::SetNextWindowPos(ImVec2(1535, 10), ImGuiCond_Once);
-	//ImGui::SetNextWindowSize(ImVec2(260, 80), ImGuiCond_Once);
-
 	ImGui::SetNextWindowPos(ImVec2(1495, 10));
 	ImGui::SetNextWindowSize(ImVec2(300, 200));
 
@@ -734,19 +731,33 @@ void UserInterface::showSceneInfo(SpiralScene& scene)
 	ImGui::SameLine();
 	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%d", scene.config.instanceCount);
 
+	// twice per second update the number of drawn faces
+	// a bit of a hack, since its costly operation
+	static float updateTimer = 0.0f;
+	static uint32_t currentDrawnTriangles = 0;
+	updateTimer += ImGui::GetIO().DeltaTime;
+	if (updateTimer >= 0.5f)
+	{
+		currentDrawnTriangles = scene.calculateCurrentDrawnTriangles(camPos);
+		updateTimer = 0.0f;
+	}
+	ImGui::Text("Drawn Triangles:");
+	ImGui::SameLine();
+	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%u", currentDrawnTriangles);
+
 	ImGui::Text("Total Length:");
 	ImGui::SameLine();
 	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%.2f units", scene.config.instanceCount * scene.config.spacing);
 
 	ImGui::Separator();
 
-	try
+	auto& lodSet = scene.getModelLODSet(0);
+
+	ImGui::Text("LOD Mesh Statistics:");
+
+	if (ImGui::BeginTable("LODStats", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
 	{
-		auto& lodSet = scene.getModelLODSet(0);
-
-		ImGui::Text("LOD Mesh Statistics:");
-
-		if (ImGui::BeginTable("LODStats", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+		if (scene.config.enableLOD)
 		{
 			ImGui::TableSetupColumn("LOD Level");
 			ImGui::TableSetupColumn("Vertices");
@@ -772,10 +783,24 @@ void UserInterface::showSceneInfo(SpiralScene& scene)
 			}
 			ImGui::EndTable();
 		}
-	}
-	catch (...)
-	{
-		ImGui::TextDisabled("Model data not available yet.");
+		else
+		{
+			ImGui::TableSetupColumn("LOD Level");
+			ImGui::TableSetupColumn("Vertices");
+			ImGui::TableSetupColumn("Faces");
+			ImGui::TableHeadersRow();
+			uint32_t vCount = lodSet.getLOD(0).getVertexCount();
+			uint32_t iCount = lodSet.getLOD(0).getIndexCount();
+			uint32_t fCount = iCount / 3;
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("LOD 0");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("%u", vCount);
+			ImGui::TableSetColumnIndex(2);
+			ImGui::Text("%u", fCount);
+			ImGui::EndTable();
+		}
 	}
 
 	ImGui::End();
