@@ -10,8 +10,8 @@
 #include <string>
 #include <fstream>
 
-const float WARMUPTIME = 2.0f;
-const float BENCHMARK_CONFIG_TIME = 10.0f;
+const float WARMUPTIME = 5.0f;
+const float BENCHMARK_CONFIG_TIME = 20.0f;
 
 // tested parameteres
 struct BenchmarkConfig {
@@ -58,6 +58,8 @@ public:
 	// getters
 	BenchmarkConfig getCurrentConfig() const { return configs[currentConfigIdx]; }
 	uint32_t getCurrentConfigIndex() const { return currentConfigIdx; }
+	size_t getNumberOfConfigs() const { return configs.size(); }
+	BenchmarkConfig getConfigAtIdx(int idx) const { return configs[idx]; }
 	bool isRunning() const { return running; }
 	bool needsApplyConfig() const { return applyConfigFlag; }
 	void clearApplyConfigFlag() { applyConfigFlag = false; }

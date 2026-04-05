@@ -310,8 +310,8 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos)
 		return totalTriangles;
 	}
 
-	// if scene was computed by GPU, we need either need to get data from GPU (this is costly)
-	// or we can compute an estimation from "time freeze" instance positions
+	// if scene was computed by GPU, we need either need to get data from GPU (this is too costly)
+	// or we can compute an ESTIMATION from "time freeze" instance positions
 	float sqDist0 = config.lodDist0 * config.lodDist0;
 	float sqDist1 = config.lodDist1 * config.lodDist1;
 	float sqDist2 = config.lodDist2 * config.lodDist2;

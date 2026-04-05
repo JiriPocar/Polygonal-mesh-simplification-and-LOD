@@ -54,6 +54,8 @@ void SpiralApp::init()
 
 void SpiralApp::update(float deltaTime)
 {
+    bool wasBenchmarkRunning = benchmark.isRunning();
+
     if (benchmark.isRunning() && benchmark.needsApplyConfig())
     {
 		// apply benchmark config to the scene and renderer
@@ -93,6 +95,16 @@ void SpiralApp::update(float deltaTime)
     if (benchmark.isRunning())
     {
 		benchmark.update(deltaTime, *spiralScene, camera.getPosition());
+    }
+
+	// check if benchmark just ended, if yes, reset the scene to default values
+    if (wasBenchmarkRunning && !benchmark.isRunning())
+    {
+        spiralScene->config.instanceCount = 10000;
+        spiralScene->config.enableLOD = true;
+		renderer->setUseGPULODCompute(false);
+		renderer->setUseGPUSpiralCompute(false);
+		spiralScene->updateSpiralPositions(0.0f, false);
     }
 }
 

@@ -10,7 +10,7 @@
 #include "../rendering/CommandManager.hpp"
 #include "../rendering/UniformBuffer.hpp"
 
-const uint32_t MAX_INSTANCE_COUNT = 1000000;
+const uint32_t MAX_INSTANCE_COUNT = 2000000;
 
 // matches the structure in the shader for instance data
 struct SpiralInstanceData {

@@ -19,6 +19,7 @@ set(ENGINE_SOURCES
     "src/common/window.h"
 
     "src/apps/demo/SpiralRenderer.cpp"
+    "src/apps/demo/Benchmark.cpp"
     "src/apps/simplificator/SimplificatorRenderer.cpp"
 
     # Core

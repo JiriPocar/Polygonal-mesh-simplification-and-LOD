@@ -72,7 +72,7 @@ void Benchmark::update(float deltaTime, SpiralScene& spiralScene, glm::vec3& cam
 
 void Benchmark::buildConfigs()
 {
-	std::vector<uint32_t> instanceCounts = { 10000, 50000, 100000, 500000, 1000000 };
+	std::vector<uint32_t> instanceCounts = { 200000, 400000, 600000, 800000, 1000000, 1200000, 1400000, 1600000, 1800000, 2000000 };
 
 	for (uint32_t count : instanceCounts)
 	{
@@ -82,11 +82,11 @@ void Benchmark::buildConfigs()
 		configs.push_back({ count, true, true, true });   // GPU LOD / GPU spiral
 
 		// disable LOD
-		//configs.push_back({ count, false, false, false }); // CPU LOD / CPU spiral
-		//configs.push_back({ count, true, false, false });  // GPU LOD / CPU spiral
-		//configs.push_back({ count, true, true, false });   // GPU LOD / GPU spiral
+		configs.push_back({ count, false, false, false }); // CPU LOD / CPU spiral
+		configs.push_back({ count, true, false, false });  // GPU LOD / CPU spiral
+		configs.push_back({ count, true, true, false });   // GPU LOD / GPU spiral
 
-		// TODO: add more configs
+		// TODO: add more configs (though I think this should do)
 	}
 }
 
@@ -122,11 +122,11 @@ void Benchmark::saveToCSV()
 	auto c = configs[currentConfigIdx];
 
 	csvFile << c.instances << ","
-		<< (c.useGPULOD ? "GPU" : "CPU") << ","
-		<< (c.useGPUSpiral ? "GPU" : "CPU") << ","
-		<< (c.enableLOD ? "Enabled" : "Disabled") << ","
-		<< currentConfigData.drawnTriangles << ","
-		<< avgTime << "\n";
+			<< (c.useGPULOD ? "GPU" : "CPU") << ","
+			<< (c.useGPUSpiral ? "GPU" : "CPU") << ","
+			<< (c.enableLOD ? "Enabled" : "Disabled") << ","
+			<< currentConfigData.drawnTriangles << ","
+			<< avgTime << "\n";
 }
 
 /* End of the Benchmark.cpp file */

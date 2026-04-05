@@ -583,41 +583,71 @@ void UserInterface::showBenchmarkStart(Benchmark& benchmark)
 void UserInterface::showBenchmarkStatus(Benchmark& benchmark)
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 10));
-	ImGui::SetNextWindowSize(ImVec2(330, 335));
+	ImGui::SetNextWindowSize(ImVec2(330, 900));
 	ImGui::Begin("Benchmark Status");
 	if (benchmark.isRunning())
 	{
-		if (ImGui::BeginTable("Benchmark information", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+		// do a table printup for each config
+		for (int i = 0; i < benchmark.getNumberOfConfigs(); i++)
 		{
-			ImGui::TableSetupColumn("Config");
-			ImGui::TableSetupColumn("Value");
-			ImGui::TableHeadersRow();
-			ImGui::TableNextRow();
+			if (ImGui::BeginTable("Benchmark information", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+			{
+				ImGui::TableSetupColumn("Config");
+				ImGui::TableSetupColumn("Value");
+				ImGui::TableHeadersRow();
 
-			ImGui::TableSetColumnIndex(0);
-			ImGui::Text("Current config index");
-			ImGui::TableSetColumnIndex(1);
-			ImGui::Text("%d", benchmark.getCurrentConfigIndex());
 
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			ImGui::Text("Instances");
-			ImGui::TableSetColumnIndex(1);
-			ImGui::Text("%d", benchmark.getCurrentConfig().instances);
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Benchmarking config");
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%d/%d", i + 1, benchmark.getNumberOfConfigs());
 
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			ImGui::Text("GPU LOD compute");
-			ImGui::TableSetColumnIndex(1);
-			ImGui::Text("%s", benchmark.getCurrentConfig().useGPULOD ? "Yes" : "No");
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Instances");
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%d", benchmark.getConfigAtIdx(i).instances);
 
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			ImGui::Text("GPU Spiral compute");
-			ImGui::TableSetColumnIndex(1);
-			ImGui::Text("%s", benchmark.getCurrentConfig().useGPUSpiral ? "Yes" : "No");
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("GPU LOD compute");
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%s", benchmark.getConfigAtIdx(i).useGPULOD ? "Yes" : "No");
 
-			ImGui::EndTable();
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("GPU Spiral compute");
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%s", benchmark.getConfigAtIdx(i).useGPUSpiral ? "Yes" : "No");
+
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("LOD Enabled");
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%s", benchmark.getConfigAtIdx(i).enableLOD ? "Yes" : "No");
+
+				// DONE / IN PROGRESS / WAITS
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Status");
+				ImGui::TableSetColumnIndex(1);
+				if (i < benchmark.getCurrentConfigIndex())
+				{
+					ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Done");
+				}
+				else if (i == benchmark.getCurrentConfigIndex())
+				{
+					ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "In progress");
+				}
+				else
+				{
+					ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.2f, 1.0f), "Waiting");
+				}
+
+				ImGui::EndTable();
+				ImGui::Spacing();
+			}
 		}
 	}
 	ImGui::End();
