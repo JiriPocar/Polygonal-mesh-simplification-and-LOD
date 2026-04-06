@@ -9,7 +9,8 @@ enum class Algorithm {
 	VertexClustering,
 	FloatingCellClustering,
 	VertexDecimation,
-	Naive
+	Naive,
+	Random
 };
 
 enum class ClusteringMethod {
@@ -36,19 +37,25 @@ struct SimplificatorResult {
 	float mseError;
 };
 
-struct CollapseOptions {
+struct SimplificationOptions {
+	// edge collapse validity checks
 	bool checkFaceFlipping = false;
 	bool checkConnectivity = false;
+
 	bool preserveBorders = false;
+
+	// holes and tearing prevention
 	bool resolveUVSeams = false;
 	bool lockUVSeams = false;
-
 	bool enableMerging = false;
 	bool mergeCloseVertivesPos = false;
 	bool mergeCloseVerticesUV = false;
 	bool mergeCloseVerticesNormal = false;
+	
+	// vdecimation parameter
 	float featureAngleThreshold = 30.0f;
 
+	// error metrics compute enablers
 	bool computeHausdorff = false;
 	bool computeMSE = false;
 };
@@ -67,7 +74,7 @@ public:
 	ClusteringMethod getClusteringMethod() const { return clusteringMethod; };
 
 	SimplificatorResult simplify(Model& model, float targetFaceCountRatio);
-	CollapseOptions options;
+	SimplificationOptions options;
 
 private:
 	Algorithm currentAlgorithm;
@@ -79,4 +86,5 @@ private:
 	MeshData simplifyVertexDecimation(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount);
 	MeshData simplifyVertexClustering(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t cellsPerAxis);
 	MeshData simplifyNaive(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount);
+	MeshData simplifyRandom(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount);
 };

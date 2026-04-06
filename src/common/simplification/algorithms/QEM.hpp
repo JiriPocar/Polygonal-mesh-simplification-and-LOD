@@ -164,7 +164,7 @@ namespace QEM {
     * 
 	* @return true if the edge is valid for collapse, false otherwise
     */
-    bool isEdgeValidForCollapse(QEMContext& context, const QEM::Qedge& e, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, CollapseOptions options);
+    bool isEdgeValidForCollapse(QEMContext& context, const QEM::Qedge& e, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, SimplificationOptions options);
 
     /**
 	* @brief Enqueues the edges affected by the collapse. After collapsing an edge, the quadrics
@@ -176,7 +176,7 @@ namespace QEM {
 	* @param qedgeQueue The priority queue of quadric edges, to which the affected edges will be enqueued
 	* @param options The collapse options
     */
-    void enqueueAffectedEdges(QEMContext& context, uint32_t keepIdx, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, CollapseOptions options);
+    void enqueueAffectedEdges(QEMContext& context, uint32_t keepIdx, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, SimplificationOptions options);
 }
 
  /* End of the QEM.hpp file */

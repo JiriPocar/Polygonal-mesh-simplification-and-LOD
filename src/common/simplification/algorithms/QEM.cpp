@@ -351,7 +351,7 @@ namespace QEM {
 		return totalDeletedFaces;
 	}
 
-	void enqueueAffectedEdges(QEMContext& context, uint32_t keepIdx, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, CollapseOptions options)
+	void enqueueAffectedEdges(QEMContext& context, uint32_t keepIdx, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, SimplificationOptions options)
 	{
 		// collect all vertices that might be affected by the collapse
 		std::vector<uint32_t> affectedVertices = { keepIdx };
@@ -410,7 +410,7 @@ namespace QEM {
 		}
 	}
 
-	bool isEdgeValidForCollapse(QEMContext& context, const QEM::Qedge& e, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, CollapseOptions options)
+	bool isEdgeValidForCollapse(QEMContext& context, const QEM::Qedge& e, LazyPriorityQueue<QEM::Qedge, QEM::QedgeCompare>& qedgeQueue, SimplificationOptions options)
 	{
 		// check if either vertex is already deleted or locked
 		if (context.vertexDeleted[e.v1] || context.vertexDeleted[e.v2]) return false;

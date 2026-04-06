@@ -68,6 +68,7 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 			case Algorithm::Naive: simplifiedMesh = simplifyNaive(vertices, indices, targetFaceCount); break;
 			case Algorithm::FloatingCellClustering: simplifiedMesh = simplifyFloatingCellClustering(vertices, indices, targetFaceCount); break;
 			case Algorithm::VertexDecimation: simplifiedMesh = simplifyVertexDecimation(vertices, indices, targetFaceCount); break;
+			case Algorithm::Random: simplifiedMesh = simplifyRandom(vertices, indices, targetFaceCount); break;
 		}
 
 		Geometry::finalizeVertices(simplifiedMesh.vertices, simplifiedMesh.indices);
@@ -557,6 +558,126 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 	size_t finalFaceCount = indices.size() / 3;
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
 	std::cout << "Reduction: " << currentFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / currentFaceCount) << "%)" << std::endl;
+
+	result.vertices = std::move(vertices);
+	result.indices = std::move(indices);
+	return result;
+}
+
+MeshData Simplificator::simplifyRandom(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount)
+{
+	MeshData result;
+
+	if (options.enableMerging)
+	{
+		Geometry::mergeCloseVertices(vertices, indices, options);
+	}
+
+	auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
+	std::vector<uint32_t> vertexDeleted(vertices.size(), false);
+
+	size_t currentFaceCount = indices.size() / 3;
+	size_t originalFaceCount = currentFaceCount;
+
+	while (currentFaceCount > targetFaceCount)
+	{
+		// pick random vertex
+		uint32_t randomVertexIdx = rand() % vertices.size();
+		if (vertexDeleted[randomVertexIdx])
+		{
+			continue;
+		}
+
+		// get triangles of the random vertex, if it has none, skip
+		auto& triangles = allNeighborhoods[randomVertexIdx].triangles;
+		if (triangles.empty())
+		{
+			continue;
+		}
+
+		// pick a random triangle connected with the random vertex 
+		uint32_t randomTri = triangles[rand() % triangles.size()];
+		uint32_t v0 = indices[randomTri];
+		uint32_t v1 = indices[randomTri + 1];
+		uint32_t v2 = indices[randomTri + 2];
+
+		uint32_t keepIdx;
+		if (randomVertexIdx == v0)
+		{
+			keepIdx = (rand() % 2 == 0) ? v1 : v2;
+		}
+		else if (randomVertexIdx == v1)
+		{
+			keepIdx = (rand() % 2 == 0) ? v0 : v2;
+		}
+		else
+		{
+			keepIdx = (rand() % 2 == 0) ? v0 : v1;
+		}
+
+		if (options.checkFaceFlipping)
+		{
+			if (Topology::checkFaceFlipping(vertices[randomVertexIdx].pos, vertices[keepIdx].pos, randomVertexIdx, indices, vertices))
+			{
+				continue;
+			}
+		}
+
+		if (options.checkConnectivity)
+		{
+			if (!Topology::checkConnectivity(randomVertexIdx, keepIdx, indices, allNeighborhoods[randomVertexIdx], allNeighborhoods[keepIdx]))
+			{
+				continue;
+			}
+		}
+
+		// update all triangles of the removed vertex to point to the kept vertex
+		for (uint32_t tri : triangles)
+		{
+			uint32_t idx0 = indices[tri];
+			uint32_t idx1 = indices[tri + 1];
+			uint32_t idx2 = indices[tri + 2];
+
+			// skip degenerate triangles
+			if (idx0 == idx1 || idx1 == idx2 || idx2 == idx0) continue;
+
+			// if triangle contains the kept vertex, it will degenerate due to collapse
+			bool willDegenerate = (idx0 == keepIdx || idx1 == keepIdx || idx2 == keepIdx);
+			if (willDegenerate) currentFaceCount--;
+
+			// redirect triangle to kept vertex
+			if (indices[tri] == randomVertexIdx) indices[tri] = keepIdx;
+			if (indices[tri + 1] == randomVertexIdx) indices[tri + 1] = keepIdx;
+			if (indices[tri + 2] == randomVertexIdx) indices[tri + 2] = keepIdx;
+
+			// if triangle didnt degenerate, add it to the neighborhood of the kept vertex
+			if (!willDegenerate)
+			{
+				allNeighborhoods[keepIdx].triangles.push_back(tri);
+			}
+		}
+
+		// clear triangles of the removed vertex
+		triangles.clear();
+
+		// after redirecting all triangles, some triangles in the neighborhood of the kept vertex might have become degenerate
+		auto& keepTris = allNeighborhoods[keepIdx].triangles;
+		keepTris.erase(std::remove_if(keepTris.begin(), keepTris.end(),
+			[&indices](uint32_t tri) {
+				return indices[tri] == indices[tri + 1] ||
+					indices[tri + 1] == indices[tri + 2] ||
+					indices[tri + 2] == indices[tri];
+			}),
+			keepTris.end());
+
+		vertexDeleted[randomVertexIdx] = true;
+	}
+
+	Geometry::removeDegeneratedTriangles(indices);
+
+	size_t finalFaceCount = indices.size() / 3;
+	std::cout << "Final faces: " << finalFaceCount << std::endl;
+	std::cout << "Reduction: " << originalFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / originalFaceCount) << "%)" << std::endl;
 
 	result.vertices = std::move(vertices);
 	result.indices = std::move(indices);

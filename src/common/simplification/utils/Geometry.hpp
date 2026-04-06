@@ -99,7 +99,7 @@ namespace Geometry {
 	* @param options The simplification options containing the merge close vertices settings
 	* @param threshold The distance threshold for merging vertices, default is 0.0001f
 	*/
-	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, float threshold = 0.0001f);
+	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, SimplificationOptions& options, float threshold = 0.0001f);
 	
 	/**
 	* @brief Converts the mesh to flat shading by duplicating vertices for each triangle and assigning them the same normal.

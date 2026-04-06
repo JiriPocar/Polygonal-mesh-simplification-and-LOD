@@ -177,7 +177,7 @@ namespace Topology
 		return count;
 	}
 
-	std::vector<bool> findLockedVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<uint32_t>& representatives, const CollapseOptions& options)
+	std::vector<bool> findLockedVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<uint32_t>& representatives, const SimplificationOptions& options)
 	{
 		std::vector<bool> isLocked(vertices.size(), false);
 
@@ -385,7 +385,7 @@ namespace Topology
 		return sharedVertices == sharedFaces;
 	}
 
-	bool isCollapseValid(uint32_t v1, uint32_t v2,std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, const std::vector<bool>& isBorderVertex, const std::vector<std::vector<uint32_t>>& twinMap, std::vector<Topology::Neighborhood>& allNeighborhoods)
+	bool isCollapseValid(uint32_t v1, uint32_t v2,std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, SimplificationOptions& options, const std::vector<bool>& isBorderVertex, const std::vector<std::vector<uint32_t>>& twinMap, std::vector<Topology::Neighborhood>& allNeighborhoods)
 	{
 		if (options.preserveBorders)
 		{

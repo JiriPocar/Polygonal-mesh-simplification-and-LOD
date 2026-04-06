@@ -245,15 +245,30 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	Algorithm currentAlgorithm = simplificator.getCurrentAlgorithm();
 
 	// provisional solution, TODO: make this quite more elegant
-	const char* algorithms[] = { "QEM", "Vertex Clustering", "Floating-cell clustering", "Vertex Decimation", "Naive"};
+	const char* algorithms[] = { "QEM", "Vertex Clustering", "Floating-cell clustering", "Vertex Decimation", "Naive", "Random"};
 	if (ImGui::BeginCombo("Algorithm", algorithms[static_cast<int>(currentAlgorithm)]))
 	{
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 6; i++)
 		{
 			if (ImGui::Selectable(algorithms[i], currentAlgorithm == static_cast<Algorithm>(i)))
 			{
+				// select algorithm
 				currentAlgorithm = static_cast<Algorithm>(i);
 				simplificator.setCurrentAlgorithm(currentAlgorithm);
+
+				// set options to default for the new algorithm
+				simplificator.options.checkFaceFlipping = false;
+				simplificator.options.checkConnectivity = false;
+				simplificator.options.preserveBorders = false;
+				simplificator.options.resolveUVSeams = false;
+				simplificator.options.lockUVSeams = false;
+				simplificator.options.enableMerging = false;
+				simplificator.options.mergeCloseVertivesPos = false;
+				simplificator.options.mergeCloseVerticesUV = false;
+				simplificator.options.mergeCloseVerticesNormal = false;
+				simplificator.options.computeHausdorff = false;
+				simplificator.options.computeMSE = false;
+				simplificator.options.featureAngleThreshold = 30.0f;
 			}
 		}
 
@@ -410,6 +425,58 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		ImGui::Separator();
 		ImGui::SliderFloat("Feature angle", &simplificator.options.featureAngleThreshold, 0.0f, 180.0f, "%.1f degrees");
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Maximum angle between adjacent face normals to be considered a smooth surface. Lower values preserve more sharp edges.");
+	}
+	else if (currentAlgorithm == Algorithm::Random)
+	{
+		ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "EXPERIMENTAL SIMPLIFICATION");
+		ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "POSSIBLE LIVELOCK AT HIGH REDUCTIONS!");
+		ImGui::Separator();
+		ImGui::Text("Edge collapse constraints");
+		ImGui::Checkbox("Check face flipping", &simplificator.options.checkFaceFlipping);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Prevents collapses that would cause faces to flip their normal direction, which can lead to visual artifacts.");
+		ImGui::Checkbox("Check connectivity", &simplificator.options.checkConnectivity);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ensures that collapses do not disconnect the mesh, which can create holes or separate parts of the model.");
+		ImGui::Separator();
+		ImGui::Text("Holes prevention");
+		if (ImGui::Checkbox("Enable merging vertices", &simplificator.options.enableMerging))
+		{
+			if (simplificator.options.enableMerging)
+			{
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+			else
+			{
+				simplificator.options.mergeCloseVertivesPos = false;
+				simplificator.options.mergeCloseVerticesUV = false;
+				simplificator.options.mergeCloseVerticesNormal = false;
+			}
+		}
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Vertices with the selected criteria will be merged. Use when textures dont matter.");
+		ImGui::Indent();
+
+		if (ImGui::Checkbox("Merge by position", &simplificator.options.mergeCloseVertivesPos))
+		{
+			if (simplificator.options.mergeCloseVertivesPos) simplificator.options.enableMerging = true;
+		}
+
+		if (ImGui::Checkbox("Merge by UV", &simplificator.options.mergeCloseVerticesUV))
+		{
+			if (simplificator.options.mergeCloseVerticesUV)
+			{
+				simplificator.options.enableMerging = true;
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+		}
+
+		if (ImGui::Checkbox("Merge by normal", &simplificator.options.mergeCloseVerticesNormal))
+		{
+			if (simplificator.options.mergeCloseVerticesNormal)
+			{
+				simplificator.options.enableMerging = true;
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+		}
+		ImGui::Unindent();
 	}
 	
 
@@ -930,6 +997,7 @@ const char* UserInterface::getAlgName(Algorithm algorithm)
 	case Algorithm::FloatingCellClustering: return "Floating cell clustering";
 	case Algorithm::VertexClustering: return "Vertex clustering";
 	case Algorithm::VertexDecimation: return "Vertex decimation";
+	case Algorithm::Random: return "Random edge collapse";
 	default: return "Other";
 	}
 }

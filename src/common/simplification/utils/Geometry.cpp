@@ -70,7 +70,7 @@ namespace Geometry
 		indices = cleanedIndices;
 	}
 
-	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, float threshold)
+	void mergeCloseVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, SimplificationOptions& options, float threshold)
 	{
 		// optimization inspired by https://leanrada.com/notes/sweep-and-prune/
 		// briefly explained here http://parallel.vub.ac.be/documentation/pvm/Example/Marc_Ramaekers/node3.html
