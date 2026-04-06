@@ -26,8 +26,7 @@ set(ENGINE_SOURCES
     "src/common/core/Device.cpp"
     "src/common/core/Instance.cpp"
     "src/common/core/Pipeline.cpp"
-    "src/common/core/SpiralComputePipeline.cpp"
-    "src/common/core/SpiralPipeline.cpp"
+    "src/common/core/ComputePipeline.cpp"
     "src/common/core/Swapchain.cpp"
     "src/common/core/VulkanApp.cpp"
 

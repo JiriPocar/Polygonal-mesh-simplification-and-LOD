@@ -18,29 +18,41 @@
 
 static std::vector<char> readFile(const std::string& filename)
 {
+	/**
+	* Code of this function is directly taken from 'Vulkan tutorial' github repository, file 09_shader_modules.cpp
+	*
+	* @author Alexander Overdoore
+	* @url https://github.com/Overv/VulkanTutorial/blob/main/code/09_shader_modules.cpp
+	* @lines 550-566
+	* @licence CC0-1.0
+	*/
 	std::string path = "shaders/" + filename;
 	std::ifstream file(path, std::ios::ate | std::ios::binary);
 
-	if (!file) {
-		throw std::runtime_error("Failed to open shader file: " + path);
+	if (!file.is_open()) {
+		throw std::runtime_error("failed to open file!");
 	}
 
-	std::streamsize size = file.tellg();
-	if (size <= 0) {
-		throw std::runtime_error("Shader file is empty or unreadable: " + path);
-	}
+	size_t fileSize = (size_t)file.tellg();
+	std::vector<char> buffer(fileSize);
 
-	std::vector<char> buffer(static_cast<size_t>(size));
 	file.seekg(0);
-	file.read(buffer.data(), size);
+	file.read(buffer.data(), fileSize);
+
+	file.close();
 
 	return buffer;
 }
 
-Pipeline::Pipeline(Device& device, RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout, vk::PolygonMode polygonMode)
+Pipeline::Pipeline(Device& device,
+	RenderPass& renderPass,
+	vk::Extent2D swapchainExtent,
+	vk::DescriptorSetLayout descriptorSetLayout,
+	PipelineType type,
+	vk::PolygonMode polygonMode)
 	: pipelineDevice(device)
 {
-	createPipeline(renderPass, swapchainExtent, descriptorSetLayout, polygonMode);
+	createPipeline(renderPass, swapchainExtent, descriptorSetLayout, type, polygonMode);
 }
 
 vk::UniqueShaderModule Pipeline::createShaderModule(const std::vector<char>& inputCode)
@@ -54,7 +66,7 @@ vk::UniqueShaderModule Pipeline::createShaderModule(const std::vector<char>& inp
 	return pipelineDevice.operator*().createShaderModuleUnique(createInfo);
 }
 
-void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout, vk::PolygonMode polygonMode)
+void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout, PipelineType type, vk::PolygonMode polygonMode)
 {
 	// load shaders
 	auto vert = readFile("shader.vert.spv");
@@ -69,24 +81,72 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		*vertShaderModule,
 		"main"
 	);
-
 	vk::PipelineShaderStageCreateInfo fragShaderStageInfo(
 		{},
 		vk::ShaderStageFlagBits::eFragment,
 		*fragShaderModule,
 		"main"
 	);
-
 	vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
+	// pipeline layout
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo(
+		{},						// flags
+		1,						// set layouts
+		&descriptorSetLayout,	// descriptor sets
+		0,
+		nullptr					// no push constants
+	);
+	pipelineLayout = pipelineDevice.operator*().createPipelineLayoutUnique(pipelineLayoutInfo);
+
 	// vertex input
-	auto bindingDescription = Vertex::getBindingDesc();
-	auto attributeDescriptions = Vertex::getAttributeDesc();
+	std::vector<vk::VertexInputBindingDescription> bindings;
+	std::vector<vk::VertexInputAttributeDescription> attributes;
+
+	bindings.push_back(Vertex::getBindingDesc());
+	auto vertAttrs = Vertex::getAttributeDesc();
+	attributes.insert(attributes.end(), vertAttrs.begin(), vertAttrs.end());
+
+	if (type == PipelineType::Spiral)
+	{
+		vk::VertexInputBindingDescription instanceBindingDescription(
+			1,
+			32, // stride = sizeof(SpiralInstaceData) = 32 bytes
+			vk::VertexInputRate::eInstance
+		);
+		bindings.push_back(instanceBindingDescription);
+
+		std::array<vk::VertexInputAttributeDescription, 3> instanceAttributes{};
+
+		// location 3, instance position
+		instanceAttributes[0].binding = 1;
+		instanceAttributes[0].location = 3;
+		instanceAttributes[0].format = vk::Format::eR32G32B32Sfloat;
+		instanceAttributes[0].offset = 0;
+
+		// location 4, instance model type
+		instanceAttributes[1].binding = 1;
+		instanceAttributes[1].location = 4;
+		instanceAttributes[1].format = vk::Format::eR32Uint;
+		instanceAttributes[1].offset = 16;
+
+		// location 5, instance LOD level
+		instanceAttributes[2].binding = 1;
+		instanceAttributes[2].location = 5;
+		instanceAttributes[2].format = vk::Format::eR32Uint;
+		instanceAttributes[2].offset = 20;
+
+		attributes.push_back(instanceAttributes[0]);
+		attributes.push_back(instanceAttributes[1]);
+		attributes.push_back(instanceAttributes[2]);
+	}
 
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo(
 		{},
-		1, &bindingDescription,
-		static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data()
+		static_cast<uint32_t>(bindings.size()),
+		bindings.data(),
+		static_cast<uint32_t>(attributes.size()),
+		attributes.data()
 	);
 
 	// input assembly
@@ -158,17 +218,6 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		&colorBlendingAttach // attachment states
 	);
 
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo(
-		{},						// flags
-		1,						// set layouts
-		&descriptorSetLayout,	// descriptor sets
-		0,
-		nullptr					// no push constants
-	);
-
-	pipelineLayout = pipelineDevice.operator*().createPipelineLayoutUnique(pipelineLayoutInfo);
-
 	vk::PipelineDepthStencilStateCreateInfo depthStencil(
 		{},
 		VK_TRUE,				// depthTestEnable
@@ -190,6 +239,12 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		dynamicStates.data()
 	);
 
+	vk::PipelineDynamicStateCreateInfo* pDynamicState = nullptr;
+	if (type == PipelineType::Simplificator)
+	{
+		pDynamicState = &dynamicStateInfo;
+	}
+
 	// create the graphics pipeline
 	vk::GraphicsPipelineCreateInfo pipelineInfo(
 		{},						// flags
@@ -202,7 +257,7 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		&multisampling,			// multisampling
 		&depthStencil,			// depth stencil
 		&colorBlending,			// color blending
-		&dynamicStateInfo,		// dynamic state
+		pDynamicState,			// dynamic state
 		*pipelineLayout,		// pipeline layout
 		renderPass.get(),		// render pass
 		0,						// subpass

@@ -31,7 +31,7 @@ def plotFrameTimeInstances(df):
     formattedLabels = [f"{int(x):,}".replace(',', ' ') for x in xLabels]
     
     # plot
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(10, 7))
     plt.grid(which='major', linestyle='--', color='gray', alpha=0.7)
     
     plt.plot(xLabels, cpuOnly, marker='o', linewidth=2, linestyle='-', label='CPU pozice na spirále / CPU výběr LOD')
@@ -92,7 +92,7 @@ def plotSceneFaces(df):
     print("Plotting Scene Faces with LOD Enabled / Disabled ...")
 
     # graph is clear even with 1 milion instances, so filter out higher instance counts for better visibility
-    df = df[df['Instances'] <= 1000000]
+    df = df[df['Instances'].isin([200000, 400000, 600000, 800000, 1000000])]
 
     # take GPU only data for LOD ON and OFF (more stable for number of drwan faces)
     gpuOnly = df[(df['GPULOD'] == 'GPU') & (df['GPUSpiral'] == 'GPU')]
@@ -119,7 +119,7 @@ def plotSceneFaces(df):
     formattedLabels = [f"{int(x):,}".replace(',', ' ') for x in xLabels]
 
     plt.xticks(xPos, formattedLabels, rotation=30)
-    plt.title('Počet vykreslených trojúhelníků s využitím přístupu diskrétní změny úrovně detailu', pad=20)
+    plt.title('Počty vykreslených trojúhelníků ve scéně', pad=20)
     plt.ylabel('Počet vykreslených trojúhelníků [miliony]', labelpad=10)
     plt.xlabel('Počet instancí ve scéně', labelpad=10)
 
@@ -166,7 +166,7 @@ def plotSpeedupRatio(df):
     plt.yticks(yTicks, yLabels)
     plt.xticks(xLabels, formattedLabels, rotation=30)
 
-    plt.title('Zrychlení při použití výpočtu na GPU (LOD zapnuto)', pad=20)
+    plt.title('Zrychlení při použití výpočtu na GPU', pad=20)
     plt.ylabel('Relativní zrychlení oproti CPU', labelpad=10)
     plt.xlabel('Počet instancí ve scéně', labelpad=10)
 
