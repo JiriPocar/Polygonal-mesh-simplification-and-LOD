@@ -46,16 +46,6 @@ public:
 	}
 
 	/**
-	 * @brief Finds a suitable memory type based on requirements.
-	 *
-	 * @param typeFilter Memory type bits to consider.
-	 * @param properties Desired memory properties.
-	 * 
-	 * @return vk::Device - member variable 'device'.
-	 */
-	uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const;
-
-	/**
 	 * @brief Finds a supported format from a list of candidates.
 	 *
 	 * @param candidates List of candidate formats.
@@ -73,35 +63,12 @@ public:
 	*/
 	vk::Format findDepthFormat();
 
-	/**
-	 * @brief Returns the graphics queue.
-	 * 
-	 * @return vk::Queue - member variable 'graphicsQueue'.
-	 */
-	vk::Queue getGraphicsQueue() const {
-		return graphicsQueue;
-	}
-
-	/**
-	 * @brief Returns the presentation queue.
-	 *
-	 * @return vk::Queue - member variable 'presentQueue'.
-	 */
-	vk::Queue getPresentQueue() const {
-		return presentQueue;
-	}
-
-	uint32_t getGraphicsQueueFamily() const {
-		return 0;
-	}
-
-	uint32_t getPresentQueueFamily() const {
-		return 0;
-	}
-
-	VmaAllocator getAllocator() const {
-		return allocator;
-	}
+	// getters
+	vk::Queue getGraphicsQueue() const { return graphicsQueue; }
+	vk::Queue getPresentQueue() const { return presentQueue; }
+	uint32_t getGraphicsQueueFamily() const { return graphicsQueueFamily; }
+	uint32_t getPresentQueueFamily() const { return presentQueueFamily; }
+	VmaAllocator getAllocator() const { return allocator; }
 
 private:
 	// structure to hold queue family indices

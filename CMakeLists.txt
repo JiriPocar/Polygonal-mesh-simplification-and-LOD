@@ -48,15 +48,15 @@ set(ENGINE_SOURCES
     # Scene
     "src/common/scene/Camera.cpp"
     "src/common/scene/Transform.cpp"
-    "src/common/scene/Scene.cpp"
-    "src/common/scene/SpiralScene.cpp"
+    
+    "src/apps/demo/SpiralScene.cpp"
 
     # Simplification
     "src/common/simplification/Simplificator.cpp"
     "src/common/simplification/Simplificator.cpp"
     "src/common/simplification/utils/Topology.cpp"
     "src/common/simplification/utils/Geometry.cpp"
-    "src/common/simplification/utils/SurfApprox.cpp"
+    "src/common/simplification/utils/ErrorMetrics.cpp"
     "src/common/simplification/algorithms/QEM.cpp"
     "src/common/simplification/algorithms/VertexClustering.cpp"
     "src/common/simplification/algorithms/FloatingCellClustering.cpp"

@@ -1,5 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
+#include <vk_mem_alloc.h>
 #include <vector>
 #include <memory>
 
@@ -8,7 +9,7 @@ class Device;
 class Swapchain {
 public:
 	Swapchain(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height);
-	~Swapchain() = default;
+	~Swapchain();
 
 	const std::vector<vk::Image>& getImages() const { return images; }
 	const std::vector<vk::UniqueImageView>& getImageViews() const { return imageViews; }
@@ -37,8 +38,9 @@ private:
 	vk::Format imageFormat;
 	vk::Extent2D extent;
 
-	vk::UniqueImage depthImage;
-	vk::UniqueDeviceMemory depthImageMemory;
+	vk::Image depthImage = nullptr;
+	VmaAllocation depthImageAllocation = nullptr;
+
 	vk::UniqueImageView depthImageView;
 	vk::Format depthFormat;
 

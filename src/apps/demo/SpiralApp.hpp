@@ -14,7 +14,7 @@
 #include "../../common/core/VulkanApp.hpp"
 #include "../../common/core/Pipeline.hpp"
 #include "../../common/core/ComputePipeline.hpp"
-#include "../../common/scene/SpiralScene.hpp"
+#include "SpiralScene.hpp"
 #include "SpiralRenderer.hpp"
 #include "Benchmark.hpp"
 

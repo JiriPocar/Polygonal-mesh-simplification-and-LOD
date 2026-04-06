@@ -11,7 +11,7 @@
 #include <filesystem>
 #include <iostream>
 #include <chrono>
-#include "../scene/SpiralScene.hpp"
+#include "../../apps/demo/SpiralScene.hpp"
 
 UserInterface::UserInterface(Instance &instance, Device& dev, Swapchain& swapchain, RenderPass& renderPass, Window& window, CommandManager& cmdManager)
 	: uiDevice(dev), uiInstance(instance), uiSwapchain(swapchain), uiRenderPass(renderPass), uiWindow(window), uiCmdManager(cmdManager), simplificator()

@@ -44,7 +44,7 @@
 #include <glm/glm.hpp>
 #include <algorithm>
 #include "../../resources/Model.hpp"
-namespace SurfApprox {
+namespace ErrorMetrics {
 
 	/**
 	* @brief Computes the distance from a point to a triangle in 3D space.

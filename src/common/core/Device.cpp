@@ -71,9 +71,6 @@ void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface)
 		if (indices.isComplete() && swapchainSupport)
 		{
 			suitableDevices.push_back(dev);
-
-			graphicsQueueFamily = indices.graphicsFamily.value();
-			presentQueueFamily = indices.presentFamily.value();
 		}
 
 		// print device info
@@ -87,12 +84,12 @@ void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface)
 	if (!suitableDevices.empty())
 	{
 		physicalDevice = suitableDevices[0];
+		graphicsQueueFamily = findQueueFamilies(physicalDevice, surface).graphicsFamily.value();
+		presentQueueFamily = findQueueFamilies(physicalDevice, surface).presentFamily.value();
 
 		// print selected device info
 		vk::PhysicalDeviceProperties props = physicalDevice.getProperties();
 		std::cout << "Selected GPU: " << props.deviceName << std::endl;
-		std::cout << "graphicsQueueFamily: " << graphicsQueueFamily
-			<< ", presentQueueFamily: " << presentQueueFamily << std::endl;
 		return;
 	}
 
@@ -182,28 +179,6 @@ Device::QueueFamilyIndices Device::findQueueFamilies(vk::PhysicalDevice device, 
 	}
 
 	return indices;
-}
-
-uint32_t Device::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const
-{
-	// find available memory information on the GPU
-	vk::PhysicalDeviceMemoryProperties memProps = physicalDevice.getMemoryProperties();
-
-	for (int i = 0; i < memProps.memoryTypeCount; i++)
-	{
-		// check if the memory type is suitable
-		bool typeSupported = typeFilter & (1 << i);
-
-		// check if the memory type has the required properties
-		bool hasRequiredProps = (memProps.memoryTypes[i].propertyFlags & properties) == properties;
-
-		if (typeSupported && hasRequiredProps)
-		{
-			return i; // found
-		}
-	}
-
-	throw std::runtime_error("Failed to find suitable memory type.");
 }
 
 vk::Format Device::findSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features)

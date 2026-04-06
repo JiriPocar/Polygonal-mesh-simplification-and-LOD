@@ -1,6 +1,6 @@
 #include "Descriptors.hpp"
 #include "../common/resources/Textures.hpp"
-#include "../common/scene/SpiralScene.hpp"
+#include "../apps/demo/SpiralScene.hpp"
 #include <array>
 
 Descriptor::Descriptor(Device& device, UniformBuffer& uniformBuffer, uint32_t maxFrames)

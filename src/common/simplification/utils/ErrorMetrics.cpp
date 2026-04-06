@@ -38,9 +38,9 @@
  * =======================================================================================
  */
 
-#include "SurfApprox.hpp"
+#include "ErrorMetrics.hpp"
 
-namespace SurfApprox {
+namespace ErrorMetrics {
 
 	float distancePointToTriangle(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c)
 	{

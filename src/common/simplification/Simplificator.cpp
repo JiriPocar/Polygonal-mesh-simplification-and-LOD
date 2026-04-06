@@ -2,7 +2,7 @@
 #include "utils/Geometry.hpp"
 #include "utils/Topology.hpp"
 #include "utils/LazyPriorityQueue.hpp"
-#include "utils/SurfApprox.hpp"
+#include "utils/ErrorMetrics.hpp"
 #include "algorithms/QEM.hpp"
 #include "algorithms/VertexClustering.hpp"
 #include "algorithms/FloatingCellClustering.hpp"
@@ -74,7 +74,7 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 
 		if (options.computeHausdorff)
 		{
-			float hausdorffDistance = SurfApprox::getHausdorffDistance(vertices, indices, simplifiedMesh.vertices, simplifiedMesh.indices);
+			float hausdorffDistance = ErrorMetrics::getHausdorffDistance(vertices, indices, simplifiedMesh.vertices, simplifiedMesh.indices);
 			
 			// normalize via scaling factor
 			float normalizedHausdorff = hausdorffDistance * scale;
@@ -84,8 +84,8 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		if (options.computeMSE)
 		{
 			// have to do it like this since simplifiying each mesh separately
-			float rawSquaredErrorSumAB = SurfApprox::computeOneSideSquaredDistance(vertices, simplifiedMesh.vertices, simplifiedMesh.indices);
-			float rawSquaredErrorSumBA = SurfApprox::computeOneSideSquaredDistance(simplifiedMesh.vertices, vertices, indices);
+			float rawSquaredErrorSumAB = ErrorMetrics::computeOneSideSquaredDistance(vertices, simplifiedMesh.vertices, simplifiedMesh.indices);
+			float rawSquaredErrorSumBA = ErrorMetrics::computeOneSideSquaredDistance(simplifiedMesh.vertices, vertices, indices);
 			
 			// normalize via scaling factor and accumulate
 			totalSquaredErrorSum += (rawSquaredErrorSumAB + rawSquaredErrorSumBA) * (scale * scale);

@@ -4,11 +4,12 @@
 #include <glm/gtx/norm.hpp>
 #include <vector>
 #include <memory>
+
 #include "core/Device.hpp"
 #include "resources/Model.hpp"
-#include "../simplification/Simplificator.hpp"
-#include "../rendering/CommandManager.hpp"
-#include "../rendering/UniformBuffer.hpp"
+#include "../../common/simplification/Simplificator.hpp"
+#include "../../common/rendering/CommandManager.hpp"
+#include "../../common/rendering/UniformBuffer.hpp"
 
 const uint32_t MAX_INSTANCE_COUNT = 2000000;
 

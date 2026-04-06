@@ -5,7 +5,7 @@
  */
 
 #pragma once
-#include "../common/scene/SpiralScene.hpp"
+#include "SpiralScene.hpp"
 #include <vector>
 #include <string>
 #include <fstream>
