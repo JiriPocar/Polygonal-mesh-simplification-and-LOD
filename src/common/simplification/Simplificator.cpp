@@ -11,6 +11,7 @@
 #include <chrono>
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 
 Simplificator::Simplificator()
 {
@@ -40,13 +41,20 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 	float totalSquaredErrorSum = 0.0f;
 	size_t totalVertexCount = 0;
 
-	std::cout << "Simplify called with parameter: " << targetFaceCountRatio << std::endl;
-
+	// per mesh simplification
 	const auto& meshes = model.getMeshes();
 	for (const auto& mesh : meshes)
 	{
 		auto vertices = mesh->extractVertices();
 		auto indices = mesh->extractIndices();
+
+		// =========================================================================
+		// pre-processing
+		if (options.enableMerging)
+		{
+			std::cout << "Called merge" << std::endl;
+			Geometry::mergeCloseVertices(vertices, indices, options);
+		}
 
 		size_t originalFaceCount = indices.size() / 3;
 
@@ -59,7 +67,10 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		{
 			targetFaceCount = static_cast<size_t>(originalFaceCount * targetFaceCountRatio);
 		}
+		// =========================================================================
 
+		// =========================================================================
+		// simplification loop / apply clustering
 		MeshData simplifiedMesh;
 		switch (currentAlgorithm)
 		{
@@ -70,7 +81,10 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 			case Algorithm::VertexDecimation: simplifiedMesh = simplifyVertexDecimation(vertices, indices, targetFaceCount); break;
 			case Algorithm::Random: simplifiedMesh = simplifyRandom(vertices, indices, targetFaceCount); break;
 		}
+		// =========================================================================
 
+		// =========================================================================
+		// post-processing
 		Geometry::finalizeVertices(simplifiedMesh.vertices, simplifiedMesh.indices);
 
 		if (options.computeHausdorff)
@@ -102,6 +116,7 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		{
 			Geometry::recalculateSmoothNormals(simplifiedMesh.vertices, simplifiedMesh.indices);
 		}
+		// =========================================================================
 
 		result.originalFaceCount += originalFaceCount;
 		result.simplifiedFaceCount += simplifiedMesh.indices.size() / 3;
@@ -130,11 +145,6 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 {
 	MeshData result;
 
-	if (options.enableMerging)
-	{
-		Geometry::mergeCloseVertices(vertices, indices, options);
-	}
-
 	auto reps = Topology::buildSamePlaceRepresentatives(vertices);
 	auto twinMap = Topology::buildTwinMap(reps);
 	std::vector<bool> isBorderVertex = Topology::findLockedVertices(vertices, indices, reps, options);
@@ -142,7 +152,7 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 	size_t currentFaceCount = Topology::countActiveFaces(indices, reps);
 	size_t resultCompareFaceCount = currentFaceCount;
 
-	std::cout << "=== QEM Simplification ===" << std::endl;
+	std::cout << "\n=== QEM Simplification ===" << std::endl;
 	std::cout << "Input: " << vertices.size() << " vertices, "
 		<< currentFaceCount << " faces" << std::endl;
 	std::cout << "Target: " << targetFaceCount << " faces" << std::endl;
@@ -269,11 +279,6 @@ MeshData Simplificator::simplifyFloatingCellClustering(std::vector<Vertex> verti
 MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount)
 {
 	MeshData result;
-
-	if (options.enableMerging)
-	{
-		Geometry::mergeCloseVertices(vertices, indices, options);
-	}
 	
 	size_t currentFaceCount = indices.size() / 3;
 	size_t resultCompareFaceCount = currentFaceCount;
@@ -452,16 +457,9 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 {
 	MeshData result;
 
-	if (options.enableMerging)
-	{
-		Geometry::mergeCloseVertices(vertices, indices, options);
-		Geometry::removeDegeneratedTriangles(indices);
-	}
-
 	auto reps = Topology::buildSamePlaceRepresentatives(vertices);
 	auto twinMap = Topology::buildTwinMap(reps);
 	std::vector<bool> isBorderVertex = Topology::findLockedVertices(vertices, indices, reps, options);
-	
 
 	size_t currentFaceCount = indices.size() / 3;
 
@@ -567,11 +565,6 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 MeshData Simplificator::simplifyRandom(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount)
 {
 	MeshData result;
-
-	if (options.enableMerging)
-	{
-		Geometry::mergeCloseVertices(vertices, indices, options);
-	}
 
 	auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
 	std::vector<uint32_t> vertexDeleted(vertices.size(), false);
@@ -682,4 +675,34 @@ MeshData Simplificator::simplifyRandom(std::vector<Vertex> vertices, std::vector
 	result.vertices = std::move(vertices);
 	result.indices = std::move(indices);
 	return result;
+}
+
+void Simplificator::exportOBJ(std::string& filename, const std::vector<MeshData>& meshData)
+{
+	std::ofstream objFile(filename);
+
+	// .obj indexing starts at 1
+	uint32_t vertexOffset = 1;
+	for (const auto& mesh : meshData)
+	{
+		// write vertices
+		for (const auto& v : mesh.vertices)
+		{
+			objFile << "v " << v.pos.x << " " << v.pos.y << " " << v.pos.z << "\n";
+		}
+
+		// write triangles
+		for (uint32_t i = 0; i < mesh.indices.size(); i += 3)
+		{
+			objFile << "f" << " " << (mesh.indices[i]     + vertexOffset) << " "
+								  << (mesh.indices[i + 1] + vertexOffset) << " "
+								  << (mesh.indices[i + 2] + vertexOffset) << "\n";
+		}
+
+		// update vertex offset for the next mesh
+		vertexOffset += mesh.vertices.size();
+	}
+
+	objFile.close();
+	std::cout << "Exported simplified model to " << filename << std::endl;
 }

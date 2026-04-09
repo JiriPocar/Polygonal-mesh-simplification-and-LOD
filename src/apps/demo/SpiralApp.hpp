@@ -34,6 +34,8 @@ private:
 	std::unique_ptr<SpiralScene> spiralScene;
 	std::unique_ptr<SpiralRenderer> renderer;
 
+	float farPlane = 50000.0f;
+
 	Benchmark benchmark;
 };
 

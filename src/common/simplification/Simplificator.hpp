@@ -73,6 +73,8 @@ public:
 	void setClusteringMethod(ClusteringMethod method) { clusteringMethod = method; };
 	ClusteringMethod getClusteringMethod() const { return clusteringMethod; };
 
+	void exportOBJ(std::string& filename, const std::vector<MeshData>& meshData);
+
 	SimplificatorResult simplify(Model& model, float targetFaceCountRatio);
 	SimplificationOptions options;
 

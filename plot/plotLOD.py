@@ -40,7 +40,7 @@ def plotFrameTimeInstances(df):
 
     plt.title('Vliv výpočtů na grafické kartě (LOD zapnut)', pad=20)
     plt.ylabel('Čas vykreslení snímku [ms]', labelpad=10)
-    plt.xlabel('Počet instancí ve scéně', labelpad=10)
+    plt.xlabel('Počet instancí modelu ve scéně', labelpad=10)
 
     plt.xticks(xLabels, formattedLabels, rotation=30)
 
@@ -80,7 +80,7 @@ def plotLODEnabling(df):
     plt.xticks(xPos, formattedLabels, rotation=30)
     plt.title('Vliv LOD na snímkový počet', pad=20)
     plt.ylabel('Počet snímků za sekundu', labelpad=10)
-    plt.xlabel('Počet instancí ve scéně', labelpad=10)
+    plt.xlabel('Počet instancí modelu ve scéně', labelpad=10)
 
     plt.legend()
     plt.tight_layout()
@@ -121,7 +121,7 @@ def plotSceneFaces(df):
     plt.xticks(xPos, formattedLabels, rotation=30)
     plt.title('Počty vykreslených trojúhelníků ve scéně', pad=20)
     plt.ylabel('Počet vykreslených trojúhelníků [miliony]', labelpad=10)
-    plt.xlabel('Počet instancí ve scéně', labelpad=10)
+    plt.xlabel('Počet instancí modelu ve scéně', labelpad=10)
 
     plt.legend()
     plt.tight_layout()
@@ -168,7 +168,7 @@ def plotSpeedupRatio(df):
 
     plt.title('Zrychlení při použití výpočtu na GPU', pad=20)
     plt.ylabel('Relativní zrychlení oproti CPU', labelpad=10)
-    plt.xlabel('Počet instancí ve scéně', labelpad=10)
+    plt.xlabel('Počet instancí modelu ve scéně', labelpad=10)
 
     plt.legend()
     plt.tight_layout()

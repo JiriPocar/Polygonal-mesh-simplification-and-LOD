@@ -85,11 +85,13 @@ void SpiralApp::update(float deltaTime)
         ui.beginFrame2(*spiralScene, *renderer, camera.getPosition(), benchmark, showUI);
     }
 
-    // handle window resizing
-    if (window.wasResized())
+	// adjust far plane and perspective based on instance count to avoid clipping
+    float farPlaneChange = (spiralScene->config.instanceCount * spiralScene->config.spacing) + 5000.0f;
+    if (window.wasResized() || farPlaneChange != farPlane)
     {
         window.resetResizedFlag();
-        camera.setPerspective(60.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 20000.0f);
+		farPlane = farPlaneChange;
+        camera.setPerspective(60.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, farPlane);
     }
 
     if (benchmark.isRunning())

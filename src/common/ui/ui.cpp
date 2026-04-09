@@ -89,7 +89,7 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	{
 		showModelMenu(currentDualModel, device, renderer, transform);
 		showSimplificationControls(currentDualModel, device);
-		showSimplificationResults();
+		showSimplificationResults(currentDualModel);
 		showModelPerspectiveControls(transform);
 		showWireframeControls(renderer);
 		showSmoothingControls();
@@ -204,6 +204,8 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 					float setScale = currentDualModel->getOriginalModel().getScaleIndex();
 					transform.setScale(glm::vec3(setScale, setScale, setScale));
 					renderer.setDualModel(*currentDualModel);
+					selectedModel = modelPath;
+					hasSimplificationResult = false;
 					std::cout << "Loaded model: " << modelPath << std::endl;
 				}
 				catch (const std::exception& e) {
@@ -212,13 +214,6 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 			}
 		}
 		ImGui::EndChild();
-	}
-
-	ImGui::Separator();
-
-	if (ImGui::Button("Refresh List"))
-	{
-		scanModels();
 	}
 
 	ImGui::End();
@@ -502,6 +497,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	{
 		if (ImGui::Button("Revert"))
 		{
+			hasSimplificationResult = false;
 			device.operator*().waitIdle(); // wait for device to be idle before reverting
 			currentDualModel->revertSimplification();
 		}
@@ -510,10 +506,10 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	ImGui::End();
 }
 
-void UserInterface::showSimplificationResults()
+void UserInterface::showSimplificationResults(std::unique_ptr<DualModel>& currentDualModel)
 {
-	ImGui::SetNextWindowPos(ImVec2(1490, 630));
-	ImGui::SetNextWindowSize(ImVec2(300, 260));
+	ImGui::SetNextWindowPos(ImVec2(1490, 610));
+	ImGui::SetNextWindowSize(ImVec2(300, 280));
 
 	ImGui::Begin("Simplification Results");
 
@@ -583,7 +579,7 @@ void UserInterface::showSimplificationResults()
 			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Maximum distance from any vertex in either mesh to the closest point on the other mesh.");
 			ImGui::Text("Hausdorf distance:");
 			ImGui::SameLine();
-			ImGui::Text("%.2f", lastResult.hausdorffDistance);
+			ImGui::Text("%.5f", lastResult.hausdorffDistance);
 		}
 
 		if (simplificator.options.computeMSE)
@@ -592,6 +588,34 @@ void UserInterface::showSimplificationResults()
 			ImGui::Text("Mean squared error:");
 			ImGui::SameLine();
 			ImGui::Text("%.5f", lastResult.mseError);
+		}
+
+		if (ImGui::Button("Export OBJ"))
+		{
+			// initial 'duck' model load hack
+			if (selectedModel.empty())
+			{
+				selectedModel = "assets/Duck.gltf";
+			}
+
+			// get Duck from assets/Duck.gltf
+			std::string baseName = std::filesystem::path(selectedModel).stem().string();
+			std::string outDir = "out/" + baseName;
+
+			std::filesystem::create_directories(outDir);
+
+			// export original model
+			std::string origPath = outDir + "/" + baseName + "_orig.obj";
+			std::vector<MeshData> origData;
+			for (const auto& mesh : currentDualModel->getOriginalModel().getMeshes())
+			{
+				origData.push_back({ mesh->extractVertices(), mesh->extractIndices() });
+			}
+			simplificator.exportOBJ(origPath, origData);
+
+			// export simplified model
+			std::string simpPath = outDir + "/" + baseName + "_simp.obj";
+			simplificator.exportOBJ(simpPath, lastResult.meshesData);
 		}
 	}
 	else
@@ -748,7 +772,7 @@ void UserInterface::showSmoothingControls()
 
 void UserInterface::showSurfaceApproximationErrorControls()
 {
-	ImGui::SetNextWindowPos(ImVec2(1490, 530));
+	ImGui::SetNextWindowPos(ImVec2(1490, 510));
 	ImGui::SetNextWindowSize(ImVec2(300, 90));
 	
 	ImGui::Begin("Compute approximation error");
@@ -761,6 +785,7 @@ void UserInterface::showSurfaceApproximationErrorControls()
 	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enables Mean squared error computation during simplification.");
 
 	ImGui::End();
+	ImGui::Separator();
 }
 
 void UserInterface::showWireframeControls(SimplificatorRenderer& renderer)
