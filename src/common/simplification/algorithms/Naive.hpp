@@ -11,19 +11,13 @@
 #include <algorithm>
 #include "../../resources/Model.hpp"
 #include "../utils/Geometry.hpp"
+#include "../utils/Topology.hpp"
 
 namespace Naive {
 
     struct Edge {
         uint32_t v1, v2;
         float length;
-
-        bool isIdentical(uint32_t e1, uint32_t e2) const
-        {
-            uint32_t minE = std::min(e1, e2);
-            uint32_t maxE = std::max(e1, e2);
-            return (v1 == minE && v2 == maxE);
-        }
     };
 
 	// comparator for priority queue to sort edges by length (shortest first)
@@ -37,8 +31,8 @@ namespace Naive {
 
     std::vector<Edge> getEdgesInModel(const std::vector<uint32_t>& indices);
     Edge findShortestEdge(const std::vector<Vertex>& vertices, const std::vector<Edge>& edges);
-    uint32_t collapseEdge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const Edge& edgeToCollapse, std::vector<std::vector<uint32_t>>& twinMap, bool syncUVSeams, std::vector<bool>& vertexDeleted);
-
+    uint32_t collapseEdge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const Edge& edgeToCollapse, std::vector<std::vector<uint32_t>>& twinMap, bool syncUVSeams, std::vector<bool>& vertexDeleted, std::vector<Topology::Neighborhood>& allNeighborhoods, int& outDeletedFaces);
+    bool isCollapseValid(uint32_t v1, uint32_t v2, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, SimplificationOptions& options, const std::vector<bool>& isBorderVertex, const std::vector<std::vector<uint32_t>>& twinMap, std::vector<Topology::Neighborhood>& allNeighborhoods);
 }
 
  /* End of the Naive.hpp file */

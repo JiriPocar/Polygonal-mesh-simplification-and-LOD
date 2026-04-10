@@ -52,7 +52,6 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		// pre-processing
 		if (options.enableMerging)
 		{
-			std::cout << "Called merge" << std::endl;
 			Geometry::mergeCloseVertices(vertices, indices, options);
 		}
 
@@ -336,10 +335,10 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 			}
 
 			return true;
-			});
+		});
 
 		// if not another valid candidate was found or the error is too high, stop the decimation
-		if (!foundValid || minErrCandidate.error > 1e7)
+		if (!foundValid || minErrCandidate.error > DONT_DECIMATE_ERROR)
 		{
 			std::cout << "Abrupt stop - no more valid candidates for decimation." << std::endl;
 			break;
@@ -462,6 +461,12 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 	std::vector<bool> isBorderVertex = Topology::findLockedVertices(vertices, indices, reps, options);
 
 	size_t currentFaceCount = indices.size() / 3;
+	size_t resultFaceCount = currentFaceCount;
+
+	std::cout << "=== Naive shortest edge collapse ===" << std::endl;
+	std::cout << "Input: " << vertices.size() << " vertices, "
+		<< currentFaceCount << " faces" << std::endl;
+	std::cout << "Target: " << targetFaceCount << " faces" << std::endl;
 
 	auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
 
@@ -480,31 +485,24 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 		Naive::Edge shortestEdge;
 		bool foundValidEdge = edgeQueue.popValid(shortestEdge, [&](const Naive::Edge& e) {
 			return !vertexDeleted[e.v1] && !vertexDeleted[e.v2];
-			});
+
+			//float currentLen = glm::distance(vertices[e.v1].pos, vertices[e.v2].pos);
+			//if (std::abs(currentLen - e.length) > 1e-4f) return false;
+		});
 		
 		if (!foundValidEdge)
 		{
 			break;
 		}
 
-		if (!Topology::isCollapseValid(shortestEdge.v1, shortestEdge.v2, vertices, indices, options, isBorderVertex, twinMap, allNeighborhoods))
+		if (!Naive::isCollapseValid(shortestEdge.v1, shortestEdge.v2, vertices, indices, options, isBorderVertex, twinMap, allNeighborhoods))
 		{
 			continue;
 		}
 		
-		std::vector<uint32_t> keptTwinVertices;
-		if (options.resolveUVSeams)
-		{
-			for (auto twin : twinMap[shortestEdge.v1])
-			{
-				if (!vertexDeleted[twin])
-				{
-					keptTwinVertices.push_back(twin);
-				}
-			}
-		}
-
-		auto actualKeepidx = Naive::collapseEdge(vertices, indices, shortestEdge, twinMap, options.resolveUVSeams, vertexDeleted);
+		int deletedFaces = 0;
+		auto actualKeepidx = Naive::collapseEdge(vertices, indices, shortestEdge, twinMap, options.resolveUVSeams, vertexDeleted, allNeighborhoods, deletedFaces);
+		currentFaceCount -= deletedFaces;
 
 		std::vector<uint32_t> affectedVertices = { actualKeepidx };
 		if (options.resolveUVSeams)
@@ -518,44 +516,32 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 			}
 		}
 
-		for (size_t i = 0; i < indices.size(); i += 3)
+		for (uint32_t aff : affectedVertices)
 		{
-			uint32_t i0 = indices[i];
-			uint32_t i1 = indices[i + 1];
-			uint32_t i2 = indices[i + 2];
-
-			bool isAffected = false;
-			for (uint32_t aff : affectedVertices)
+			for (uint32_t tri : allNeighborhoods[aff].triangles)
 			{
-				if (i0 == aff || i1 == aff || i2 == aff)
-				{
-					isAffected = true;
-					break;
-				}
-			}
+				uint32_t i0 = indices[tri];
+				uint32_t i1 = indices[tri + 1];
+				uint32_t i2 = indices[tri + 2];
 
-			if (isAffected)
-			{
-				Naive::Edge e1 = { std::min(i0, i1), std::max(i0, i1), 0.0f };
-				Naive::Edge e2 = { std::min(i1, i2), std::max(i1, i2), 0.0f };
-				Naive::Edge e3 = { std::min(i2, i0), std::max(i2, i0), 0.0f };
+				if (i0 == i1 || i1 == i2 || i2 == i0) continue;
 
-				e1.length = glm::length(vertices[e1.v1].pos - vertices[e1.v2].pos);
-				e2.length = glm::length(vertices[e2.v1].pos - vertices[e2.v2].pos);
-				e3.length = glm::length(vertices[e3.v1].pos - vertices[e3.v2].pos);
+				Naive::Edge e1 = { std::min(i0, i1), std::max(i0, i1), glm::distance(vertices[i0].pos, vertices[i1].pos) };
+				Naive::Edge e2 = { std::min(i1, i2), std::max(i1, i2), glm::distance(vertices[i1].pos, vertices[i2].pos) };
+				Naive::Edge e3 = { std::min(i2, i0), std::max(i2, i0), glm::distance(vertices[i2].pos, vertices[i0].pos) };
 
 				edgeQueue.push(e1);
 				edgeQueue.push(e2);
 				edgeQueue.push(e3);
 			}
 		}
-
-		currentFaceCount = indices.size() / 3;
 	}
+
+	Geometry::removeDegeneratedTriangles(indices);
 
 	size_t finalFaceCount = indices.size() / 3;
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
-	std::cout << "Reduction: " << currentFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / currentFaceCount) << "%)" << std::endl;
+	std::cout << "Reduction: " << resultFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / resultFaceCount) << "%)" << std::endl;
 
 	result.vertices = std::move(vertices);
 	result.indices = std::move(indices);

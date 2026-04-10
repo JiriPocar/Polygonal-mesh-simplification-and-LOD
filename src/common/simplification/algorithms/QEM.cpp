@@ -93,16 +93,25 @@ namespace QEM {
 
 	Quadric createQuadricFromTriangle(glm::vec3& v1, glm::vec3& v2, glm::vec3& v3)
 	{
+		// check if triangle is degenerate
+		auto cross = glm::cross(v2 - v1, v3 - v1);
+		if (glm::length(cross) < 1e-6f) return Quadric();
+
 		// get plane normal
-		glm::vec3 n = glm::normalize(glm::cross(v2 - v1, v3 - v1));
+		glm::vec3 n = glm::normalize(cross);
 		double a = n.x, b = n.y, c = n.z;
 		double d = -glm::dot(n, v1);
 
+		// get area of the triangle
+		double area = 0.5 * glm::length(c);
+
+		// multiply the coefficients of the plane equation by the area of the triangle
+		// this makes bigger triangles in the mesh more important
 		Quadric q;
-		q.q11 = a * a;	q.q12 = a * b;	q.q13 = a * c;	q.q14 = a * d;
-		q.q22 = b * b;	q.q23 = b * c;	q.q24 = b * d;
-		q.q33 = c * c;	q.q34 = c * d;
-		q.q44 = d * d;
+		q.q11 = a * a * area;	q.q12 = a * b * area;	q.q13 = a * c * area;	q.q14 = a * d * area;
+		q.q22 = b * b * area;	q.q23 = b * c * area;	q.q24 = b * d * area;
+		q.q33 = c * c * area;	q.q34 = c * d * area;
+		q.q44 = d * d * area;
 
 		return q;
 	}
@@ -113,7 +122,7 @@ namespace QEM {
 
 		// OPTIMAL POSITION - solve for v that minimizes v^T * Q * v
 		// since Q is symmetric, we can use the simplified form
-		glm::mat3 MAT(
+		glm::dmat3 MAT(
 			q.q11, q.q12, q.q13,
 			q.q12, q.q22, q.q23,
 			q.q13, q.q23, q.q33
@@ -121,18 +130,18 @@ namespace QEM {
 
 		// if determinant is non-zero, we can find optimal position by solving the linear system
 		float det = glm::determinant(MAT);
-		if (std::abs(det) > 1e-6)
+		if (std::abs(det) > 1e-12)
 		{
 			// vector b is the negation of the last column of Q
-			glm::vec3 b(q.q14, q.q24, q.q34);
+			glm::dvec3 b(q.q14, q.q24, q.q34);
 
 			// solve for v in MAT * v = -b
-			glm::vec3 exactOptPos = -glm::inverse(MAT) * b;
+			glm::dvec3 exactOptPos = -glm::inverse(MAT) * b;
 
 			outErr = q.evalError(exactOptPos);
 			if (outErr < 0.0) outErr = 0.0;
 
-			return exactOptPos;
+			return glm::vec3(exactOptPos);
 		}
 
 		// FALLBACK - choose between v1, v2 and midpoint
@@ -217,7 +226,6 @@ namespace QEM {
 		context.quadrics[keepIdx] = context.quadrics[keepIdx] + context.quadrics[removeIdx];
 
 		// update all triangles in the neighborhood of the removed vertex
-		// update the neighborhood of the kept vertex
 		for (uint32_t tri : context.allNeighborhoods[removeIdx].triangles)
 		{
 			uint32_t idx0 = context.indices[tri];
