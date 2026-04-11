@@ -1,3 +1,12 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Model.hpp
+ * @brief Model loading and management.
+ *
+ * This file implements the Model class, which is responsible for loading 3D models from files using tinygltf,
+ * creating vertex and index buffers for the meshes, and providing functionality to draw the model using Vulkan command buffers.
+ */
+
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include "../core/Device.hpp"
@@ -13,6 +22,7 @@ class CommandManager;
 #define LEFT 0
 #define RIGHT 1
 
+// represents a vertex
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec3 normal;
@@ -26,6 +36,7 @@ struct Vertex {
 	}
 };
 
+// represents a single mesh in the model
 struct MeshData {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -36,27 +47,55 @@ public:
 	Mesh(Device& device, const tinygltf::Model& model, const tinygltf::Primitive& primitive);
 	Mesh(Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 
+	/**
+	* @brief Records draw commands for this mesh into the provided command buffer.
+	* 
+	* @param commandBuffer The command buffer to record draw commands into.
+	*/
 	void draw(vk::CommandBuffer commandBuffer) const;
 
+	// getters
 	vk::Buffer getVertexBuffer() const { return vertexBuffer->getBuffer(); }
 	vk::Buffer getIndexBuffer() const { return indexBuffer->getBuffer(); }
 	uint32_t getVertexCount() const { return vertexCount; }
 	uint32_t getIndexCount() const { return indexCount; }
+	void getBounds(glm::vec3& minBound, glm::vec3& maxBound) const;
 
 	std::vector<Vertex> extractVertices() const;
 	std::vector<uint32_t> extractIndices() const;
 
-	void getBounds(glm::vec3& minBound, glm::vec3& maxBound) const;
-
 private:
-	void loadVertices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<Vertex>& vertices);
-	void loadIndices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<uint32_t>& indices);
-	void createVertexBuffer(const std::vector<Vertex>& vertices);
-	void createIndexBuffer(const std::vector<uint32_t>& indices);
 
+	/**
+	* @brief Loads vertex data into vertices vector
+	* 
+	* @param model The tinygltf model containing the mesh data
+	* @param primitive The tinygltf primitive representing the mesh to load
+	* @param vertices Output vector to store the loaded vertices
+	*/
+	void loadVertices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<Vertex>& vertices);
+	
+	/**
+	* @brief Loads index data into indices vector
+	* 
+	* @param model The tinygltf model containing the mesh data
+	* @param primitive The tinygltf primitive representing the mesh to load
+	* @param indices Output vector to store the loaded indices
+	*/
+	void loadIndices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<uint32_t>& indices);
+	
+	/**
+	* @brief Calculates the axis-aligned bounding box of the mesh based on its vertices
+	* 
+	* @param vertices The vertices of the mesh to calculate bounds for
+	*/
 	void calculateMeshBounds(const std::vector<Vertex>& vertices);
 	glm::vec3 minBound;
 	glm::vec3 maxBound;
+
+	// creates vertex and index buffers from the loaded vertex and index data
+	void createVertexBuffer(const std::vector<Vertex>& vertices);
+	void createIndexBuffer(const std::vector<uint32_t>& indices);
 
 	Device& dev;
 	std::unique_ptr<Buffer> vertexBuffer;
@@ -82,6 +121,17 @@ public:
 
 	~Model() = default;
 
+	/**
+	* @brief Records draw commands for all meshes in the model into the provided command buffer.
+	* 
+	* @param commandBuffer The command buffer to record draw commands into.
+	*/
+	void draw(vk::CommandBuffer commandBuffer) const;
+
+	// calculates a uniform scale factor to fit the model to 10x10x10 box
+	float getScaleIndex() const;
+
+	// getters and setters
 	vk::Buffer getVertexBuffer() const {
 		if (meshes.empty()) throw std::runtime_error("Model has no meshes");
 		return meshes[0]->getVertexBuffer();
@@ -104,12 +154,28 @@ public:
 	uint32_t getVertexCount() const { return vertexCount; };
 	uint32_t getIndexCount() const { return indexCount; };
 
-	void draw(vk::CommandBuffer commandBuffer) const;
-	float getScaleIndex() const;
-
 private:
+	/**
+	* @brief Loads a GLTF model from the specified file path and processes its meshes.
+	* 
+	* @param modelPath The file path to the GLTF model to load
+	* @param cmd The CommandManager for texture loading (transition and copying)
+	*/
 	void loadModel(const std::string& modelPath, CommandManager& cmd);
+
+	/**
+	* @brief Processes a tinygltf::Mesh, saving them to meshes vector
+	* 
+	* @param mesh The tinygltf::Mesh to process
+	*/
 	void processMesh(const tinygltf::Mesh& mesh);
+
+	/**
+	* @brief Recreates model with mesh data from provided vertices and indices.
+	* 
+	* @param vertices The vertex data to create the model from
+	* @param indices The index data to create the model from
+	*/
 	void createFromData(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 
 	uint32_t indexCount;
@@ -119,3 +185,5 @@ private:
 	std::vector<std::unique_ptr<Mesh>> meshes;
 	std::unique_ptr<Texture> texture;
 };
+
+/* End of the Model.hpp file */

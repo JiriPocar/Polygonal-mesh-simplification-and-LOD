@@ -10,8 +10,8 @@
 #include <string>
 #include <fstream>
 
-const float WARMUPTIME = 5.0f;
-const float BENCHMARK_CONFIG_TIME = 20.0f;
+const float WARMUPTIME = 10.0f;
+const float BENCHMARK_CONFIG_TIME = 15.0f;
 
 // tested parameteres
 struct BenchmarkConfig {

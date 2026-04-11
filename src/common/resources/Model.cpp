@@ -1,3 +1,20 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Model.cpp
+ * @brief Model loading and management.
+ *
+ * This file implements loading 3D models from files using tinygltf, creating vertex and index
+ * buffers for the meshes, and providing functionality to draw the model using Vulkan command buffers.
+ * 
+ * Inspired by:
+ *		- Syoyo Fujita - tinygltf library usage examples
+ *			- @url https://github.com/syoyo/tinygltf/tree/release/examples
+ *		- Syoyo Fujita - "Accessing vertex data"
+ *			- @url https://github.com/syoyo/tinygltf/wiki/Accessing-vertex-data
+ *		- Alexander Overvoorde - Vertex input descriptions
+ *			- @url https://vulkan-tutorial.com/Vertex_buffers/Vertex_input_description
+ */
+
 #include "Model.hpp"
 #include "../rendering/CommandManager.hpp"
 #include <stdexcept>
@@ -106,7 +123,8 @@ std::vector<uint32_t> Mesh::extractIndices() const
 
 void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<Vertex>& vertices)
 {
-	if (primitive.attributes.find("POSITION") == primitive.attributes.end()) {
+	if (primitive.attributes.find("POSITION") == primitive.attributes.end())
+	{
 		throw std::runtime_error("Mesh missing POSITION attribute");
 	}
 
@@ -120,7 +138,8 @@ void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive&
 	bool hasNormals = primitive.attributes.find("NORMAL") != primitive.attributes.end();
 	std::vector<float> normalsData;
 
-	if (hasNormals) {
+	if (hasNormals)
+	{
 		const auto& normalsAccessor = model.accessors[primitive.attributes.at("NORMAL")];
 		const auto& normalsView = model.bufferViews[normalsAccessor.bufferView];
 		const float* normalsRawData = reinterpret_cast<const float*>(
@@ -133,7 +152,8 @@ void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive&
 	bool hasTexCoords = primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end();
 	std::vector<float> texCoordsData;
 
-	if (hasTexCoords) {
+	if (hasTexCoords)
+	{
 		const auto& texCoordsAccessor = model.accessors[primitive.attributes.at("TEXCOORD_0")];
 		const auto& texCoordsView = model.bufferViews[texCoordsAccessor.bufferView];
 		const float* texCoordsRawData = reinterpret_cast<const float*>(
@@ -286,7 +306,8 @@ void Mesh::calculateMeshBounds(const std::vector<Vertex>& vertices)
 	minBound = vertices[0].pos;
 	maxBound = vertices[0].pos;
 
-	for (const auto& v : vertices) {
+	for (const auto& v : vertices)
+	{
 		minBound = glm::min(minBound, v.pos);
 		maxBound = glm::max(maxBound, v.pos);
 	}
@@ -338,9 +359,9 @@ Model::Model(Device& device, const std::vector<MeshData>& simplifiedMeshesData)
 
 void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 {
-
 	std::ifstream testFile(modelPath);
-	if (!testFile.is_open()) {
+	if (!testFile.is_open())
+	{
 		throw std::runtime_error("File does not exist or cannot be opened: " + modelPath);
 	}
 	testFile.close();
@@ -351,26 +372,31 @@ void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 
 	bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, modelPath);
 
-	if (!warn.empty()) {
+	if (!warn.empty())
+	{
 		std::cout << "GLTF Warning: " << warn << std::endl;
 	}
 
-	if (!err.empty()) {
+	if (!err.empty())
+	{
 		std::cerr << "GLTF Error: " << err << std::endl;
 	}
 
-	if (!ret) {
+	if (!ret)
+	{
 		throw std::runtime_error("Failed to load GLTF model: " + modelPath);
 	}
 
-	for (const auto& mesh : model.meshes) {
+	// process meshes of the model separately
+	for (const auto& mesh : model.meshes)
+	{
 		processMesh(mesh);
 	}
 
+	// load texture if available
 	std::filesystem::path path(modelPath);
 	std::string baseDir = path.parent_path().string();
 	if (!baseDir.empty()) baseDir += "/";
-
 	if (!model.materials.empty())
 	{
 		auto& material = model.materials[0];
@@ -401,6 +427,7 @@ void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 		}
 	}
 
+	// set fallback texture if no texture was loaded
 	if (!texture)
 	{
 		std::cout << "Model has no texture, setting fallback texture." << std::endl;
@@ -420,7 +447,8 @@ void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 
 void Model::processMesh(const tinygltf::Mesh& mesh)
 {
-	for (const auto& primitive : mesh.primitives) {
+	for (const auto& primitive : mesh.primitives)
+	{
 		if (primitive.mode != TINYGLTF_MODE_TRIANGLES)
 		{
 			std::cout << "Skipping non-triangular primitive\n" << std::endl;
@@ -433,7 +461,8 @@ void Model::processMesh(const tinygltf::Mesh& mesh)
 
 void Model::draw(vk::CommandBuffer commandBuffer) const
 {
-	for (const auto& mesh : meshes) {
+	for (const auto& mesh : meshes)
+	{
 		mesh->draw(commandBuffer);
 	}
 }
@@ -511,3 +540,5 @@ std::vector<uint32_t> Model::extractIndices() const
 
 	return allIndices;
 }
+
+/* End of the Model.cpp file */

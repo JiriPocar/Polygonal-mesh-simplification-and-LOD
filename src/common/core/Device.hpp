@@ -21,8 +21,8 @@ public:
 	/**
 	 * @brief Constructs a Device object. 
 	 * 
-	 * @param instance Vulkan instance.
-	 * @param surface Vulkan surface for presentation.
+	 * @param instance Vulkan instance
+	 * @param surface Vulkan surface for presentation
 	 */
 	Device(vk::Instance instance, vk::SurfaceKHR surface);
 	~Device();
@@ -48,9 +48,9 @@ public:
 	/**
 	 * @brief Finds a supported format from a list of candidates.
 	 *
-	 * @param candidates List of candidate formats.
-	 * @param tiling Desired image tiling (optimal, linear).
-	 * @param features Format features (depth stencil attachment).
+	 * @param candidates List of candidate formats
+	 * @param tiling Desired image tiling (optimal, linear)
+	 * @param features Format features (depth stencil attachment)
 	 *
 	 * @return vk::Format - a supported format that meets the criteria.
 	 */
@@ -86,16 +86,16 @@ private:
 	/**
 	 * @brief Selects the first suitable physical device (GPU) that supports required features.
 	 * 
-	 * @param instance Vulkan instance.
-	 * @param surface Vulkan surface for presentation.
+	 * @param instance Vulkan instance
+	 * @param surface Vulkan surface for presentation
 	 */
 	void pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface);
 
 	/**
 	 * @brief Finds queue families that support graphics and presentation.
 	 * 
-	 * @param device Vulkan physical device to evaluate.
-	 * @param surface Vulkan surface for presentation.
+	 * @param device Vulkan physical device to evaluate
+	 * @param surface Vulkan surface for presentation
 	 * 
 	 * @return QueueFamilyIndices - structure containing indices of graphics and presentation queue families.
 	 */
@@ -104,7 +104,7 @@ private:
 	/**
 	 * @brief Creates a logical device from the first suitable physical device and retrieves the graphics and presentation queues.
 	 * 
-	 * @param surface Vulkan surface for presentation.
+	 * @param surface Vulkan surface for presentation
 	 */
 	void createLogicalDevice(vk::SurfaceKHR surface);
 

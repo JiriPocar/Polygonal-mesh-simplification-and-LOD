@@ -1,3 +1,21 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Framebuffer.hpp
+ * @brief Framebuffer management for Vulkan application.
+ *
+ * This file contains the implementation of the FrameBuffer class,
+ * which is responsible for creating and managing Vulkan framebuffers
+ * for each swapchain image view and the depth image view.
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
+ */
+
 #include "FrameBuffer.hpp"
 #include "../core/Device.hpp"
 #include "../core/Swapchain.hpp"
@@ -5,13 +23,13 @@
 #include <stdexcept>
 #include <iostream>
 
-FrameBuffer::FrameBuffer(const Device& device, const RenderPass& renderPass, const Swapchain& swapchain)
+FrameBuffer::FrameBuffer(Device& device, RenderPass& renderPass, Swapchain& swapchain)
 	: dev(device)
 {
 	createFramebuffers(renderPass, swapchain);
 }
 
-void FrameBuffer::createFramebuffers(const RenderPass& renderPass, const Swapchain& swapchain)
+void FrameBuffer::createFramebuffers(RenderPass& renderPass, Swapchain& swapchain)
 {
 	cleanup();
 
@@ -38,11 +56,8 @@ void FrameBuffer::createFramebuffers(const RenderPass& renderPass, const Swapcha
 			1					// layers	
 		);
 
-		try {
-			framebuffers.push_back(dev.operator*().createFramebufferUnique(fbInfo));
-		}
-		catch (const std::exception& e) {
-			throw std::runtime_error(std::string("Failed to create framebuffer: ") + e.what());
-		}
+		framebuffers.push_back(dev.operator*().createFramebufferUnique(fbInfo));
 	}
 }
+
+/* End of the FrameBuffer.cpp file */

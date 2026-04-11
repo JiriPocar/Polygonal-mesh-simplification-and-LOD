@@ -18,8 +18,6 @@ import numpy as np
 def plotFrameTimeInstances(df):
     print("Plotting frame time to instances...")
 
-    df['AvgFPS'] = np.where(df['AvgFrameTimeMs'] > 0, 1000.0 / df['AvgFrameTimeMs'], 0)
-
     # GPU / CPU Compute plot
     dfLODON = df[df['EnableLOD'] == 'Enabled']
     cpuOnly = dfLODON[(dfLODON['GPULOD'] == 'CPU') & (dfLODON['GPUSpiral'] == 'CPU')]['AvgFrameTimeMs'].values
@@ -51,7 +49,7 @@ def plotFrameTimeInstances(df):
     print("Done...")
     
 
-def plotLODEnabling(df):
+def plotLODEnablingGPU(df):
     print("Plotting FPS to instances with LOD Enabled / Disabled ...")
 
     # take each unique instance count
@@ -59,8 +57,8 @@ def plotLODEnabling(df):
     xPos = np.arange(len(xLabels))
 
     gpuOnly = df[(df['GPULOD'] == 'GPU') & (df['GPUSpiral'] == 'GPU')]
-    LODON = gpuOnly[gpuOnly['EnableLOD'] == 'Enabled']['AvgFPS'].values
-    LODOFF = gpuOnly[gpuOnly['EnableLOD'] == 'Disabled']['AvgFPS'].values
+    LODON = gpuOnly[gpuOnly['EnableLOD'] == 'Enabled']['AvgFrameTimeMs'].values
+    LODOFF = gpuOnly[gpuOnly['EnableLOD'] == 'Disabled']['AvgFrameTimeMs'].values
 
     # plot
     plt.figure(figsize=(10, 7))
@@ -78,13 +76,50 @@ def plotLODEnabling(df):
     formattedLabels = [f"{int(x):,}".replace(',', ' ') for x in xLabels]
 
     plt.xticks(xPos, formattedLabels, rotation=30)
-    plt.title('Vliv LOD na snímkový počet', pad=20)
-    plt.ylabel('Počet snímků za sekundu', labelpad=10)
+    plt.title('Vliv LOD na čas vykreslení snímku (GPU výpočetní režim)', pad=20)
+    plt.ylabel('Čas vykreslení snímku [ms]', labelpad=10)
     plt.xlabel('Počet instancí modelu ve scéně', labelpad=10)
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig('LODINFLUENCE.svg')
+    plt.savefig('LODINFLUENCEGPU.svg')
+    plt.close()
+    print("Done...")
+
+def plotLODEnablingCPU(df):
+    print("Plotting FPS to instances with LOD Enabled / Disabled ...")
+
+    # take each unique instance count
+    xLabels = sorted(df['Instances'].unique())
+    xPos = np.arange(len(xLabels))
+
+    gpuOnly = df[(df['GPULOD'] == 'CPU') & (df['GPUSpiral'] == 'CPU')]
+    LODON = gpuOnly[gpuOnly['EnableLOD'] == 'Enabled']['AvgFrameTimeMs'].values
+    LODOFF = gpuOnly[gpuOnly['EnableLOD'] == 'Disabled']['AvgFrameTimeMs'].values
+
+    # plot
+    plt.figure(figsize=(10, 7))
+    plt.grid(axis='y', which='major', linestyle='--', color='gray', alpha=0.7, zorder=0)
+    width = 0.35
+
+    plt.bar(xPos - width/2, LODON, width, edgecolor='black', hatch='//', label='LOD Zapnuto', zorder=2)
+    plt.bar(xPos + width/2, LODOFF, width, edgecolor='black', label='LOD Vypnuto', zorder=2)
+
+    # number on top of each bar
+    for i in range(len(xLabels)):
+        plt.text(xPos[i] - width/2, LODON[i] + 1, f'{LODON[i]:.1f}', ha='center', va='bottom', fontsize=9)
+        plt.text(xPos[i] + width/2, LODOFF[i] + 1, f'{LODOFF[i]:.1f}', ha='center', va='bottom', fontsize=9)
+
+    formattedLabels = [f"{int(x):,}".replace(',', ' ') for x in xLabels]
+
+    plt.xticks(xPos, formattedLabels, rotation=30)
+    plt.title('Vliv LOD na čas vykreslení snímku (CPU výpočetní režim)', pad=20)
+    plt.ylabel('Čas vykreslení snímku [ms]', labelpad=10)
+    plt.xlabel('Počet instancí modelu ve scéně', labelpad=10)
+
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('LODINFLUENCECPU.svg')
     plt.close()
     print("Done...")
 
@@ -183,11 +218,15 @@ def main():
         print("spiralBenchmark.csv file has not been found")
         return
 
+    df = df.sort_values(by='Instances', ascending=True).reset_index(drop=True)
+    df['AvgFPS'] = np.where(df['AvgFrameTimeMs'] > 0, 1000.0 / df['AvgFrameTimeMs'], 0)
+
     plt.style.use('tableau-colorblind10')
     plt.rcParams.update({'axes.edgecolor': 'black', 'font.size': 12, 'axes.titlesize': 14, 'axes.labelsize': 12})
 
     plotFrameTimeInstances(df)
-    plotLODEnabling(df)
+    plotLODEnablingCPU(df)
+    plotLODEnablingGPU(df)
     plotSceneFaces(df)
     plotSpeedupRatio(df)
     

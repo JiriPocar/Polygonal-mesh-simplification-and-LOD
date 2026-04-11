@@ -1,3 +1,19 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file UniformBuffer.cpp
+ * @brief Uniform buffer management for Vulkan application.
+ *
+ * This file implements creating and managing Vulkan uniform buffers
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
+ */
+
 #include "UniformBuffer.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -22,3 +38,5 @@ void UniformBuffer::update(UniformBufferObject& ubo, uint32_t currentFrame)
 {
 	buffers[currentFrame]->copyData(&ubo, sizeof(ubo));
 }
+
+/* End of the UniformBuffer.cpp file */

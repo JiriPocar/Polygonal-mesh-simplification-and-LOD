@@ -1,9 +1,17 @@
 /**
  * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
  * @file ComputePipeline.cpp
- * @brief Compute pipeline class declaration for Spiral application.
+ * @brief Compute pipeline class declaration.
  *
- * This file contains the implementation of the ComputePipeline class. Sets up compute pipeline.
+ * This file contains the implementation of the compute pipeline class. Sets up compute pipeline.
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
  */
 
 #include "ComputePipeline.hpp"

@@ -1,9 +1,9 @@
 /**
  * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
  * @file ComputePipeline.hpp
- * @brief Compute pipeline class declaration for Spiral application.
+ * @brief Compute pipeline class declaration.
  *
- * This file contains the declaration of the Pipeline class.
+ * This file contains the implementation of the compute pipeline class. Sets up compute pipeline.
  */
 
 #pragma once
@@ -11,26 +11,18 @@
 #include "Device.hpp"
 #include <vector>
 
-struct ComputePushConstants {
-    uint32_t totalInstances;
-    float lodDist0;
-    float lodDist1;
-    float lodDist2;
-    float lodDist3;
-    uint32_t computeSpiral;
-    float spacing;
-    int numArms;
-    float minRadius;
-    float coneFactor;
-    float twistSpeed;
-    float animationTime;
-    uint32_t enableLOD;
-};
-
 class ComputePipeline {
 public:
+    /**
+	* @brief Constructor for ComputePipeline class. Loads the compute shader, creates the shader module, pipeline object and pipeline layout object.
+    * 
+	* @param device Reference to the Vulkan device
+	* @param descSetLayout Descriptor set layout used by the compute shader
+	* @param pushConstantSize Size of the push constants used by the compute shader
+    */
     ComputePipeline(Device& device, vk::DescriptorSetLayout descSetLayout, uint32_t pushConstantSize);
 
+    // getters
     vk::Pipeline get() const { return pipeline.get(); }
     vk::PipelineLayout getLayout() const { return layout.get(); }
 

@@ -1,3 +1,21 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Buffer.cpp
+ * @brief Buffer management for Vulkan application.
+ *
+ * This file implements creating and managing Vulkan buffers using VMA for memory management.
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
+ *		- VMA starter code
+ *			- @url https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/quick_start.html
+ */
+
 #include "Buffer.hpp"
 
 Buffer::Buffer(const Device& device, vk::DeviceSize size, vk::BufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags flags)
@@ -54,3 +72,4 @@ void Buffer::copyData(const void* data, vk::DeviceSize size)
 	vmaFlushAllocation(dev.getAllocator(), allocation, 0, size);
 }
 
+/* End of the Buffer.cpp file */

@@ -1,3 +1,12 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file DualModel.cpp
+ * @brief Header file for the DualModel class.
+ *
+ * This file implements an abstraction for managing
+ * both the original and simplified versions of a 3D model.
+ */
+
 #include "DualModel.hpp"
 #include <iostream>
 
@@ -66,3 +75,4 @@ void DualModel::revertSimplification()
 	wasSimplified = false;
 }
 
+/* End of the DualModel.cpp file */

@@ -11,7 +11,7 @@
 #include "../../common/rendering/CommandManager.hpp"
 #include "../../common/rendering/UniformBuffer.hpp"
 
-const uint32_t MAX_INSTANCE_COUNT = 2000000;
+const uint32_t MAX_INSTANCE_COUNT = 4000000;
 
 // matches the structure in the shader for instance data
 struct SpiralInstanceData {
@@ -29,6 +29,23 @@ struct DrawIndexedIndirectCommand {
 	uint32_t firstIndex;
 	int32_t vertexOffset;
 	uint32_t firstInstance;
+};
+
+// push constants used in the compute shader
+struct ComputePushConstants {
+	uint32_t totalInstances;
+	float lodDist0;
+	float lodDist1;
+	float lodDist2;
+	float lodDist3;
+	uint32_t computeSpiral;
+	float spacing;
+	int numArms;
+	float minRadius;
+	float coneFactor;
+	float twistSpeed;
+	float animationTime;
+	uint32_t enableLOD;
 };
 
 struct SpiralConfig {

@@ -1,10 +1,28 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Swapchain.hpp
+ * @brief Swapchain management for Vulkan application.
+ *
+ * This file contains the implementation of the Swapchain class,
+ * which is responsible for creating and managing the Vulkan swapchain,
+ * including image views and depth resources.
+ *
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
+ */
+
 #include "Swapchain.hpp"
 #include "Device.hpp"
 #include <stdexcept>
 #include <iostream>
 
 Swapchain::Swapchain(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
-	: swapchainDevice(device) // initialize the swapchain "device" variable with the provided device
+	: swapchainDevice(device)
 {
 	createSwapchain(surface, width, height);
 	createImageViews();
@@ -219,3 +237,5 @@ void Swapchain::cleanup()
 		depthImageAllocation = VK_NULL_HANDLE;
 	}
 }
+
+/* End of the Swapchain.cpp file */

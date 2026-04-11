@@ -5,6 +5,14 @@
  *
  * This file contains the implementation of the Instance class,
  * which is responsible for creating an unique Vulkan instance.
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
  */
 
 #include "Instance.hpp"

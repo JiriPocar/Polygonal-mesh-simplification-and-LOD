@@ -6,6 +6,14 @@
  * This file contains the implementation of the Device class,
  * which is responsible for selecting a physical device (GPU)
  * and creating a logical device along with the necessary queues.
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
  */
 
 #include "Device.hpp"
