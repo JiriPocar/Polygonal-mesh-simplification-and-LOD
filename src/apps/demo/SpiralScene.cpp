@@ -283,7 +283,7 @@ void SpiralScene::updateSpiralPositions(float deltaTime, bool useGPUSpiral)
 
 }
 
-uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos)
+uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos, std::array<uint32_t, 4>& outLodCounts)
 {
 	// DO NOT CALL THIS FUNCTION EVERY FRAME SINCE ITS COSTLY
 	// USE FOR:
@@ -291,17 +291,20 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos)
 	//		b) UI display (display only two times per sec)
 
 	uint32_t totalTriangles = 0;
+	outLodCounts = { 0, 0, 0, 0 };
 
 	// if LOD is disabled, then all instances are drwan with LOD0
 	if (!config.enableLOD)
 	{
 		uint32_t lod0Faces = modelLODSets[0].getLOD(0).getIndexCount() / 3;
+		outLodCounts[0] = config.instanceCount;
 		return config.instanceCount * lod0Faces;
 	}
 
 	// if scene was computed by CPU, we know exact numbers
 	if (lodCounts[0] > 0 || lodCounts[1] > 0 || lodCounts[2] > 0 || lodCounts[3] > 0)
 	{
+		outLodCounts = lodCounts;
 		for (int i = 0; i < 4; i++)
 		{
 			totalTriangles += lodCounts[i] * (modelLODSets[0].getLOD(i).getIndexCount() / 3);
@@ -315,8 +318,6 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos)
 	float sqDist0 = config.lodDist0 * config.lodDist0;
 	float sqDist1 = config.lodDist1 * config.lodDist1;
 	float sqDist2 = config.lodDist2 * config.lodDist2;
-
-	std::array<uint32_t, 4> timefreezeCounts = { 0, 0, 0, 0 };
 
 	for (uint32_t i = 0; i < config.instanceCount; i++)
 	{
@@ -336,12 +337,12 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos)
 			lod = 2;
 		}
 
-		timefreezeCounts[lod]++;
+		outLodCounts[lod]++;
 	}
 
 	for (int i = 0; i < 4; i++)
 	{
-		totalTriangles += timefreezeCounts[i] * (modelLODSets[0].getLOD(i).getIndexCount() / 3);
+		totalTriangles += outLodCounts[i] * (modelLODSets[0].getLOD(i).getIndexCount() / 3);
 	}
 
 	return totalTriangles;

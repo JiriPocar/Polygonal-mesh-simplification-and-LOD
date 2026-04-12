@@ -52,7 +52,7 @@ void Benchmark::update(float deltaTime, SpiralScene& spiralScene, glm::vec3& cam
 			currentTimer = 0.0f;
 			currentConfigData.cumulatedTime = 0.0f;
 			currentConfigData.framesMeasured = 0;
-			currentConfigData.drawnTriangles = spiralScene.calculateCurrentDrawnTriangles(camPos);
+			currentConfigData.drawnTriangles = spiralScene.calculateCurrentDrawnTriangles(camPos, currentConfigData.lodCounts);
 		}
 	}
 	else

@@ -858,9 +858,10 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 	static float updateTimer = 0.0f;
 	static uint32_t currentDrawnTriangles = 0;
 	updateTimer += ImGui::GetIO().DeltaTime;
+	static std::array<uint32_t, 4> lodInstances;
 	if (updateTimer >= 0.5f)
 	{
-		currentDrawnTriangles = scene.calculateCurrentDrawnTriangles(camPos);
+		currentDrawnTriangles = scene.calculateCurrentDrawnTriangles(camPos, lodInstances);
 		updateTimer = 0.0f;
 	}
 	ImGui::Text("Drawn Triangles:");
@@ -877,13 +878,14 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 
 	ImGui::Text("LOD Mesh Statistics:");
 
-	if (ImGui::BeginTable("LODStats", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+	if (ImGui::BeginTable("LODStats", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
 	{
 		if (scene.config.enableLOD)
 		{
 			ImGui::TableSetupColumn("LOD Level");
 			ImGui::TableSetupColumn("Vertices");
 			ImGui::TableSetupColumn("Faces");
+			ImGui::TableSetupColumn("Number");
 			ImGui::TableHeadersRow();
 
 			for (int i = 0; i < 4; ++i)
@@ -902,6 +904,9 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 
 				ImGui::TableSetColumnIndex(2);
 				ImGui::Text("%u", fCount);
+
+				ImGui::TableSetColumnIndex(3);
+				ImGui::Text("%u", lodInstances[i]);
 			}
 			ImGui::EndTable();
 		}
@@ -993,10 +998,10 @@ void UserInterface::showSpiralControls(SpiralScene& scene)
 
 	// shape
 	ImGui::Text("Shape Parameters");
-	ImGui::SliderFloat("Spacing", &scene.config.spacing, 0.5f, 20.0f);
-	ImGui::SliderInt("Arms (Num)", &scene.config.numArms, 1, 12);
+	ImGui::SliderFloat("Spacing", &scene.config.spacing, 0.1f, 20.0f);
+	ImGui::SliderInt("Arms", &scene.config.numArms, 1, 12);
 	ImGui::SliderFloat("Min Radius", &scene.config.minRadius, 0.0f, 100.0f);
-	ImGui::SliderFloat("Cone Factor", &scene.config.coneFactor, 0.0f, 2.0f);
+	ImGui::SliderFloat("Cone Factor", &scene.config.coneFactor, 0.0f, 10.0f);
 	ImGui::Separator();
 
 	// animation

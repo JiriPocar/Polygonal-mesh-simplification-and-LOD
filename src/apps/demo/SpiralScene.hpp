@@ -115,7 +115,7 @@ public:
 	uint32_t getModelTypeCount() const { return static_cast<uint32_t>(modelLODSets.size()); }
 	float getAnimationTime() const { return animationTime; }
 
-	uint32_t calculateCurrentDrawnTriangles(const glm::vec3& cameraPos);
+	uint32_t calculateCurrentDrawnTriangles(const glm::vec3& cameraPos, std::array<uint32_t, 4>& outLodCounts);
 
 	void resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFrame);
 

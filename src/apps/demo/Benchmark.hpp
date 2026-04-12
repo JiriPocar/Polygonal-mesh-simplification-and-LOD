@@ -26,6 +26,7 @@ struct BenchmarkConfigData {
 	uint32_t framesMeasured;
 	float cumulatedTime;
 	uint32_t drawnTriangles;
+	std::array<uint32_t, 4> lodCounts;
 };
 
 class Benchmark {
