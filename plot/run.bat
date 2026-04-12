@@ -1,4 +1,5 @@
 @echo off
 cd /d "%~dp0"
-py plotLOD.py
+py plotLODStatic.py
+py plotLODDynamic.py
 pause

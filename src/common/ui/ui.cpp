@@ -656,15 +656,21 @@ void UserInterface::showModelPerspectiveControls(Transform& transform)
 
 void UserInterface::showBenchmarkStart(Benchmark& benchmark)
 {
-	// make a button
-	ImGui::SetNextWindowPos(ImVec2(1660, 855)); // 920 - 55+10
-	ImGui::SetNextWindowSize(ImVec2(130, 55));
+	ImGui::SetNextWindowPos(ImVec2(1600, 835));
+	ImGui::SetNextWindowSize(ImVec2(190, 85));
 	ImGui::Begin("Benchmark");
-	if (ImGui::Button("Start Benchmark"))
+	if (ImGui::Button("Start static benchmark"))
 	{
 		if (!benchmark.isRunning())
 		{
-			benchmark.start();
+			benchmark.startStatic();
+		}
+	}
+	if (ImGui::Button("Start dynamic benchmark"))
+	{
+		if (!benchmark.isRunning())
+		{
+			benchmark.startDynamic();
 		}
 	}
 
@@ -675,9 +681,9 @@ void UserInterface::showBenchmarkStatus(Benchmark& benchmark)
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 10));
 	ImGui::SetNextWindowSize(ImVec2(330, 900));
-	ImGui::Begin("Benchmark Status");
-	if (benchmark.isRunning())
+	if (benchmark.isRunning() && benchmark.getMethod() == BenchmarkMethod::STATIC_CAMERA)
 	{
+		ImGui::Begin("Benchmark Status");
 		// do a table printup for each config
 		for (int i = 0; i < benchmark.getNumberOfConfigs(); i++)
 		{
@@ -740,8 +746,8 @@ void UserInterface::showBenchmarkStatus(Benchmark& benchmark)
 				ImGui::Spacing();
 			}
 		}
+		ImGui::End();
 	}
-	ImGui::End();
 }
 
 Transform UserInterface::fetchTransform()
@@ -847,9 +853,9 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 	ImGui::SetNextWindowPos(ImVec2(1495, 10));
 	ImGui::SetNextWindowSize(ImVec2(300, 200));
 
-	ImGui::Begin("Scene Info");
+	ImGui::Begin("Scene info");
 
-	ImGui::Text("Instance Count:");
+	ImGui::Text("Instance count:");
 	ImGui::SameLine();
 	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%d", scene.config.instanceCount);
 
@@ -864,11 +870,11 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 		currentDrawnTriangles = scene.calculateCurrentDrawnTriangles(camPos, lodInstances);
 		updateTimer = 0.0f;
 	}
-	ImGui::Text("Drawn Triangles:");
+	ImGui::Text("Drawn triangles:");
 	ImGui::SameLine();
 	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%u", currentDrawnTriangles);
 
-	ImGui::Text("Total Length:");
+	ImGui::Text("Max length:");
 	ImGui::SameLine();
 	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%.2f units", scene.config.instanceCount * scene.config.spacing);
 
@@ -876,7 +882,7 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 
 	auto& lodSet = scene.getModelLODSet(0);
 
-	ImGui::Text("LOD Mesh Statistics:");
+	ImGui::Text("LOD Mesh statistics:");
 
 	if (ImGui::BeginTable("LODStats", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
 	{
@@ -968,7 +974,7 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 		ImGui::SliderFloat("LOD0 Range", &scene.config.lodDist0, 10.0f,				   scene.config.lodDist1);
 		ImGui::SliderFloat("LOD1 Range", &scene.config.lodDist1, scene.config.lodDist0, scene.config.lodDist2);
 		ImGui::SliderFloat("LOD2 Range", &scene.config.lodDist2, scene.config.lodDist1, scene.config.lodDist3);
-		ImGui::SliderFloat("LOD3 Range", &scene.config.lodDist3, scene.config.lodDist2, 20000.0f);
+		//ImGui::SliderFloat("LOD3 Range", &scene.config.lodDist3, scene.config.lodDist2, 20000.0f);
 
 		ImGui::Separator();
 

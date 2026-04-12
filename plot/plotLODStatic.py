@@ -63,7 +63,7 @@ def plotLODEnablingGPU(df):
     # plot
     plt.figure(figsize=(10, 7))
     plt.grid(axis='y', which='major', linestyle='--', color='gray', alpha=0.7, zorder=0)
-    width = 0.35
+    width = 0.44
 
     plt.bar(xPos - width/2, LODON, width, edgecolor='black', hatch='//', label='LOD Zapnuto', zorder=2)
     plt.bar(xPos + width/2, LODOFF, width, edgecolor='black', label='LOD Vypnuto', zorder=2)
@@ -100,7 +100,7 @@ def plotLODEnablingCPU(df):
     # plot
     plt.figure(figsize=(10, 7))
     plt.grid(axis='y', which='major', linestyle='--', color='gray', alpha=0.7, zorder=0)
-    width = 0.35
+    width = 0.44
 
     plt.bar(xPos - width/2, LODON, width, edgecolor='black', hatch='//', label='LOD Zapnuto', zorder=2)
     plt.bar(xPos + width/2, LODOFF, width, edgecolor='black', label='LOD Vypnuto', zorder=2)
@@ -127,7 +127,7 @@ def plotSceneFaces(df):
     print("Plotting Scene Faces with LOD Enabled / Disabled ...")
 
     # graph is clear even with 1 milion instances, so filter out higher instance counts for better visibility
-    df = df[df['Instances'].isin([200000, 400000, 600000, 800000, 1000000])]
+    df = df[df['Instances'].isin([400000, 800000, 1200000, 1600000])]
 
     # take GPU only data for LOD ON and OFF (more stable for number of drwan faces)
     gpuOnly = df[(df['GPULOD'] == 'GPU') & (df['GPUSpiral'] == 'GPU')]

@@ -13,6 +13,11 @@
 const float WARMUPTIME = 10.0f;
 const float BENCHMARK_CONFIG_TIME = 15.0f;
 
+enum class BenchmarkMethod {
+	STATIC_CAMERA,
+	MOVING_CAMERA
+};
+
 // tested parameteres
 struct BenchmarkConfig {
 	uint32_t instances;
@@ -22,9 +27,16 @@ struct BenchmarkConfig {
 };
 
 // collected data
-struct BenchmarkConfigData {
+struct BenchmarkConfigDataStatic {
 	uint32_t framesMeasured;
 	float cumulatedTime;
+	uint32_t drawnTriangles;
+	std::array<uint32_t, 4> lodCounts;
+};
+
+struct BenchmarkConfigDataDynamic {
+	float camZ;
+	float lastCamZ;
 	uint32_t drawnTriangles;
 	std::array<uint32_t, 4> lodCounts;
 };
@@ -38,7 +50,8 @@ public:
 	* @brief Sets the benchmark process to start. Opens the CSV file and
 	*		 sets the initial internal variables.
 	*/
-	void start();
+	void startStatic();
+	void startDynamic();
 
 	/**
 	* @brief Controls the benchmark process, mesasures frame times and manages
@@ -64,6 +77,8 @@ public:
 	bool isRunning() const { return running; }
 	bool needsApplyConfig() const { return applyConfigFlag; }
 	void clearApplyConfigFlag() { applyConfigFlag = false; }
+	BenchmarkMethod getMethod() const { return method; }
+	void setMethod(BenchmarkMethod newMethod) { method = newMethod; }
 
 private:
 	/**
@@ -82,8 +97,11 @@ private:
 	std::vector<BenchmarkConfig> configs;
 	uint32_t currentConfigIdx;
 
-	BenchmarkConfigData currentConfigData = { 0, 0.0f, 0 };
+	BenchmarkConfigDataStatic currentConfigDataStatic = { 0, 0.0f, 0 };
+	BenchmarkConfigDataDynamic currentConfigDataDynamic = { 0.0f, 0.0f, 0 };
 	float currentTimer = 0.0f;
+
+	BenchmarkMethod method = BenchmarkMethod::STATIC_CAMERA;
 
 	bool running = false;
 	bool inWarmup = false;

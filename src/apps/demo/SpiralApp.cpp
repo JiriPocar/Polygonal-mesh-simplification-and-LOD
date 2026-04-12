@@ -58,17 +58,43 @@ void SpiralApp::update(float deltaTime)
 
     if (benchmark.isRunning() && benchmark.needsApplyConfig())
     {
-		// apply benchmark config to the scene and renderer
-		BenchmarkConfig cfg = benchmark.getCurrentConfig();
-		spiralScene->config.instanceCount = cfg.instances;
-		spiralScene->config.enableLOD = cfg.enableLOD;
-		renderer->setUseGPULODCompute(cfg.useGPULOD);
-		renderer->setUseGPUSpiralCompute(cfg.useGPUSpiral);
+        if (benchmark.getMethod() == BenchmarkMethod::STATIC_CAMERA)
+        {
+            // apply benchmark config to the scene and renderer
+            BenchmarkConfig cfg = benchmark.getCurrentConfig();
+            spiralScene->config.instanceCount = cfg.instances;
+            spiralScene->config.enableLOD = cfg.enableLOD;
+            renderer->setUseGPULODCompute(cfg.useGPULOD);
+            renderer->setUseGPUSpiralCompute(cfg.useGPUSpiral);
 
-        // reset positions when changing instance count
-		spiralScene->updateSpiralPositions(0.0f, false);
+            // reset positions when changing instance count
+            spiralScene->updateSpiralPositions(0.0f, false);
 
-		benchmark.clearApplyConfigFlag();
+            benchmark.clearApplyConfigFlag();
+        }
+		else if (benchmark.getMethod() == BenchmarkMethod::MOVING_CAMERA)
+		{
+            // setup the scene
+            //spiralScene->resetAnimation();
+            spiralScene->config.coneFactor = 10.0f;
+            spiralScene->config.instanceCount = 7000;
+            spiralScene->config.speed = 1.0f;
+            spiralScene->config.numArms = 12;
+            spiralScene->config.twistSpeed = 0.2f;
+            spiralScene->config.spacing = 0.1f;
+            spiralScene->config.lodDist0 = 1000.0f;
+            spiralScene->config.lodDist1 = 2000.0f;
+            spiralScene->config.lodDist2 = 4000.0f;
+            
+			// reset camera to the start position
+            camera.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+            camera.setPerspective(60.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 100000.0f);
+            spiralScene->updateSpiralPositions(0.0f, false);
+
+			// reset benchmark timer and data
+            benchmark.clearApplyConfigFlag();
+		}
+		
     }
 
 	// update spiral positions and LODs
@@ -87,7 +113,7 @@ void SpiralApp::update(float deltaTime)
 
 	// adjust far plane and perspective based on instance count to avoid clipping
     float farPlaneChange = (spiralScene->config.instanceCount * spiralScene->config.spacing) + 5000.0f;
-    if (window.wasResized() || farPlaneChange != farPlane)
+    if (window.wasResized() || farPlaneChange > farPlane)
     {
         window.resetResizedFlag();
 		farPlane = farPlaneChange;
@@ -96,7 +122,9 @@ void SpiralApp::update(float deltaTime)
 
     if (benchmark.isRunning())
     {
-		benchmark.update(deltaTime, *spiralScene, camera.getPosition());
+        glm::vec3 currentCamPos = camera.getPosition();
+        benchmark.update(deltaTime, *spiralScene, currentCamPos);
+        camera.setPosition(currentCamPos);
     }
 
 	// check if benchmark just ended, if yes, reset the scene to default values
