@@ -135,6 +135,15 @@ void SpiralApp::update(float deltaTime)
 		renderer->setUseGPULODCompute(false);
 		renderer->setUseGPUSpiralCompute(false);
 		spiralScene->updateSpiralPositions(0.0f, false);
+        spiralScene->config.coneFactor = 0.5f;
+        spiralScene->config.speed = 30.0f;
+        spiralScene->config.numArms = 5;
+        spiralScene->config.twistSpeed = 0.02f;
+        spiralScene->config.spacing = 2.0f;
+        spiralScene->config.lodDist0 = 400.0f;
+        spiralScene->config.lodDist1 = 1200.0f;
+        spiralScene->config.lodDist2 = 3000.0f;
+        camera.setPosition(glm::vec3(0.0f, 0.0f, 155.0f));
     }
 }
 

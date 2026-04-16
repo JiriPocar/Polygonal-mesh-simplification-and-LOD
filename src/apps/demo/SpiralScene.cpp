@@ -6,7 +6,7 @@
 SpiralScene::SpiralScene(Device& dev, CommandManager& cmd, const std::string& modelPath, UniformBuffer& uniformBuffer)
 	: dev(dev), uniformBuffer(uniformBuffer), modelPath(modelPath)
 {
-	generateSpiralPositions();
+	initSpiralPositions();
 	generateLODVersions(cmd);
 	createInstanceBuffer();
 	createIndirectBuffer();
@@ -14,36 +14,15 @@ SpiralScene::SpiralScene(Device& dev, CommandManager& cmd, const std::string& mo
 	std::cout << "SpiralScene created" << std::endl;
 }
 
-void SpiralScene::generateSpiralPositions()
+void SpiralScene::initSpiralPositions()
 {
 	positions.clear();
 	positions.resize(MAX_INSTANCE_COUNT);
 	instanceData.resize(MAX_INSTANCE_COUNT);
 
-	float spacing = 2.0f;
-	int numArms = 5;
-	float minRadius = 10.0f;
-	float coneFactor = 0.5f;
-	float twistSpeed = 0.02f;
-
-	float totalLength = config.instanceCount * spacing;
-
 	for (int i = 0; i < config.instanceCount; i++)
 	{
-		float linearPos = (float)i * spacing;
-		float distance = fmod(linearPos, totalLength);
-		float currentZ = -distance;
-		float baseArmAngle = (i % numArms) * (6.28318f / numArms);
-		float twistAngle = abs(currentZ) * twistSpeed;
-		float finalAngle = baseArmAngle + twistAngle;
-		float currentRadius = minRadius + (abs(currentZ) * coneFactor);
-
-		glm::vec3 pos = glm::vec3(
-			currentRadius * cos(finalAngle),
-			currentRadius * sin(finalAngle),
-			currentZ
-		);
-
+		glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
 		positions.push_back(pos);
 		instanceData[i].pos = pos;
 		instanceData[i].modelTypeIndex = 0;

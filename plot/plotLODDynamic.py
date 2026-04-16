@@ -5,7 +5,7 @@ import numpy as np
 
 def plotLODTransitions(df):
     print("Plotting LOD Transitions...")
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(12, 8))
     
     maxFaces = (df['Instances'].iloc[0] * 960) / 1000000.0
     
@@ -47,7 +47,7 @@ def plotLODTransitions(df):
 
 def plotSceneFacesDynamic(df):
     print("Plotting Scene Faces Dynamic...")
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(12, 8))
     
     # get values for x and y axes
     x = df['CAMZ'].values
@@ -90,7 +90,7 @@ def main():
         return
 
     plt.style.use('tableau-colorblind10')
-    plt.rcParams.update({'axes.edgecolor': 'black', 'font.size': 12, 'axes.titlesize': 14, 'axes.labelsize': 12})
+    plt.rcParams.update({'axes.edgecolor': 'black', 'font.size': 14, 'axes.titlesize': 18, 'axes.labelsize': 16})
 
     plotLODTransitions(df)
     plotSceneFacesDynamic(df)

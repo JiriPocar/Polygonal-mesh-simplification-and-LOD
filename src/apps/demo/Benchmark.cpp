@@ -136,7 +136,7 @@ void Benchmark::update(float deltaTime, SpiralScene& spiralScene, glm::vec3& cam
 
 void Benchmark::buildConfigs()
 {
-	std::vector<uint32_t> instanceCounts = { 4000000, 3600000, 3200000, 2800000, 2400000, 2000000, 1600000, 1200000, 800000, 400000 };
+	std::vector<uint32_t> instanceCounts = { 6000000, 5600000, 5200000, 4800000, 4400000, 4000000, 3600000, 3200000, 2800000, 2400000, 2000000, 1600000, 1200000, 800000, 400000 };
 
 	for (uint32_t count : instanceCounts)
 	{

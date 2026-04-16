@@ -11,7 +11,7 @@
 #include "../../common/rendering/CommandManager.hpp"
 #include "../../common/rendering/UniformBuffer.hpp"
 
-const uint32_t MAX_INSTANCE_COUNT = 4000000;
+const uint32_t MAX_INSTANCE_COUNT = 6000000;
 
 // matches the structure in the shader for instance data
 struct SpiralInstanceData {
@@ -124,7 +124,7 @@ public:
 	SpiralConfig config;
 
 private:
-	void generateSpiralPositions();
+	void initSpiralPositions();
 	void generateLODVersions(CommandManager& cmd);
 	void createInstanceBuffer();
 	void updateInstancesCPU(const glm::vec3& cameraPos, uint32_t currentFrame);

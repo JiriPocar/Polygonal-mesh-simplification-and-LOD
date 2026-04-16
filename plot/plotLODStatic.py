@@ -29,7 +29,7 @@ def plotFrameTimeInstances(df):
     formattedLabels = [f"{int(x):,}".replace(',', ' ') for x in xLabels]
     
     # plot
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(12, 8))
     plt.grid(which='major', linestyle='--', color='gray', alpha=0.7)
     
     plt.plot(xLabels, cpuOnly, marker='o', linewidth=2, linestyle='-', label='CPU pozice na spirále / CPU výběr LOD')
@@ -61,7 +61,7 @@ def plotLODEnablingGPU(df):
     LODOFF = gpuOnly[gpuOnly['EnableLOD'] == 'Disabled']['AvgFrameTimeMs'].values
 
     # plot
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(12, 8))
     plt.grid(axis='y', which='major', linestyle='--', color='gray', alpha=0.7, zorder=0)
     width = 0.44
 
@@ -98,7 +98,7 @@ def plotLODEnablingCPU(df):
     LODOFF = gpuOnly[gpuOnly['EnableLOD'] == 'Disabled']['AvgFrameTimeMs'].values
 
     # plot
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(12, 8))
     plt.grid(axis='y', which='major', linestyle='--', color='gray', alpha=0.7, zorder=0)
     width = 0.44
 
@@ -141,7 +141,7 @@ def plotSceneFaces(df):
     width = 0.35
 
     # plot
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(12, 8))
     plt.grid(axis='y', which='major', linestyle='--', color='gray', alpha=0.7, zorder=0)
     plt.bar(xPos - width/2, facesON, width, edgecolor='black', hatch='//', label='LOD Zapnuto', zorder=2)
     plt.bar(xPos + width/2, facesOFF, width, edgecolor='black', label='LOD Vypnuto', zorder=2)
@@ -191,17 +191,17 @@ def plotSpeedupRatio(df):
     yLabels = [f"{y:.2f}x" for y in yTicks]
 
     # plot
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(12, 8))
     plt.grid(which='major', linestyle='--', color='gray', alpha=0.7, zorder = 0)
 
-    plt.plot(xLabels, speedupLODON, marker='o', linewidth=2.5, label='Výpočty na GPU (LOD Zapnuto)', zorder=3)
-    plt.plot(xLabels, speedupLODOFF, marker='s', linewidth=2.5, label='Výpočty na GPU (LOD Vypnuto)', zorder=3)
+    plt.plot(xLabels, speedupLODON, marker='o', linewidth=2.5, label='Výkon GPU (LOD Zapnuto)', zorder=3)
+    plt.plot(xLabels, speedupLODOFF, marker='s', linewidth=2.5, label='Výkon GPU (LOD Vypnuto)', zorder=3)
     plt.axhline(y=1, linestyle='--', color = 'red', linewidth=1.5, label='Výkon CPU')
 
     plt.yticks(yTicks, yLabels)
     plt.xticks(xLabels, formattedLabels, rotation=30)
 
-    plt.title('Zrychlení při použití výpočtu na GPU', pad=20)
+    plt.title('Zrychlení času snímku při využití GPU režimu', pad=20)
     plt.ylabel('Relativní zrychlení oproti CPU', labelpad=10)
     plt.xlabel('Počet instancí modelu ve scéně', labelpad=10)
 
@@ -222,7 +222,7 @@ def main():
     df['AvgFPS'] = np.where(df['AvgFrameTimeMs'] > 0, 1000.0 / df['AvgFrameTimeMs'], 0)
 
     plt.style.use('tableau-colorblind10')
-    plt.rcParams.update({'axes.edgecolor': 'black', 'font.size': 12, 'axes.titlesize': 14, 'axes.labelsize': 12})
+    plt.rcParams.update({'axes.edgecolor': 'black', 'font.size': 14, 'axes.titlesize': 18, 'axes.labelsize': 16})
 
     plotFrameTimeInstances(df)
     plotLODEnablingCPU(df)

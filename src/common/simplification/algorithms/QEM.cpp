@@ -130,7 +130,7 @@ namespace QEM {
 
 		// if determinant is non-zero, we can find optimal position by solving the linear system
 		float det = glm::determinant(MAT);
-		if (std::abs(det) > 1e-12)
+		if (std::abs(det) > 1e-6)
 		{
 			// vector b is the negation of the last column of Q
 			glm::dvec3 b(q.q14, q.q24, q.q34);

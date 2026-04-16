@@ -8,6 +8,7 @@
 plot/*.csv
 plot/*.svg
 plot/plotSimplification.py
+plot/runPlotSimplification.bat
 
 ## ===================================================================
 

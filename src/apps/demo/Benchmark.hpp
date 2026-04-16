@@ -11,7 +11,7 @@
 #include <fstream>
 
 const float WARMUPTIME = 10.0f;
-const float BENCHMARK_CONFIG_TIME = 15.0f;
+const float BENCHMARK_CONFIG_TIME = 20.0f;
 
 enum class BenchmarkMethod {
 	STATIC_CAMERA,
