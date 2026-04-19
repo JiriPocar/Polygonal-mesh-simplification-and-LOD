@@ -21,8 +21,8 @@ public:
 	/**
 	 * @brief Constructs a Device object. 
 	 * 
-	 * @param instance Vulkan instance.
-	 * @param surface Vulkan surface for presentation.
+	 * @param instance Vulkan instance
+	 * @param surface Vulkan surface for presentation
 	 */
 	Device(vk::Instance instance, vk::SurfaceKHR surface);
 	~Device();
@@ -46,21 +46,11 @@ public:
 	}
 
 	/**
-	 * @brief Finds a suitable memory type based on requirements.
-	 *
-	 * @param typeFilter Memory type bits to consider.
-	 * @param properties Desired memory properties.
-	 * 
-	 * @return vk::Device - member variable 'device'.
-	 */
-	uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const;
-
-	/**
 	 * @brief Finds a supported format from a list of candidates.
 	 *
-	 * @param candidates List of candidate formats.
-	 * @param tiling Desired image tiling (optimal, linear).
-	 * @param features Format features (depth stencil attachment).
+	 * @param candidates List of candidate formats
+	 * @param tiling Desired image tiling (optimal, linear)
+	 * @param features Format features (depth stencil attachment)
 	 *
 	 * @return vk::Format - a supported format that meets the criteria.
 	 */
@@ -73,35 +63,12 @@ public:
 	*/
 	vk::Format findDepthFormat();
 
-	/**
-	 * @brief Returns the graphics queue.
-	 * 
-	 * @return vk::Queue - member variable 'graphicsQueue'.
-	 */
-	vk::Queue getGraphicsQueue() const {
-		return graphicsQueue;
-	}
-
-	/**
-	 * @brief Returns the presentation queue.
-	 *
-	 * @return vk::Queue - member variable 'presentQueue'.
-	 */
-	vk::Queue getPresentQueue() const {
-		return presentQueue;
-	}
-
-	uint32_t getGraphicsQueueFamily() const {
-		return 0;
-	}
-
-	uint32_t getPresentQueueFamily() const {
-		return 0;
-	}
-
-	VmaAllocator getAllocator() const {
-		return allocator;
-	}
+	// getters
+	vk::Queue getGraphicsQueue() const { return graphicsQueue; }
+	vk::Queue getPresentQueue() const { return presentQueue; }
+	uint32_t getGraphicsQueueFamily() const { return graphicsQueueFamily; }
+	uint32_t getPresentQueueFamily() const { return presentQueueFamily; }
+	VmaAllocator getAllocator() const { return allocator; }
 
 private:
 	// structure to hold queue family indices
@@ -119,16 +86,16 @@ private:
 	/**
 	 * @brief Selects the first suitable physical device (GPU) that supports required features.
 	 * 
-	 * @param instance Vulkan instance.
-	 * @param surface Vulkan surface for presentation.
+	 * @param instance Vulkan instance
+	 * @param surface Vulkan surface for presentation
 	 */
 	void pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface);
 
 	/**
 	 * @brief Finds queue families that support graphics and presentation.
 	 * 
-	 * @param device Vulkan physical device to evaluate.
-	 * @param surface Vulkan surface for presentation.
+	 * @param device Vulkan physical device to evaluate
+	 * @param surface Vulkan surface for presentation
 	 * 
 	 * @return QueueFamilyIndices - structure containing indices of graphics and presentation queue families.
 	 */
@@ -137,7 +104,7 @@ private:
 	/**
 	 * @brief Creates a logical device from the first suitable physical device and retrieves the graphics and presentation queues.
 	 * 
-	 * @param surface Vulkan surface for presentation.
+	 * @param surface Vulkan surface for presentation
 	 */
 	void createLogicalDevice(vk::SurfaceKHR surface);
 
