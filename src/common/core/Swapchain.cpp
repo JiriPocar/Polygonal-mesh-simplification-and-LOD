@@ -60,15 +60,14 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 	{
 		for (const auto& availablePresentMode : supportDetails.presentModes)
 		{
-			// lowest latency mode, may cause tearing
-			if (availablePresentMode == vk::PresentModeKHR::eImmediate)
-			{
+			if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
+				std::cout << "Mailbox present mode supported, using it for swapchain." << std::endl;
 				presentMode = availablePresentMode;
 				break;
 			}
-
-			// fallback to mailbox
-			if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
+			if (availablePresentMode == vk::PresentModeKHR::eImmediate)
+			{
+				std::cout << "Immediate present mode supported, using it for swapchain." << std::endl;
 				presentMode = availablePresentMode;
 				break;
 			}
