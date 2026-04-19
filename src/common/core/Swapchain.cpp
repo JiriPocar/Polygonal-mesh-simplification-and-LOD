@@ -1,14 +1,37 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Swapchain.hpp
+ * @brief Swapchain management for Vulkan application.
+ *
+ * This file contains the implementation of the Swapchain class,
+ * which is responsible for creating and managing the Vulkan swapchain,
+ * including image views and depth resources.
+ *
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
+ */
+
 #include "Swapchain.hpp"
 #include "Device.hpp"
 #include <stdexcept>
 #include <iostream>
 
 Swapchain::Swapchain(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
-	: swapchainDevice(device) // initialize the swapchain "device" variable with the provided device
+	: swapchainDevice(device)
 {
 	createSwapchain(surface, width, height);
 	createImageViews();
 	createDepthResources();
+}
+
+Swapchain::~Swapchain()
+{
+	cleanup();
 }
 
 void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t height)
@@ -118,33 +141,35 @@ void Swapchain::createDepthResources()
 	// find a supported depth format
 	depthFormat = swapchainDevice.findDepthFormat();
 
-	// create depth image
-	vk::ImageCreateInfo imageInfo(
-		{},													// flags
-		vk::ImageType::e2D,									// imageType
-		depthFormat,										// format
-		vk::Extent3D{ extent.width, extent.height, 1 },		// extent
-		1,													// mipLevels
-		1,													// arrayLayers
-		vk::SampleCountFlagBits::e1,						// samples
-		vk::ImageTiling::eOptimal,							// tiling
-		vk::ImageUsageFlagBits::eDepthStencilAttachment 	// usage
-	);
-	depthImage = swapchainDevice.operator*().createImageUnique(imageInfo);
+	// create depth image using VMA
+	VkImageCreateInfo imageInfo = {};
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.format = static_cast<VkFormat>(depthFormat);
+	imageInfo.extent = { extent.width, extent.height, 1 };
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-	// allocate memory for the depth image
-	vk::MemoryRequirements memRequirements = swapchainDevice.operator*().getImageMemoryRequirements(*depthImage);
-	vk::MemoryAllocateInfo allocInfo(
-		memRequirements.size,
-		swapchainDevice.findMemoryType(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal)
-	);
-	depthImageMemory = swapchainDevice.operator*().allocateMemoryUnique(allocInfo);
-	swapchainDevice.operator*().bindImageMemory(*depthImage, *depthImageMemory, 0);
+	// allocate memory for the depth image with VMA
+	VmaAllocationCreateInfo allocInfo = {};
+	allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	VkImage rawImage;
+	if (vmaCreateImage(swapchainDevice.getAllocator(), &imageInfo, &allocInfo, &rawImage, &depthImageAllocation, nullptr) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to create depth image with VMA...");
+	}
 
-	// create image view for the depth image
+	depthImage = rawImage;
+
+	// create image view for the depth image (C++ API)
 	vk::ImageViewCreateInfo viewInfo(
 		{},										// flags
-		*depthImage,							// image
+		depthImage,								// image
 		vk::ImageViewType::e2D,					// viewType
 		depthFormat,							// format
 		{},										// components
@@ -204,6 +229,13 @@ void Swapchain::cleanup()
 	swapchain.reset();
 	images.clear();
 	depthImageView.reset();
-	depthImage.reset();
-	depthImageMemory.reset();
+
+	if (depthImage)
+	{
+		vmaDestroyImage(swapchainDevice.getAllocator(), depthImage, depthImageAllocation);
+		depthImage = VK_NULL_HANDLE;
+		depthImageAllocation = VK_NULL_HANDLE;
+	}
 }
+
+/* End of the Swapchain.cpp file */

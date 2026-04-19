@@ -1,9 +1,9 @@
 /**
  * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
  * @file Renderer.hpp
- * @brief Source file for the base Renderer class.
+ * @brief Header file for the base Renderer class.
  *
- * This file implements the Renderer class, which serves as a base for specific
+ * This file implements the Renderer class, which serves as a base class for specific
  * renderers in the application. It manages common Vulkan rendering tasks such as
  * synchronization, command buffer management, and swapchain recreation on window resize.
  */
@@ -32,16 +32,34 @@ public:
         Window& window,
         vk::SurfaceKHR surface
     );
-
     virtual ~Renderer();
 
+	// recreates the swapchain and all dependent resources
     void recreateSwapchain();
+
+    // getters
 	uint32_t getCurrentFrame() const { return currentFrame; }
 
     static const int MAX_FRAMES_IN_FLIGHT = 2;
 
 protected:
+    /**
+	* @brief Begins recording a command buffer for the current frame
+    *        and acquires the next image from the swapchain.
+    * 
+	* @param outImgIdx Output parameter to receive the index of the acquired swapchain image
+    * 
+	* @return vk::CommandBuffer ready command buffer
+    */
     vk::CommandBuffer beginFrame(uint32_t& outImgIdx);
+
+    /**
+	* @brief Ends recording of the command buffer for the current frame,
+    *        submits it to the graphics queue, and presents the swapchain image.
+    * 
+	* @param cmd The command buffer that was recorded for the current frame
+	* @param imgIdx Index of the swapchain image that was acquired for the current frame
+    */
     void endFrame(vk::CommandBuffer cmd, uint32_t imgIdx);
 
     Device& m_device;

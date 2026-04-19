@@ -40,7 +40,7 @@
 
 namespace VertexDecimation {
 
-	double computeVertexError(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, CollapseOptions& options, std::vector<bool>& isLocked)
+	double computeVertexError(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, SimplificationOptions& options, std::vector<bool>& isLocked)
 	{
 		if (isLocked[vertexIdx])
 		{
@@ -116,7 +116,7 @@ namespace VertexDecimation {
 		}
 	}
 
-	VertexClassification classifyVertex(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, CollapseOptions& options)
+	VertexClassification classifyVertex(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, SimplificationOptions& options)
 	{
 		if (!info.isActive)
 		{
@@ -504,7 +504,7 @@ namespace VertexDecimation {
 		return newTriangles;
 	}
 
-	void updateLocalTopology(std::vector<VertexInfo>& vertexInfo, LazyPriorityQueue<DecimationCandidate, DecimationCompare>& candidatesQueue, std::vector<uint32_t>& newTriangles, std::vector<uint32_t>& indices, uint32_t removedVertexIdx, std::vector<Vertex>& vertices, CollapseOptions& options, std::vector<bool>& isLocked)
+	void updateLocalTopology(std::vector<VertexInfo>& vertexInfo, LazyPriorityQueue<DecimationCandidate, DecimationCompare>& candidatesQueue, std::vector<uint32_t>& newTriangles, std::vector<uint32_t>& indices, uint32_t removedVertexIdx, std::vector<Vertex>& vertices, SimplificationOptions& options, std::vector<bool>& isLocked)
 	{
 		// mark the vertex as inactive
 		vertexInfo[removedVertexIdx].isActive = false;

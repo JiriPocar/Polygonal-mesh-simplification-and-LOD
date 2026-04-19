@@ -14,7 +14,7 @@
 #define VK_USE_PLATFORM_XCB_KHR
 #endif
 #include <vulkan/vulkan.hpp>
-#include <memory> // unique_ptr etc.
+#include <memory>
 
 class Instance
 {
@@ -22,25 +22,14 @@ public:
 	/**
 	 * @brief Constructs a Vulkan instance with optional validation layers.
 	 * 
-	 * @param validation If true, enables validation layers for debugging.
+	 * @param validation If true, enables validation layers for debugging
 	 */
 	Instance(bool validation);
 	~Instance() = default;
 
-	/**
-	 * @brief Returns the Vulkan instance.
-	 *
-	 * @return vk::Instance - member variable 'instance'.
-	 */
-	operator vk::Instance() const
-	{
-		return *instance;
-	}
-
-	vk::Instance get() const
-	{
-		return *instance;
-	}
+	// getters
+	operator vk::Instance() const { return *instance; }
+	vk::Instance get() const { return *instance; }
 
 private:
 	vk::UniqueInstance instance;

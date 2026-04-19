@@ -11,7 +11,7 @@
 #include <filesystem>
 #include <iostream>
 #include <chrono>
-#include "../scene/SpiralScene.hpp"
+#include "../../apps/demo/SpiralScene.hpp"
 
 UserInterface::UserInterface(Instance &instance, Device& dev, Swapchain& swapchain, RenderPass& renderPass, Window& window, CommandManager& cmdManager)
 	: uiDevice(dev), uiInstance(instance), uiSwapchain(swapchain), uiRenderPass(renderPass), uiWindow(window), uiCmdManager(cmdManager), simplificator()
@@ -89,7 +89,7 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 	{
 		showModelMenu(currentDualModel, device, renderer, transform);
 		showSimplificationControls(currentDualModel, device);
-		showSimplificationResults();
+		showSimplificationResults(currentDualModel);
 		showModelPerspectiveControls(transform);
 		showWireframeControls(renderer);
 		showSmoothingControls();
@@ -204,6 +204,8 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 					float setScale = currentDualModel->getOriginalModel().getScaleIndex();
 					transform.setScale(glm::vec3(setScale, setScale, setScale));
 					renderer.setDualModel(*currentDualModel);
+					selectedModel = modelPath;
+					hasSimplificationResult = false;
 					std::cout << "Loaded model: " << modelPath << std::endl;
 				}
 				catch (const std::exception& e) {
@@ -212,13 +214,6 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 			}
 		}
 		ImGui::EndChild();
-	}
-
-	ImGui::Separator();
-
-	if (ImGui::Button("Refresh List"))
-	{
-		scanModels();
 	}
 
 	ImGui::End();
@@ -245,15 +240,30 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	Algorithm currentAlgorithm = simplificator.getCurrentAlgorithm();
 
 	// provisional solution, TODO: make this quite more elegant
-	const char* algorithms[] = { "QEM", "Vertex Clustering", "Floating-cell clustering", "Vertex Decimation", "Naive"};
+	const char* algorithms[] = { "QEM", "Vertex Clustering", "Floating-cell clustering", "Vertex Decimation", "Naive", "Random"};
 	if (ImGui::BeginCombo("Algorithm", algorithms[static_cast<int>(currentAlgorithm)]))
 	{
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 6; i++)
 		{
 			if (ImGui::Selectable(algorithms[i], currentAlgorithm == static_cast<Algorithm>(i)))
 			{
+				// select algorithm
 				currentAlgorithm = static_cast<Algorithm>(i);
 				simplificator.setCurrentAlgorithm(currentAlgorithm);
+
+				// set options to default for the new algorithm
+				simplificator.options.checkFaceFlipping = false;
+				simplificator.options.checkConnectivity = false;
+				simplificator.options.preserveBorders = false;
+				simplificator.options.resolveUVSeams = false;
+				simplificator.options.lockUVSeams = false;
+				simplificator.options.enableMerging = false;
+				simplificator.options.mergeCloseVertivesPos = false;
+				simplificator.options.mergeCloseVerticesUV = false;
+				simplificator.options.mergeCloseVerticesNormal = false;
+				simplificator.options.computeHausdorff = false;
+				simplificator.options.computeMSE = false;
+				simplificator.options.featureAngleThreshold = 30.0f;
 			}
 		}
 
@@ -411,6 +421,58 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		ImGui::SliderFloat("Feature angle", &simplificator.options.featureAngleThreshold, 0.0f, 180.0f, "%.1f degrees");
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Maximum angle between adjacent face normals to be considered a smooth surface. Lower values preserve more sharp edges.");
 	}
+	else if (currentAlgorithm == Algorithm::Random)
+	{
+		ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "EXPERIMENTAL SIMPLIFICATION");
+		ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "POSSIBLE LIVELOCK AT HIGH REDUCTIONS!");
+		ImGui::Separator();
+		ImGui::Text("Edge collapse constraints");
+		ImGui::Checkbox("Check face flipping", &simplificator.options.checkFaceFlipping);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Prevents collapses that would cause faces to flip their normal direction, which can lead to visual artifacts.");
+		ImGui::Checkbox("Check connectivity", &simplificator.options.checkConnectivity);
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ensures that collapses do not disconnect the mesh, which can create holes or separate parts of the model.");
+		ImGui::Separator();
+		ImGui::Text("Holes prevention");
+		if (ImGui::Checkbox("Enable merging vertices", &simplificator.options.enableMerging))
+		{
+			if (simplificator.options.enableMerging)
+			{
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+			else
+			{
+				simplificator.options.mergeCloseVertivesPos = false;
+				simplificator.options.mergeCloseVerticesUV = false;
+				simplificator.options.mergeCloseVerticesNormal = false;
+			}
+		}
+		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Vertices with the selected criteria will be merged. Use when textures dont matter.");
+		ImGui::Indent();
+
+		if (ImGui::Checkbox("Merge by position", &simplificator.options.mergeCloseVertivesPos))
+		{
+			if (simplificator.options.mergeCloseVertivesPos) simplificator.options.enableMerging = true;
+		}
+
+		if (ImGui::Checkbox("Merge by UV", &simplificator.options.mergeCloseVerticesUV))
+		{
+			if (simplificator.options.mergeCloseVerticesUV)
+			{
+				simplificator.options.enableMerging = true;
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+		}
+
+		if (ImGui::Checkbox("Merge by normal", &simplificator.options.mergeCloseVerticesNormal))
+		{
+			if (simplificator.options.mergeCloseVerticesNormal)
+			{
+				simplificator.options.enableMerging = true;
+				simplificator.options.mergeCloseVertivesPos = true;
+			}
+		}
+		ImGui::Unindent();
+	}
 	
 
 	ImGui::Separator();
@@ -435,6 +497,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	{
 		if (ImGui::Button("Revert"))
 		{
+			hasSimplificationResult = false;
 			device.operator*().waitIdle(); // wait for device to be idle before reverting
 			currentDualModel->revertSimplification();
 		}
@@ -443,10 +506,10 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	ImGui::End();
 }
 
-void UserInterface::showSimplificationResults()
+void UserInterface::showSimplificationResults(std::unique_ptr<DualModel>& currentDualModel)
 {
-	ImGui::SetNextWindowPos(ImVec2(1490, 630));
-	ImGui::SetNextWindowSize(ImVec2(300, 260));
+	ImGui::SetNextWindowPos(ImVec2(1490, 610));
+	ImGui::SetNextWindowSize(ImVec2(300, 280));
 
 	ImGui::Begin("Simplification Results");
 
@@ -516,7 +579,7 @@ void UserInterface::showSimplificationResults()
 			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Maximum distance from any vertex in either mesh to the closest point on the other mesh.");
 			ImGui::Text("Hausdorf distance:");
 			ImGui::SameLine();
-			ImGui::Text("%.2f", lastResult.hausdorffDistance);
+			ImGui::Text("%.5f", lastResult.hausdorffDistance);
 		}
 
 		if (simplificator.options.computeMSE)
@@ -525,6 +588,34 @@ void UserInterface::showSimplificationResults()
 			ImGui::Text("Mean squared error:");
 			ImGui::SameLine();
 			ImGui::Text("%.5f", lastResult.mseError);
+		}
+
+		if (ImGui::Button("Export OBJ"))
+		{
+			// initial 'duck' model load hack
+			if (selectedModel.empty())
+			{
+				selectedModel = "assets/Duck.gltf";
+			}
+
+			// get Duck from assets/Duck.gltf
+			std::string baseName = std::filesystem::path(selectedModel).stem().string();
+			std::string outDir = "out/" + baseName;
+
+			std::filesystem::create_directories(outDir);
+
+			// export original model
+			std::string origPath = outDir + "/" + baseName + "_orig.obj";
+			std::vector<MeshData> origData;
+			for (const auto& mesh : currentDualModel->getOriginalModel().getMeshes())
+			{
+				origData.push_back({ mesh->extractVertices(), mesh->extractIndices() });
+			}
+			simplificator.exportOBJ(origPath, origData);
+
+			// export simplified model
+			std::string simpPath = outDir + "/" + baseName + "_simp.obj";
+			simplificator.exportOBJ(simpPath, lastResult.meshesData);
 		}
 	}
 	else
@@ -565,15 +656,21 @@ void UserInterface::showModelPerspectiveControls(Transform& transform)
 
 void UserInterface::showBenchmarkStart(Benchmark& benchmark)
 {
-	// make a button
-	ImGui::SetNextWindowPos(ImVec2(1660, 855)); // 920 - 55+10
-	ImGui::SetNextWindowSize(ImVec2(130, 55));
+	ImGui::SetNextWindowPos(ImVec2(1600, 835));
+	ImGui::SetNextWindowSize(ImVec2(190, 85));
 	ImGui::Begin("Benchmark");
-	if (ImGui::Button("Start Benchmark"))
+	if (ImGui::Button("Start static benchmark"))
 	{
 		if (!benchmark.isRunning())
 		{
-			benchmark.start();
+			benchmark.startStatic();
+		}
+	}
+	if (ImGui::Button("Start dynamic benchmark"))
+	{
+		if (!benchmark.isRunning())
+		{
+			benchmark.startDynamic();
 		}
 	}
 
@@ -584,9 +681,9 @@ void UserInterface::showBenchmarkStatus(Benchmark& benchmark)
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 10));
 	ImGui::SetNextWindowSize(ImVec2(330, 900));
-	ImGui::Begin("Benchmark Status");
-	if (benchmark.isRunning())
+	if (benchmark.isRunning() && benchmark.getMethod() == BenchmarkMethod::STATIC_CAMERA)
 	{
+		ImGui::Begin("Benchmark Status");
 		// do a table printup for each config
 		for (int i = 0; i < benchmark.getNumberOfConfigs(); i++)
 		{
@@ -649,8 +746,8 @@ void UserInterface::showBenchmarkStatus(Benchmark& benchmark)
 				ImGui::Spacing();
 			}
 		}
+		ImGui::End();
 	}
-	ImGui::End();
 }
 
 Transform UserInterface::fetchTransform()
@@ -681,7 +778,7 @@ void UserInterface::showSmoothingControls()
 
 void UserInterface::showSurfaceApproximationErrorControls()
 {
-	ImGui::SetNextWindowPos(ImVec2(1490, 530));
+	ImGui::SetNextWindowPos(ImVec2(1490, 510));
 	ImGui::SetNextWindowSize(ImVec2(300, 90));
 	
 	ImGui::Begin("Compute approximation error");
@@ -694,6 +791,7 @@ void UserInterface::showSurfaceApproximationErrorControls()
 	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enables Mean squared error computation during simplification.");
 
 	ImGui::End();
+	ImGui::Separator();
 }
 
 void UserInterface::showWireframeControls(SimplificatorRenderer& renderer)
@@ -755,9 +853,9 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 	ImGui::SetNextWindowPos(ImVec2(1495, 10));
 	ImGui::SetNextWindowSize(ImVec2(300, 200));
 
-	ImGui::Begin("Scene Info");
+	ImGui::Begin("Scene info");
 
-	ImGui::Text("Instance Count:");
+	ImGui::Text("Instance count:");
 	ImGui::SameLine();
 	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%d", scene.config.instanceCount);
 
@@ -766,16 +864,17 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 	static float updateTimer = 0.0f;
 	static uint32_t currentDrawnTriangles = 0;
 	updateTimer += ImGui::GetIO().DeltaTime;
+	static std::array<uint32_t, 4> lodInstances;
 	if (updateTimer >= 0.5f)
 	{
-		currentDrawnTriangles = scene.calculateCurrentDrawnTriangles(camPos);
+		currentDrawnTriangles = scene.calculateCurrentDrawnTriangles(camPos, lodInstances);
 		updateTimer = 0.0f;
 	}
-	ImGui::Text("Drawn Triangles:");
+	ImGui::Text("Drawn triangles:");
 	ImGui::SameLine();
 	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%u", currentDrawnTriangles);
 
-	ImGui::Text("Total Length:");
+	ImGui::Text("Max length:");
 	ImGui::SameLine();
 	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%.2f units", scene.config.instanceCount * scene.config.spacing);
 
@@ -783,15 +882,16 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 
 	auto& lodSet = scene.getModelLODSet(0);
 
-	ImGui::Text("LOD Mesh Statistics:");
+	ImGui::Text("LOD Mesh statistics:");
 
-	if (ImGui::BeginTable("LODStats", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+	if (ImGui::BeginTable("LODStats", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
 	{
 		if (scene.config.enableLOD)
 		{
 			ImGui::TableSetupColumn("LOD Level");
 			ImGui::TableSetupColumn("Vertices");
 			ImGui::TableSetupColumn("Faces");
+			ImGui::TableSetupColumn("Number");
 			ImGui::TableHeadersRow();
 
 			for (int i = 0; i < 4; ++i)
@@ -810,6 +910,9 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 
 				ImGui::TableSetColumnIndex(2);
 				ImGui::Text("%u", fCount);
+
+				ImGui::TableSetColumnIndex(3);
+				ImGui::Text("%u", lodInstances[i]);
 			}
 			ImGui::EndTable();
 		}
@@ -871,7 +974,7 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 		ImGui::SliderFloat("LOD0 Range", &scene.config.lodDist0, 10.0f,				   scene.config.lodDist1);
 		ImGui::SliderFloat("LOD1 Range", &scene.config.lodDist1, scene.config.lodDist0, scene.config.lodDist2);
 		ImGui::SliderFloat("LOD2 Range", &scene.config.lodDist2, scene.config.lodDist1, scene.config.lodDist3);
-		ImGui::SliderFloat("LOD3 Range", &scene.config.lodDist3, scene.config.lodDist2, 20000.0f);
+		//ImGui::SliderFloat("LOD3 Range", &scene.config.lodDist3, scene.config.lodDist2, 20000.0f);
 
 		ImGui::Separator();
 
@@ -901,10 +1004,10 @@ void UserInterface::showSpiralControls(SpiralScene& scene)
 
 	// shape
 	ImGui::Text("Shape Parameters");
-	ImGui::SliderFloat("Spacing", &scene.config.spacing, 0.5f, 20.0f);
-	ImGui::SliderInt("Arms (Num)", &scene.config.numArms, 1, 12);
+	ImGui::SliderFloat("Spacing", &scene.config.spacing, 0.1f, 20.0f);
+	ImGui::SliderInt("Arms", &scene.config.numArms, 1, 12);
 	ImGui::SliderFloat("Min Radius", &scene.config.minRadius, 0.0f, 100.0f);
-	ImGui::SliderFloat("Cone Factor", &scene.config.coneFactor, 0.0f, 2.0f);
+	ImGui::SliderFloat("Cone Factor", &scene.config.coneFactor, 0.0f, 10.0f);
 	ImGui::Separator();
 
 	// animation
@@ -930,6 +1033,7 @@ const char* UserInterface::getAlgName(Algorithm algorithm)
 	case Algorithm::FloatingCellClustering: return "Floating cell clustering";
 	case Algorithm::VertexClustering: return "Vertex clustering";
 	case Algorithm::VertexDecimation: return "Vertex decimation";
+	case Algorithm::Random: return "Random edge collapse";
 	default: return "Other";
 	}
 }

@@ -108,8 +108,8 @@ BP Pocarovsky
 	- [ ] Naive simplification
 		- [ ] Optimized
 		- [ ] Twin tracking
-	- [ ] Random edge collapse
-		- [ ] Implementation 
+	- [x] Random edge collapse
+		- [x] Implementation 
 	- [x] Vertex decimation
 		- [x] Research
 		- [x] Implementation
@@ -127,18 +127,17 @@ BP Pocarovsky
 	- [ ] Implement popping effect reduction techniques
 		- [ ] Cross fading
 	- [ ] Performance comparison
-		- [ ] Set up environment for performance testing 
+		- [x] Set up environment for performance testing 
 			- [ ] Simplification
-			- [ ] Spiral
-		- [ ] Save performance statistics to file
-		- [ ] Create graphs using ```python```, ```matplotlib```, ...
+			- [x] Spiral
+		- [x] Save performance statistics to file
+		- [x] Create graphs using ```python```, ```matplotlib```, ...
 	- [ ] Visual comparison
 		- [x] Hausdorff Distance
 		- [x] Mean Squared Error
 		- [ ] Use MeshLab for visual comparison of models
 	- [ ] Moving scene(s) with dynamic LOD adjustment
 		- [x] Spiral scene with moving parts
-		- [ ] Simple scene with car driving through "mountains"
 		
 - [ ] General TODO's
 	- [x] Texture loading
@@ -148,7 +147,7 @@ BP Pocarovsky
 		- [x] Debug (result) window
 		- [x] Spiral scene - LOD threshold controls
 		- [x] Enable / disable UI option
-	- [ ] Performance research
+	- [x] Performance research
 	- [ ] Export model option (.obj is trivial, .gltf is a bit tricky)
 	- [ ] Use MeshLab for visual comparison of models
 
@@ -156,7 +155,7 @@ BP Pocarovsky
 - Theoretical part of the thesis
 	- Many re-iterations of existing chapters (Nanite, model repr., Vulkan chapter, ..)
 	- Some reiterations left (simpl. methods, )
-	- Completed remaining chapters (CLOD, View-dependent LOD, additional techniques, libraries)
+	- Completed remaining theory chapters (CLOD, View-dependent LOD, additional techniques, libraries)
 	- Structure changes in chapters (chronology)
 	- Formal side of the thesis improved (figures, equations, pointers to these)
 - Implementation part of the thesis
@@ -164,10 +163,14 @@ BP Pocarovsky
 	- Format of the design and implementation chapters to be decided
 		- Added Spiral app design
 		- Added Simplificator app design
+	- Added implementation details for the simplificator app
+	- Added implementation details for the spiral app
+	- Split implementation into technical part and result part
 - Application
 	- Added VMA (Spiral CPU-compute boost, tweaking desired comparison)
 		- Some thorough testing was done here, to assure that the performance boost is not a fluke
 	- Refactored spaghetti ```main``` codes
+	- Refactored shared Vulkan code for both apps into common library
 	- Added base python scripts for performance statistics visualization
 	- SPIRAL APP
 		- Several UI and QoL Spiral app improvements (wireframe mode in particular)
@@ -175,7 +178,8 @@ BP Pocarovsky
 		- Completed twin tracking for QEM simplification
 		- Completed Vertex Decimation simplification
 		- Several UI improvements in the simplificator app
-		- Added 'basic' Hausdorff distance and MSE calculations
+		- Added Hausdorff distance and MSE calculations
+		- Added 'Random' edge removal
 - Other
 	- Visited a lecture about computer graphics in KCD2
 		- 50 000 up to 100 000 triangles per character

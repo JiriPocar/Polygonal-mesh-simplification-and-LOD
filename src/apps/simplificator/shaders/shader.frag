@@ -22,7 +22,7 @@ void main() {
     vec4 textureColor = texture(texSampler, fragTexCoord);
     vec3 lightDir = normalize(ubo.cameraPos - fragPos);
     float diff = max(dot(normalize(fragColor), lightDir), 0.1);
-    vec3 finalColor = diff * textureColor.rgb;
+    vec3 finalColor = diff * 0.75 * textureColor.rgb;
 
     outColor = vec4(finalColor, 1.0);
 }

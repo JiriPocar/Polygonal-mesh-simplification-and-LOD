@@ -91,7 +91,7 @@ namespace VertexDecimation {
     * 
     * @return error value of vertex at vertexIdx
     */
-    double computeVertexError(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, CollapseOptions& options, std::vector<bool>& isLocked);
+    double computeVertexError(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, SimplificationOptions& options, std::vector<bool>& isLocked);
     
     /**
     * @brief Classifies a vertex based on its neighborhood using directed edge graph.
@@ -105,7 +105,7 @@ namespace VertexDecimation {
     * 
 	* @return classification of the vertex at vertexIdx
     */
-    VertexClassification classifyVertex(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, CollapseOptions& options);
+    VertexClassification classifyVertex(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, SimplificationOptions& options);
 
     /**
 	* @brief Computes the vertex metadata for ALL vertices in the mesh, including their neighborhood and classification.
@@ -137,7 +137,7 @@ namespace VertexDecimation {
         std::vector<uint32_t>& indices,
         uint32_t removedVertexIdx,
         std::vector<Vertex>& vertices,
-        CollapseOptions& options,
+        SimplificationOptions& options,
         std::vector<bool>& isLocked
     );
 

@@ -177,7 +177,7 @@ namespace Topology
 		return count;
 	}
 
-	std::vector<bool> findLockedVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<uint32_t>& representatives, const CollapseOptions& options)
+	std::vector<bool> findLockedVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<uint32_t>& representatives, const SimplificationOptions& options)
 	{
 		std::vector<bool> isLocked(vertices.size(), false);
 
@@ -385,61 +385,5 @@ namespace Topology
 		return sharedVertices == sharedFaces;
 	}
 
-	bool isCollapseValid(uint32_t v1, uint32_t v2,std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, CollapseOptions& options, const std::vector<bool>& isBorderVertex, const std::vector<std::vector<uint32_t>>& twinMap, std::vector<Topology::Neighborhood>& allNeighborhoods)
-	{
-		if (options.preserveBorders)
-		{
-			if (isBorderVertex[v1] || isBorderVertex[v2])
-			{
-				return false;
-			}
-		}
-
-		if (options.checkFaceFlipping)
-		{
-			if (checkFaceFlipping(vertices[v2].pos, vertices[v1].pos, v2, indices, vertices))
-			{
-				return false;
-			}
-		}
-
-		if (options.checkConnectivity)
-		{
-			if (!checkConnectivity(v1, v2, indices, allNeighborhoods[v1], allNeighborhoods[v2]))
-			{
-				return false;
-			}
-
-			if (options.resolveUVSeams)
-			{
-				std::vector<uint32_t> keepCandidates = twinMap[v1];
-				keepCandidates.push_back(v1);
-
-				for (uint32_t twinToRemove : twinMap[v2])
-				{
-					uint32_t bestTwinKeep = v1;
-					float minDiff = FLT_MAX;
-
-					for (uint32_t candidate : keepCandidates)
-					{
-						float uvDiff = glm::length(vertices[twinToRemove].texCoord - vertices[candidate].texCoord);
-						float normDiff = glm::length(vertices[twinToRemove].normal - vertices[candidate].normal);
-						if (uvDiff + normDiff < minDiff)
-						{
-							minDiff = uvDiff + normDiff;
-							bestTwinKeep = candidate;
-						}
-					}
-
-					if (!checkConnectivity(bestTwinKeep, twinToRemove, indices, allNeighborhoods[bestTwinKeep], allNeighborhoods[twinToRemove]))
-					{
-						return false;
-					}
-				}
-			}
-		}
-
-		return true;
-	}
 }
 /* End of the Topology.cpp file */

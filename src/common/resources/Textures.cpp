@@ -1,3 +1,20 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Textures.hpp
+ * @brief Texture management for Vulkan application.
+ *
+ * This file implements the loading an image from a file, creating a Vulkan image, allocating
+ * memory for it using VMA and creating an image view and sampler.
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
+ */
+
 #include "Textures.hpp"
 
 #include "../external/tinygltf/stb_image.h"
@@ -135,3 +152,5 @@ void Texture::createTextureSampler()
 
 	sampler = dev.operator*().createSamplerUnique(samplerInfo);
 }
+
+/* End of the Textures.cpp file */

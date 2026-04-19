@@ -14,9 +14,11 @@
 #pragma once
 
 #include "../../common/rendering/Renderer.hpp"
-#include "../../common/core/SpiralPipeline.hpp"
+#include "../../common/core/Pipeline.hpp"
+#include "../../common/core/ComputePipeline.hpp"
 #include "../../common/scene/Camera.hpp"
-#include "../../common/scene/SpiralScene.hpp"
+//#include "../../common/scene/SpiralScene.hpp"
+#include "../apps/demo/SpiralScene.hpp"
 #include "../../common/rendering/UniformBuffer.hpp"
 #include "../../common/rendering/Descriptors.hpp"
 
@@ -29,7 +31,7 @@ public:
         Device& device,
         Swapchain& swapchain,
         RenderPass& renderPass,
-        SpiralPipeline& pipeline,
+        Pipeline& pipeline,
         FrameBuffer& framebuffer,
         CommandManager& commandManager,
         Window& window,
@@ -43,9 +45,9 @@ public:
 
     void drawFrame(const Camera& camera, UserInterface& ui);
 
-    void setWireframePipeline(SpiralPipeline& pipeline) { m_wireframePipeline = &pipeline; }
+    void setWireframePipeline(Pipeline& pipeline) { m_wireframePipeline = &pipeline; }
     void setShowWireframe(bool show) { showWireframe = show; }
-    void setComputePipeline(SpiralComputePipeline& pipeline) { m_computePipeline = &pipeline; }
+    void setComputePipeline(ComputePipeline& pipeline) { m_computePipeline = &pipeline; }
 
     void refreshTextureDescriptors();
 
@@ -64,9 +66,9 @@ public:
     bool getUseGPUSpiralCompute() const { return useGPUSpiralCompute; }
 
 private:
-    SpiralPipeline& m_pipeline;
-    SpiralPipeline* m_wireframePipeline = nullptr;
-    SpiralComputePipeline* m_computePipeline = nullptr;
+    Pipeline& m_pipeline;
+    Pipeline* m_wireframePipeline = nullptr;
+    ComputePipeline* m_computePipeline = nullptr;
     SpiralScene& m_spiralScene;
     UniformBuffer& m_uniformBuffer;
     Descriptor& m_descriptor;

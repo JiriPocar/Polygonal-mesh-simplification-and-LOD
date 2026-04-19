@@ -2,7 +2,7 @@
 #include "utils/Geometry.hpp"
 #include "utils/Topology.hpp"
 #include "utils/LazyPriorityQueue.hpp"
-#include "utils/SurfApprox.hpp"
+#include "utils/ErrorMetrics.hpp"
 #include "algorithms/QEM.hpp"
 #include "algorithms/VertexClustering.hpp"
 #include "algorithms/FloatingCellClustering.hpp"
@@ -11,6 +11,7 @@
 #include <chrono>
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 
 Simplificator::Simplificator()
 {
@@ -40,13 +41,19 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 	float totalSquaredErrorSum = 0.0f;
 	size_t totalVertexCount = 0;
 
-	std::cout << "Simplify called with parameter: " << targetFaceCountRatio << std::endl;
-
+	// per mesh simplification
 	const auto& meshes = model.getMeshes();
 	for (const auto& mesh : meshes)
 	{
 		auto vertices = mesh->extractVertices();
 		auto indices = mesh->extractIndices();
+
+		// =========================================================================
+		// pre-processing
+		if (options.enableMerging)
+		{
+			Geometry::mergeCloseVertices(vertices, indices, options);
+		}
 
 		size_t originalFaceCount = indices.size() / 3;
 
@@ -59,7 +66,10 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		{
 			targetFaceCount = static_cast<size_t>(originalFaceCount * targetFaceCountRatio);
 		}
+		// =========================================================================
 
+		// =========================================================================
+		// simplification loop / apply clustering
 		MeshData simplifiedMesh;
 		switch (currentAlgorithm)
 		{
@@ -68,13 +78,17 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 			case Algorithm::Naive: simplifiedMesh = simplifyNaive(vertices, indices, targetFaceCount); break;
 			case Algorithm::FloatingCellClustering: simplifiedMesh = simplifyFloatingCellClustering(vertices, indices, targetFaceCount); break;
 			case Algorithm::VertexDecimation: simplifiedMesh = simplifyVertexDecimation(vertices, indices, targetFaceCount); break;
+			case Algorithm::Random: simplifiedMesh = simplifyRandom(vertices, indices, targetFaceCount); break;
 		}
+		// =========================================================================
 
+		// =========================================================================
+		// post-processing
 		Geometry::finalizeVertices(simplifiedMesh.vertices, simplifiedMesh.indices);
 
 		if (options.computeHausdorff)
 		{
-			float hausdorffDistance = SurfApprox::getHausdorffDistance(vertices, indices, simplifiedMesh.vertices, simplifiedMesh.indices);
+			float hausdorffDistance = ErrorMetrics::getHausdorffDistance(vertices, indices, simplifiedMesh.vertices, simplifiedMesh.indices);
 			
 			// normalize via scaling factor
 			float normalizedHausdorff = hausdorffDistance * scale;
@@ -84,8 +98,8 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		if (options.computeMSE)
 		{
 			// have to do it like this since simplifiying each mesh separately
-			float rawSquaredErrorSumAB = SurfApprox::computeOneSideSquaredDistance(vertices, simplifiedMesh.vertices, simplifiedMesh.indices);
-			float rawSquaredErrorSumBA = SurfApprox::computeOneSideSquaredDistance(simplifiedMesh.vertices, vertices, indices);
+			float rawSquaredErrorSumAB = ErrorMetrics::computeOneSideSquaredDistance(vertices, simplifiedMesh.vertices, simplifiedMesh.indices);
+			float rawSquaredErrorSumBA = ErrorMetrics::computeOneSideSquaredDistance(simplifiedMesh.vertices, vertices, indices);
 			
 			// normalize via scaling factor and accumulate
 			totalSquaredErrorSum += (rawSquaredErrorSumAB + rawSquaredErrorSumBA) * (scale * scale);
@@ -101,6 +115,7 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		{
 			Geometry::recalculateSmoothNormals(simplifiedMesh.vertices, simplifiedMesh.indices);
 		}
+		// =========================================================================
 
 		result.originalFaceCount += originalFaceCount;
 		result.simplifiedFaceCount += simplifiedMesh.indices.size() / 3;
@@ -129,11 +144,6 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 {
 	MeshData result;
 
-	if (options.enableMerging)
-	{
-		Geometry::mergeCloseVertices(vertices, indices, options);
-	}
-
 	auto reps = Topology::buildSamePlaceRepresentatives(vertices);
 	auto twinMap = Topology::buildTwinMap(reps);
 	std::vector<bool> isBorderVertex = Topology::findLockedVertices(vertices, indices, reps, options);
@@ -141,7 +151,7 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 	size_t currentFaceCount = Topology::countActiveFaces(indices, reps);
 	size_t resultCompareFaceCount = currentFaceCount;
 
-	std::cout << "=== QEM Simplification ===" << std::endl;
+	std::cout << "\n=== QEM Simplification ===" << std::endl;
 	std::cout << "Input: " << vertices.size() << " vertices, "
 		<< currentFaceCount << " faces" << std::endl;
 	std::cout << "Target: " << targetFaceCount << " faces" << std::endl;
@@ -268,11 +278,6 @@ MeshData Simplificator::simplifyFloatingCellClustering(std::vector<Vertex> verti
 MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount)
 {
 	MeshData result;
-
-	if (options.enableMerging)
-	{
-		Geometry::mergeCloseVertices(vertices, indices, options);
-	}
 	
 	size_t currentFaceCount = indices.size() / 3;
 	size_t resultCompareFaceCount = currentFaceCount;
@@ -330,10 +335,10 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 			}
 
 			return true;
-			});
+		});
 
 		// if not another valid candidate was found or the error is too high, stop the decimation
-		if (!foundValid || minErrCandidate.error > 1e7)
+		if (!foundValid || minErrCandidate.error > DONT_DECIMATE_ERROR)
 		{
 			std::cout << "Abrupt stop - no more valid candidates for decimation." << std::endl;
 			break;
@@ -451,18 +456,17 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 {
 	MeshData result;
 
-	if (options.enableMerging)
-	{
-		Geometry::mergeCloseVertices(vertices, indices, options);
-		Geometry::removeDegeneratedTriangles(indices);
-	}
-
 	auto reps = Topology::buildSamePlaceRepresentatives(vertices);
 	auto twinMap = Topology::buildTwinMap(reps);
 	std::vector<bool> isBorderVertex = Topology::findLockedVertices(vertices, indices, reps, options);
-	
 
 	size_t currentFaceCount = indices.size() / 3;
+	size_t resultFaceCount = currentFaceCount;
+
+	std::cout << "=== Naive shortest edge collapse ===" << std::endl;
+	std::cout << "Input: " << vertices.size() << " vertices, "
+		<< currentFaceCount << " faces" << std::endl;
+	std::cout << "Target: " << targetFaceCount << " faces" << std::endl;
 
 	auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
 
@@ -481,31 +485,24 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 		Naive::Edge shortestEdge;
 		bool foundValidEdge = edgeQueue.popValid(shortestEdge, [&](const Naive::Edge& e) {
 			return !vertexDeleted[e.v1] && !vertexDeleted[e.v2];
-			});
+
+			//float currentLen = glm::distance(vertices[e.v1].pos, vertices[e.v2].pos);
+			//if (std::abs(currentLen - e.length) > 1e-4f) return false;
+		});
 		
 		if (!foundValidEdge)
 		{
 			break;
 		}
 
-		if (!Topology::isCollapseValid(shortestEdge.v1, shortestEdge.v2, vertices, indices, options, isBorderVertex, twinMap, allNeighborhoods))
+		if (!Naive::isCollapseValid(shortestEdge.v1, shortestEdge.v2, vertices, indices, options, isBorderVertex, twinMap, allNeighborhoods))
 		{
 			continue;
 		}
 		
-		std::vector<uint32_t> keptTwinVertices;
-		if (options.resolveUVSeams)
-		{
-			for (auto twin : twinMap[shortestEdge.v1])
-			{
-				if (!vertexDeleted[twin])
-				{
-					keptTwinVertices.push_back(twin);
-				}
-			}
-		}
-
-		auto actualKeepidx = Naive::collapseEdge(vertices, indices, shortestEdge, twinMap, options.resolveUVSeams, vertexDeleted);
+		int deletedFaces = 0;
+		auto actualKeepidx = Naive::collapseEdge(vertices, indices, shortestEdge, twinMap, options.resolveUVSeams, vertexDeleted, allNeighborhoods, deletedFaces);
+		currentFaceCount -= deletedFaces;
 
 		std::vector<uint32_t> affectedVertices = { actualKeepidx };
 		if (options.resolveUVSeams)
@@ -519,46 +516,179 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 			}
 		}
 
-		for (size_t i = 0; i < indices.size(); i += 3)
+		for (uint32_t aff : affectedVertices)
 		{
-			uint32_t i0 = indices[i];
-			uint32_t i1 = indices[i + 1];
-			uint32_t i2 = indices[i + 2];
-
-			bool isAffected = false;
-			for (uint32_t aff : affectedVertices)
+			for (uint32_t tri : allNeighborhoods[aff].triangles)
 			{
-				if (i0 == aff || i1 == aff || i2 == aff)
-				{
-					isAffected = true;
-					break;
-				}
-			}
+				uint32_t i0 = indices[tri];
+				uint32_t i1 = indices[tri + 1];
+				uint32_t i2 = indices[tri + 2];
 
-			if (isAffected)
-			{
-				Naive::Edge e1 = { std::min(i0, i1), std::max(i0, i1), 0.0f };
-				Naive::Edge e2 = { std::min(i1, i2), std::max(i1, i2), 0.0f };
-				Naive::Edge e3 = { std::min(i2, i0), std::max(i2, i0), 0.0f };
+				if (i0 == i1 || i1 == i2 || i2 == i0) continue;
 
-				e1.length = glm::length(vertices[e1.v1].pos - vertices[e1.v2].pos);
-				e2.length = glm::length(vertices[e2.v1].pos - vertices[e2.v2].pos);
-				e3.length = glm::length(vertices[e3.v1].pos - vertices[e3.v2].pos);
+				Naive::Edge e1 = { std::min(i0, i1), std::max(i0, i1), glm::distance(vertices[i0].pos, vertices[i1].pos) };
+				Naive::Edge e2 = { std::min(i1, i2), std::max(i1, i2), glm::distance(vertices[i1].pos, vertices[i2].pos) };
+				Naive::Edge e3 = { std::min(i2, i0), std::max(i2, i0), glm::distance(vertices[i2].pos, vertices[i0].pos) };
 
 				edgeQueue.push(e1);
 				edgeQueue.push(e2);
 				edgeQueue.push(e3);
 			}
 		}
-
-		currentFaceCount = indices.size() / 3;
 	}
+
+	Geometry::removeDegeneratedTriangles(indices);
 
 	size_t finalFaceCount = indices.size() / 3;
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
-	std::cout << "Reduction: " << currentFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / currentFaceCount) << "%)" << std::endl;
+	std::cout << "Reduction: " << resultFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / resultFaceCount) << "%)" << std::endl;
 
 	result.vertices = std::move(vertices);
 	result.indices = std::move(indices);
 	return result;
+}
+
+MeshData Simplificator::simplifyRandom(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount)
+{
+	MeshData result;
+
+	auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
+	std::vector<uint32_t> vertexDeleted(vertices.size(), false);
+
+	size_t currentFaceCount = indices.size() / 3;
+	size_t originalFaceCount = currentFaceCount;
+
+	while (currentFaceCount > targetFaceCount)
+	{
+		// pick random vertex
+		uint32_t randomVertexIdx = rand() % vertices.size();
+		if (vertexDeleted[randomVertexIdx])
+		{
+			continue;
+		}
+
+		// get triangles of the random vertex, if it has none, skip
+		auto& triangles = allNeighborhoods[randomVertexIdx].triangles;
+		if (triangles.empty())
+		{
+			continue;
+		}
+
+		// pick a random triangle connected with the random vertex 
+		uint32_t randomTri = triangles[rand() % triangles.size()];
+		uint32_t v0 = indices[randomTri];
+		uint32_t v1 = indices[randomTri + 1];
+		uint32_t v2 = indices[randomTri + 2];
+
+		uint32_t keepIdx;
+		if (randomVertexIdx == v0)
+		{
+			keepIdx = (rand() % 2 == 0) ? v1 : v2;
+		}
+		else if (randomVertexIdx == v1)
+		{
+			keepIdx = (rand() % 2 == 0) ? v0 : v2;
+		}
+		else
+		{
+			keepIdx = (rand() % 2 == 0) ? v0 : v1;
+		}
+
+		if (options.checkFaceFlipping)
+		{
+			if (Topology::checkFaceFlipping(vertices[randomVertexIdx].pos, vertices[keepIdx].pos, randomVertexIdx, indices, vertices))
+			{
+				continue;
+			}
+		}
+
+		if (options.checkConnectivity)
+		{
+			if (!Topology::checkConnectivity(randomVertexIdx, keepIdx, indices, allNeighborhoods[randomVertexIdx], allNeighborhoods[keepIdx]))
+			{
+				continue;
+			}
+		}
+
+		// update all triangles of the removed vertex to point to the kept vertex
+		for (uint32_t tri : triangles)
+		{
+			uint32_t idx0 = indices[tri];
+			uint32_t idx1 = indices[tri + 1];
+			uint32_t idx2 = indices[tri + 2];
+
+			// skip degenerate triangles
+			if (idx0 == idx1 || idx1 == idx2 || idx2 == idx0) continue;
+
+			// if triangle contains the kept vertex, it will degenerate due to collapse
+			bool willDegenerate = (idx0 == keepIdx || idx1 == keepIdx || idx2 == keepIdx);
+			if (willDegenerate) currentFaceCount--;
+
+			// redirect triangle to kept vertex
+			if (indices[tri] == randomVertexIdx) indices[tri] = keepIdx;
+			if (indices[tri + 1] == randomVertexIdx) indices[tri + 1] = keepIdx;
+			if (indices[tri + 2] == randomVertexIdx) indices[tri + 2] = keepIdx;
+
+			// if triangle didnt degenerate, add it to the neighborhood of the kept vertex
+			if (!willDegenerate)
+			{
+				allNeighborhoods[keepIdx].triangles.push_back(tri);
+			}
+		}
+
+		// clear triangles of the removed vertex
+		triangles.clear();
+
+		// after redirecting all triangles, some triangles in the neighborhood of the kept vertex might have become degenerate
+		auto& keepTris = allNeighborhoods[keepIdx].triangles;
+		keepTris.erase(std::remove_if(keepTris.begin(), keepTris.end(),
+			[&indices](uint32_t tri) {
+				return indices[tri] == indices[tri + 1] ||
+					indices[tri + 1] == indices[tri + 2] ||
+					indices[tri + 2] == indices[tri];
+			}),
+			keepTris.end());
+
+		vertexDeleted[randomVertexIdx] = true;
+	}
+
+	Geometry::removeDegeneratedTriangles(indices);
+
+	size_t finalFaceCount = indices.size() / 3;
+	std::cout << "Final faces: " << finalFaceCount << std::endl;
+	std::cout << "Reduction: " << originalFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / originalFaceCount) << "%)" << std::endl;
+
+	result.vertices = std::move(vertices);
+	result.indices = std::move(indices);
+	return result;
+}
+
+void Simplificator::exportOBJ(std::string& filename, const std::vector<MeshData>& meshData)
+{
+	std::ofstream objFile(filename);
+
+	// .obj indexing starts at 1
+	uint32_t vertexOffset = 1;
+	for (const auto& mesh : meshData)
+	{
+		// write vertices
+		for (const auto& v : mesh.vertices)
+		{
+			objFile << "v " << v.pos.x << " " << v.pos.y << " " << v.pos.z << "\n";
+		}
+
+		// write triangles
+		for (uint32_t i = 0; i < mesh.indices.size(); i += 3)
+		{
+			objFile << "f" << " " << (mesh.indices[i]     + vertexOffset) << " "
+								  << (mesh.indices[i + 1] + vertexOffset) << " "
+								  << (mesh.indices[i + 2] + vertexOffset) << "\n";
+		}
+
+		// update vertex offset for the next mesh
+		vertexOffset += mesh.vertices.size();
+	}
+
+	objFile.close();
+	std::cout << "Exported simplified model to " << filename << std::endl;
 }

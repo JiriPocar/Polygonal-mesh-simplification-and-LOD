@@ -13,14 +13,15 @@
 
 #include "SpiralRenderer.hpp"
 #include "../common/ui/ui.hpp"
-#include "../../common/core/SpiralComputePipeline.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <array>
 
-SpiralRenderer::SpiralRenderer(Device& device, Swapchain& swapchain, RenderPass& renderPass,
-    SpiralPipeline& pipeline, FrameBuffer& framebuffer, CommandManager& commandManager,
-    Window& window, vk::SurfaceKHR surface, SpiralScene& spiralScene,
+SpiralRenderer::SpiralRenderer(Device& device,
+    Swapchain& swapchain, RenderPass& renderPass,
+    Pipeline& pipeline, FrameBuffer& framebuffer,
+    CommandManager& commandManager, Window& window,
+    vk::SurfaceKHR surface, SpiralScene& spiralScene,
     UniformBuffer& uniformBuffer, Descriptor& descriptor)
     :   Renderer(device, swapchain, renderPass, framebuffer, commandManager, window, surface),
         m_pipeline(pipeline),

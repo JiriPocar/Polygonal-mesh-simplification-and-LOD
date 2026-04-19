@@ -4,13 +4,14 @@
 #include <glm/gtx/norm.hpp>
 #include <vector>
 #include <memory>
+
 #include "core/Device.hpp"
 #include "resources/Model.hpp"
-#include "../simplification/Simplificator.hpp"
-#include "../rendering/CommandManager.hpp"
-#include "../rendering/UniformBuffer.hpp"
+#include "../../common/simplification/Simplificator.hpp"
+#include "../../common/rendering/CommandManager.hpp"
+#include "../../common/rendering/UniformBuffer.hpp"
 
-const uint32_t MAX_INSTANCE_COUNT = 2000000;
+const uint32_t MAX_INSTANCE_COUNT = 6000000;
 
 // matches the structure in the shader for instance data
 struct SpiralInstanceData {
@@ -28,6 +29,23 @@ struct DrawIndexedIndirectCommand {
 	uint32_t firstIndex;
 	int32_t vertexOffset;
 	uint32_t firstInstance;
+};
+
+// push constants used in the compute shader
+struct ComputePushConstants {
+	uint32_t totalInstances;
+	float lodDist0;
+	float lodDist1;
+	float lodDist2;
+	float lodDist3;
+	uint32_t computeSpiral;
+	float spacing;
+	int numArms;
+	float minRadius;
+	float coneFactor;
+	float twistSpeed;
+	float animationTime;
+	uint32_t enableLOD;
 };
 
 struct SpiralConfig {
@@ -97,7 +115,7 @@ public:
 	uint32_t getModelTypeCount() const { return static_cast<uint32_t>(modelLODSets.size()); }
 	float getAnimationTime() const { return animationTime; }
 
-	uint32_t calculateCurrentDrawnTriangles(const glm::vec3& cameraPos);
+	uint32_t calculateCurrentDrawnTriangles(const glm::vec3& cameraPos, std::array<uint32_t, 4>& outLodCounts);
 
 	void resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFrame);
 
@@ -106,7 +124,7 @@ public:
 	SpiralConfig config;
 
 private:
-	void generateSpiralPositions();
+	void initSpiralPositions();
 	void generateLODVersions(CommandManager& cmd);
 	void createInstanceBuffer();
 	void updateInstancesCPU(const glm::vec3& cameraPos, uint32_t currentFrame);

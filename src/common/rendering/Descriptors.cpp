@@ -1,6 +1,24 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Descriptors.cpp
+ * @brief Descriptor set management for Vulkan application.
+ *
+ * This file contains the implementation of the Descriptor class,
+ * which is responsible for creating and managing Vulkan descriptor
+ * sets and descriptor set layouts for both graphics and compute pipelines.
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
+ */
+
 #include "Descriptors.hpp"
 #include "../common/resources/Textures.hpp"
-#include "../common/scene/SpiralScene.hpp"
+#include "../apps/demo/SpiralScene.hpp"
 #include <array>
 
 Descriptor::Descriptor(Device& device, UniformBuffer& uniformBuffer, uint32_t maxFrames)
@@ -212,3 +230,5 @@ void Descriptor::createComputeDescriptors(SpiralScene& scene, uint32_t maxFrames
 		dev.operator*().updateDescriptorSets(writes.size(), writes.data(), 0, nullptr);
 	}
 }
+
+/* End of the Descriptors.cpp file */

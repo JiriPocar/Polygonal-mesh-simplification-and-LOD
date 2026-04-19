@@ -59,6 +59,7 @@ private:
 
 	// simplificator app interface
 	std::vector<std::string> menuModels;
+	std::string selectedModel;
 	void scanModels();
 	void showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& devices, SimplificatorRenderer& renderer, Transform& transform);
 	void showStatistics();
@@ -66,7 +67,7 @@ private:
 	void showModelPerspectiveControls(Transform& transform);
 	void showWireframeControls(SimplificatorRenderer& renderer);
 	void showSmoothingControls();
-	void showSimplificationResults();
+	void showSimplificationResults(std::unique_ptr<DualModel>& currentDualModel);
 	void showSurfaceApproximationErrorControls();
 
 	// spiral app interface

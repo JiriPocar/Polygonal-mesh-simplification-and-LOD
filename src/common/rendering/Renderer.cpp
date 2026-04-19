@@ -6,6 +6,14 @@
  * This file implements the Renderer class, which serves as a base for specific
  * renderers in the application. It manages common Vulkan rendering tasks such as
  * synchronization, command buffer management, and swapchain recreation on window resize.
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
  */
 
 #include "Renderer.hpp"

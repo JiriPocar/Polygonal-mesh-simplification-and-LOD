@@ -12,9 +12,9 @@
 
 #pragma once
 #include "../../common/core/VulkanApp.hpp"
-#include "../../common/core/SpiralPipeline.hpp"
-#include "../../common/core/SpiralComputePipeline.hpp"
-#include "../../common/scene/SpiralScene.hpp"
+#include "../../common/core/Pipeline.hpp"
+#include "../../common/core/ComputePipeline.hpp"
+#include "SpiralScene.hpp"
 #include "SpiralRenderer.hpp"
 #include "Benchmark.hpp"
 
@@ -28,11 +28,13 @@ protected:
 	void drawFrame() override;
 
 private:
-	std::unique_ptr<SpiralPipeline> pipeline;
-	std::unique_ptr<SpiralPipeline> wireframePipeline;
-	std::unique_ptr<SpiralComputePipeline> computePipeline;
+	std::unique_ptr<Pipeline> pipeline;
+	std::unique_ptr<Pipeline> wireframePipeline;
+	std::unique_ptr<ComputePipeline> computePipeline;
 	std::unique_ptr<SpiralScene> spiralScene;
 	std::unique_ptr<SpiralRenderer> renderer;
+
+	float farPlane = 50000.0f;
 
 	Benchmark benchmark;
 };

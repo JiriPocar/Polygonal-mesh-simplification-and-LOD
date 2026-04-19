@@ -1,5 +1,14 @@
-#pragma once
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Textures.hpp
+ * @brief Texture management for Vulkan application.
+ *
+ * This file implements the Texture class, which is responsible
+ * for loading an image from a file, creating a Vulkan image, allocating
+ * memory for it using VMA, and creating an image view and sampler.
+ */
 
+#pragma once
 #include <vulkan/vulkan.hpp>
 #include <string.h>
 #include <vk_mem_alloc.h>
@@ -11,10 +20,12 @@ public:
 	Texture(Device& device, CommandManager& cmd, std::string& filePath);
 	~Texture();
 
+	// getters
 	vk::ImageView getImageView() const { return *imageView; }
 	vk::Sampler getSampler() const { return *sampler; }
 
 private:
+	// helper functions for texture creation
 	void createTextureImage(CommandManager& cmd, std::string& filePath);
 	void createTextureImageView();
 	void createTextureSampler();
@@ -32,3 +43,5 @@ private:
 	int channels;
 	vk::DeviceSize imageSize;
 };
+
+/* End of the Textures.hpp file */

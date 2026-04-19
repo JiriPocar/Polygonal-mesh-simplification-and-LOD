@@ -18,8 +18,8 @@ SimplificatorApp::SimplificatorApp()
 
 void SimplificatorApp::init()
 {
-    pipeline = std::make_unique<Pipeline>(device, renderPass, swapchain.getExtent(), descriptor.getLayout());
-    wireframePipeline = std::make_unique<Pipeline>(device, renderPass, swapchain.getExtent(), descriptor.getLayout(), vk::PolygonMode::eLine);
+    pipeline = std::make_unique<Pipeline>(device, renderPass, swapchain.getExtent(), descriptor.getLayout(), PipelineType::Simplificator);
+    wireframePipeline = std::make_unique<Pipeline>(device, renderPass, swapchain.getExtent(), descriptor.getLayout(), PipelineType::Simplificator, vk::PolygonMode::eLine);
     dualModel = std::make_unique<DualModel>(device, commandManager, "assets/Duck.gltf");
 
     transform.setPos(glm::vec3(0.0f, 0.0f, 0.0f));

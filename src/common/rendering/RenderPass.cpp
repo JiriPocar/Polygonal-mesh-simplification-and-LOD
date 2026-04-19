@@ -1,3 +1,19 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file RenderPass.cpp
+ * @brief Render pass management for Vulkan application.
+ *
+ * This file creates render pass on construction.
+ * 
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/
+ *			- @url https://github.com/Overv/VulkanTutorial
+ *		- Victor Blanco's "Vulkan Guide"
+ *			- @url https://vkguide.dev/
+ *			- @url https://github.com/vblanco20-1/vulkan-guide
+ */
+
 #include "RenderPass.hpp"
 #include "../core/Device.hpp"
 #include <stdexcept>
@@ -59,13 +75,13 @@ void RenderPass::createRenderpass(vk::Format swapchainImageFormat)
 	);
 
 	vk::SubpassDependency dependency(
-		VK_SUBPASS_EXTERNAL,								// source subpass
-		0,													// dest subpass
-		vk::PipelineStageFlagBits::eColorAttachmentOutput,	// source stage
-		vk::PipelineStageFlagBits::eColorAttachmentOutput,	// dest stage
-		{},													// no source access mask
-		vk::AccessFlagBits::eColorAttachmentWrite,          // dest access mask
-		{}													// no dependency flags
+		VK_SUBPASS_EXTERNAL,																				// source subpass
+		0,																									// dest subpass
+		vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,	// source stage
+		vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,	// dest stage
+		{},																									// no source access mask
+		vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite,		// dest access mask
+		{}																									// no dependency flags
 	);
 
 	std::array<vk::AttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
@@ -80,3 +96,5 @@ void RenderPass::createRenderpass(vk::Format swapchainImageFormat)
 
 	renderPass = renderPassDevice.operator*().createRenderPassUnique(renderPassInfo);
 }
+
+/* End of the Renderer.cpp file */
