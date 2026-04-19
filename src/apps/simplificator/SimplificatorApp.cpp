@@ -11,7 +11,7 @@
 #include <iostream>
 
 SimplificatorApp::SimplificatorApp()
-    : VulkanApp(1800, 900, "Simplificator")
+    : VulkanApp(1800, 900, true, "Simplificator")
 {
 
 }

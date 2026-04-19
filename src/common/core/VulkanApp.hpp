@@ -32,7 +32,7 @@
 
 class VulkanApp {
 public:
-	VulkanApp(int width, int height, const char* name);
+	VulkanApp(int width, int height, bool enableVsync, const char* name);
 	virtual ~VulkanApp() = default;
 
 	void run();

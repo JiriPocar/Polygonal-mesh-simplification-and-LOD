@@ -34,9 +34,6 @@ SpiralRenderer::SpiralRenderer(Device& device,
 
 void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 {
-    // update lods
-    //m_spiralScene.updateLODs(camera.getPosition(), currentFrame, useGPULODCompute, useGPUSpiralCompute);
-
 	// get next image from swapchain and begin command buffer recording
     uint32_t imgIdx;
     vk::CommandBuffer cmdBuffer = beginFrame(imgIdx);

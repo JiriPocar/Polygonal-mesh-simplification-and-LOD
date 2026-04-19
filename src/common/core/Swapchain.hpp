@@ -18,7 +18,7 @@ class Device;
 
 class Swapchain {
 public:
-	Swapchain(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height);
+	Swapchain(Device& device, vk::SurfaceKHR surface, bool enableVsync, uint32_t width, uint32_t height);
 	~Swapchain();
 
 	/**
@@ -88,6 +88,7 @@ private:
 	std::vector<vk::UniqueImageView> imageViews;
 	vk::Format imageFormat;
 	vk::Extent2D extent;
+	bool enableVsync;
 
 	vk::Image depthImage = nullptr;
 	VmaAllocation depthImageAllocation = nullptr;

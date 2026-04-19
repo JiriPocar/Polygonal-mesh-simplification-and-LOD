@@ -21,8 +21,8 @@
 #include <stdexcept>
 #include <iostream>
 
-Swapchain::Swapchain(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
-	: swapchainDevice(device)
+Swapchain::Swapchain(Device& device, vk::SurfaceKHR surface, bool enableVsync, uint32_t width, uint32_t height)
+	: swapchainDevice(device), enableVsync(enableVsync)
 {
 	createSwapchain(surface, width, height);
 	createImageViews();
@@ -54,17 +54,24 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 		}
 	}
 	
-	// pick the best present mode
+	// pick vsync mode by default, fallback to mailbox or immediate if vsync is disabled and supported
 	vk::PresentModeKHR presentMode = vk::PresentModeKHR::eFifo;
-	for (const auto& availablePresentMode : supportDetails.presentModes) {
-		if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
-			presentMode = availablePresentMode;
-			break;
-		}
-		if (availablePresentMode == vk::PresentModeKHR::eImmediate)
+	if (!enableVsync)
+	{
+		for (const auto& availablePresentMode : supportDetails.presentModes)
 		{
-			presentMode = availablePresentMode;
-			break;
+			// lowest latency mode, may cause tearing
+			if (availablePresentMode == vk::PresentModeKHR::eImmediate)
+			{
+				presentMode = availablePresentMode;
+				break;
+			}
+
+			// fallback to mailbox
+			if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
+				presentMode = availablePresentMode;
+				break;
+			}
 		}
 	}
 

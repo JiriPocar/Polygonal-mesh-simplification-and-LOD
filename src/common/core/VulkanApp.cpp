@@ -11,12 +11,12 @@
 #include "VulkanApp.hpp"
 #include <iostream>
 
-VulkanApp::VulkanApp(int width, int height, const char* appName)
+VulkanApp::VulkanApp(int width, int height, bool enableVsync, const char* appName)
 	: window(width, height, appName),
 	  instance(false),
 	  surface(window.createSurface(instance)),
 	  device(instance, *surface),
-	  swapchain(device, *surface, window.getWidth(), window.getHeight()),
+	  swapchain(device, *surface, enableVsync, window.getWidth(), window.getHeight()),
 	  renderPass(device, swapchain.getImageFormat()),
 	  uniformBuffer(device),
 	  descriptor(device, uniformBuffer),

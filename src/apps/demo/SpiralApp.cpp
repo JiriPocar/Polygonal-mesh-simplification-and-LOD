@@ -14,7 +14,7 @@
 #include <iostream>
 
 SpiralApp::SpiralApp() 
-	: VulkanApp(1800, 920, "Spiral scene")
+	: VulkanApp(1800, 920, false, "Spiral scene")
 {
 
 }
