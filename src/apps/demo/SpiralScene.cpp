@@ -23,9 +23,8 @@ void SpiralScene::initSpiralPositions()
 	for (int i = 0; i < config.instanceCount; i++)
 	{
 		glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
-		positions.push_back(pos);
+		positions[i] = pos;
 		instanceData[i].pos = pos;
-		instanceData[i].modelTypeIndex = 0;
 		instanceData[i].lodLevel = 0;
 	}
 }
@@ -64,7 +63,7 @@ void SpiralScene::generateLODVersions(CommandManager& cmd)
 	}
 
 
-	modelLODSets.push_back(std::move(lodSet));
+	modelLODSet = std::move(lodSet);
 }
 
 void SpiralScene::rebuildLODs(CommandManager& cmd)
@@ -73,7 +72,6 @@ void SpiralScene::rebuildLODs(CommandManager& cmd)
 	dev.operator*().waitIdle();
 
 	// clear existing LODs and generate new ones based on current model path
-	modelLODSets.clear();
 	generateLODVersions(cmd);
 
 	vk::CommandBuffer singleCmd = cmd.beginSingleTimeCommands();
@@ -211,7 +209,6 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t curren
 		uint32_t targetIdx = currentOffsets[lod]++;
 
 		instanceData[targetIdx].pos = positions[i];
-		instanceData[targetIdx].modelTypeIndex = 0; // single model type for now
 		instanceData[targetIdx].lodLevel = lod;
 	}
 
@@ -275,7 +272,7 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos,
 	// if LOD is disabled, then all instances are drwan with LOD0
 	if (!config.enableLOD)
 	{
-		uint32_t lod0Faces = modelLODSets[0].getLOD(0).getIndexCount() / 3;
+		uint32_t lod0Faces = modelLODSet.getLOD(0).getIndexCount() / 3;
 		outLodCounts[0] = config.instanceCount;
 		return config.instanceCount * lod0Faces;
 	}
@@ -286,7 +283,7 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos,
 		outLodCounts = lodCounts;
 		for (int i = 0; i < 4; i++)
 		{
-			totalTriangles += lodCounts[i] * (modelLODSets[0].getLOD(i).getIndexCount() / 3);
+			totalTriangles += lodCounts[i] * (modelLODSet.getLOD(i).getIndexCount() / 3);
 		}
 
 		return totalTriangles;
@@ -321,7 +318,7 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos,
 
 	for (int i = 0; i < 4; i++)
 	{
-		totalTriangles += outLodCounts[i] * (modelLODSets[0].getLOD(i).getIndexCount() / 3);
+		totalTriangles += outLodCounts[i] * (modelLODSet.getLOD(i).getIndexCount() / 3);
 	}
 
 	return totalTriangles;
@@ -335,7 +332,7 @@ void SpiralScene::resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFra
 	for (int i = 0; i < 4; i++)
 	{
 		// get exact index count for each LOD level to ensure correct draw calls
-		Model& lodModel = modelLODSets[0].getLOD(i);
+		Model& lodModel = modelLODSet.getLOD(i);
 
 		cmds[i].indexCount = static_cast<uint32_t>(lodModel.getIndexCount());
 		cmds[i].instanceCount = 0; // will be updated by compute shader
@@ -348,9 +345,4 @@ void SpiralScene::resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFra
 
 	// copy the commands to the indirect buffer
 	cmd.updateBuffer(indirectBuffers[currentFrame]->getBuffer(), 0, sizeof(cmds), cmds);
-}
-
-void SpiralScene::addModelType(const std::string& modelPath, CommandManager& cmd)
-{
-	generateLODVersions(cmd);
 }

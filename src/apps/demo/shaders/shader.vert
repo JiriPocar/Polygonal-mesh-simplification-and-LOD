@@ -7,8 +7,7 @@ layout(location = 2) in vec2 inTexCoord;
 
 // instance attributes (per-instance, binding 1)
 layout(location = 3) in vec3 instancePosition;
-layout(location = 4) in uint instanceModelType;
-layout(location = 5) in uint instanceLodLevel;
+layout(location = 4) in uint instanceLodLevel;
 
 // outputs to fragment shader
 layout(location = 0) out vec3 fragColor;

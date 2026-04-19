@@ -211,7 +211,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
     for (int lod = 0; lod < 4; lod++)
     {
         // get model for this LOD level
-        Model& lodModel = m_spiralScene.getModelLODSet(0).getLOD(lod);
+        Model& lodModel = m_spiralScene.getModelLODSet().getLOD(lod);
 
         // smaller vertex buffer for each LOD level
         vk::Buffer vertexBuffers[] = { lodModel.getVertexBuffer() };
@@ -252,7 +252,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 
 void SpiralRenderer::refreshTextureDescriptors()
 {
-    Texture* texture = m_spiralScene.getModelLODSet(0).getLOD(0).getTexture();
+    Texture* texture = m_spiralScene.getModelLODSet().getLOD(0).getTexture();
     if (texture)
     {
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)

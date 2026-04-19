@@ -880,7 +880,7 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 
 	ImGui::Separator();
 
-	auto& lodSet = scene.getModelLODSet(0);
+	auto& lodSet = scene.getModelLODSet();
 
 	ImGui::Text("LOD Mesh statistics:");
 

@@ -222,7 +222,7 @@ def main():
     df['AvgFPS'] = np.where(df['AvgFrameTimeMs'] > 0, 1000.0 / df['AvgFrameTimeMs'], 0)
 
     plt.style.use('tableau-colorblind10')
-    plt.rcParams.update({'axes.edgecolor': 'black', 'font.size': 14, 'axes.titlesize': 18, 'axes.labelsize': 16})
+    plt.rcParams.update({'axes.edgecolor': 'black', 'font.size': 16, 'axes.titlesize': 20, 'axes.labelsize': 18})
 
     plotFrameTimeInstances(df)
     plotLODEnablingCPU(df)

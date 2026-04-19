@@ -119,34 +119,27 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 	{
 		vk::VertexInputBindingDescription instanceBindingDescription(
 			1,
-			32, // stride = sizeof(SpiralInstaceData) = 32 bytes
+			16, // stride = sizeof(SpiralInstaceData) = 16 bytes
 			vk::VertexInputRate::eInstance
 		);
 		bindings.push_back(instanceBindingDescription);
 
-		std::array<vk::VertexInputAttributeDescription, 3> instanceAttributes{};
+		std::array<vk::VertexInputAttributeDescription, 2> instanceAttributes{};
 
 		// location 3, instance position
 		instanceAttributes[0].binding = 1;
 		instanceAttributes[0].location = 3;
 		instanceAttributes[0].format = vk::Format::eR32G32B32Sfloat;
-		instanceAttributes[0].offset = 0;
+		instanceAttributes[0].offset = 0; // start at beginning of instance data
 
 		// location 4, instance model type
 		instanceAttributes[1].binding = 1;
 		instanceAttributes[1].location = 4;
 		instanceAttributes[1].format = vk::Format::eR32Uint;
-		instanceAttributes[1].offset = 16;
-
-		// location 5, instance LOD level
-		instanceAttributes[2].binding = 1;
-		instanceAttributes[2].location = 5;
-		instanceAttributes[2].format = vk::Format::eR32Uint;
-		instanceAttributes[2].offset = 20;
+		instanceAttributes[1].offset = 12; // offset of sizeof(vec3) in instance data
 
 		attributes.push_back(instanceAttributes[0]);
 		attributes.push_back(instanceAttributes[1]);
-		attributes.push_back(instanceAttributes[2]);
 	}
 
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo(

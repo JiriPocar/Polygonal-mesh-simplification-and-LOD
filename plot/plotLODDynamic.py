@@ -90,7 +90,7 @@ def main():
         return
 
     plt.style.use('tableau-colorblind10')
-    plt.rcParams.update({'axes.edgecolor': 'black', 'font.size': 14, 'axes.titlesize': 18, 'axes.labelsize': 16})
+    plt.rcParams.update({'axes.edgecolor': 'black', 'font.size': 16, 'axes.titlesize': 20, 'axes.labelsize': 18})
 
     plotLODTransitions(df)
     plotSceneFacesDynamic(df)

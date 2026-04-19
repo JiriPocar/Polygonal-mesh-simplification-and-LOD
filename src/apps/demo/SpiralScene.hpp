@@ -15,11 +15,8 @@ const uint32_t MAX_INSTANCE_COUNT = 6000000;
 
 // matches the structure in the shader for instance data
 struct SpiralInstanceData {
-	glm::vec3 pos;
-	float padding1;
-	uint32_t modelTypeIndex;
-	uint32_t lodLevel;
-	glm::vec2 padding2;
+	glm::vec3 pos;		// 12 bytes
+	uint32_t lodLevel;	// 4 bytes
 };
 
 // matches the structure in the shader for indirect draw commands
@@ -107,19 +104,17 @@ public:
 	uint32_t getMaxInstanceCount() const { return MAX_INSTANCE_COUNT; }
 	uint32_t getLODCount(uint32_t lodLevel) const { return lodCounts[lodLevel]; }
 	uint32_t getLODOffset(uint32_t lodLevel) const { return lodOffsets[lodLevel]; }
-	ModelLODSet& getModelLODSet(uint32_t index = 0) { return modelLODSets[index]; }
+	ModelLODSet& getModelLODSet() { return modelLODSet; }
 	const std::vector<SpiralInstanceData>& getInstanceData() const { return instanceData; }
 	vk::Buffer getIndirectBuffer(uint32_t currentFrame) const { return indirectBuffers[currentFrame]->getBuffer(); }
 	UniformBuffer& getUniformBuffer() const { return uniformBuffer; }
 	vk::Buffer getLODInstanceBuffer(uint32_t currentFrame) const { return LODInstanceBuffers[currentFrame]->getBuffer(); }
-	uint32_t getModelTypeCount() const { return static_cast<uint32_t>(modelLODSets.size()); }
 	float getAnimationTime() const { return animationTime; }
 
 	uint32_t calculateCurrentDrawnTriangles(const glm::vec3& cameraPos, std::array<uint32_t, 4>& outLodCounts);
 
 	void resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFrame);
 
-	void addModelType(const std::string& modelPath, CommandManager& cmd);
 	void resetAnimation() { animationTime = 0.0f; }
 	SpiralConfig config;
 
@@ -138,7 +133,7 @@ private:
 
 	std::vector<glm::vec3> positions;
 	std::vector<SpiralInstanceData> instanceData;
-	std::vector<ModelLODSet> modelLODSets;
+	ModelLODSet modelLODSet;
 
 	std::vector<std::unique_ptr<Buffer>> indirectBuffers;
 	std::vector<std::unique_ptr<Buffer>> LODInstanceBuffers;

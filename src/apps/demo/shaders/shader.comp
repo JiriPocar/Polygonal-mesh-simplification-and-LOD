@@ -3,13 +3,10 @@
 // 256 threads per work group
 layout(local_size_x = 256) in;
 
-// 32bytes structure per instance
+// 16bytes structure per instance
 struct InstanceData {
 	vec3 pos;
-	float padding;
-	uint modelTypeIndex;
 	uint lodLevel;
-	vec2 padding2;
 };
 
 // binding 0
@@ -92,7 +89,6 @@ void main()
 
 	InstanceData instance;
 	instance.pos = currentPos;
-	instance.modelTypeIndex = 0;
 
 	vec3 dist = currentPos - ubo.cameraPos;
 	float distSquared = dot(dist, dist);
