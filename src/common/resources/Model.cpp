@@ -17,10 +17,12 @@
 
 #include "Model.hpp"
 #include "../rendering/CommandManager.hpp"
+#include "../common/simplification/utils/Geometry.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <sstream>
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -366,6 +368,16 @@ void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 	}
 	testFile.close();
 
+	// call obj loader instead if the file is .obj
+	std::string ext = std::filesystem::path(modelPath).extension().string();
+	if (ext == ".obj")
+	{
+		loadObjModel(modelPath);
+		std::string fallbackPath = "assets/fallback.png";
+		texture = std::make_unique<Texture>(dev, cmd, fallbackPath);
+		return;
+	}
+
 	tinygltf::TinyGLTF loader;
 	std::string err;
 	std::string warn;
@@ -443,6 +455,49 @@ void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 	}
 
 	std::cout << "Loaded GLTF model: " << modelPath << std::endl;
+}
+
+void Model::loadObjModel(const std::string& modelPath)
+{
+	std::ifstream file(modelPath);
+	if (!file.is_open())
+	{
+		throw std::runtime_error("Failed to open OBJ file: " + modelPath);
+	}
+
+	std::vector<Vertex> parsedVertices;
+	std::vector<uint32_t> parsedIndices;
+
+	// parse simply for the obj file exported by the simplificator
+	std::string line;
+	while (std::getline(file, line))
+	{
+		if (line.empty()) continue;
+
+		if (line[0] == 'v')
+		{
+			glm::vec3 pos;
+			std::istringstream s(line.substr(2));
+			s >> pos.x >> pos.y >> pos.z;
+
+			// normals and uvs are not saved, therefore set to default values
+			parsedVertices.push_back({ pos, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f) });
+		}
+		else if (line[0] == 'f')
+		{
+			uint32_t idx1, idx2, idx3;
+			std::istringstream s(line.substr(2));
+			s >> idx1 >> idx2 >> idx3;
+
+			// .obj indexes from 1, we need 0, therefore subtract 1
+			parsedIndices.push_back(idx1 - 1);
+			parsedIndices.push_back(idx2 - 1);
+			parsedIndices.push_back(idx3 - 1);
+		}
+	}
+	// recalculate normals for the loaded obj model, since they are not saved by the simplificator
+	Geometry::recalculateSmoothNormals(parsedVertices, parsedIndices);
+	createFromData(parsedVertices, parsedIndices);
 }
 
 void Model::processMesh(const tinygltf::Mesh& mesh)

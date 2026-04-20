@@ -23,7 +23,7 @@ void SpiralApp::init()
 {
     pipeline = std::make_unique<Pipeline>(device, renderPass, swapchain.getExtent(), descriptor.getLayout(), PipelineType::Spiral);
     wireframePipeline = std::make_unique<Pipeline>(device, renderPass, swapchain.getExtent(), descriptor.getLayout(), PipelineType::Spiral, vk::PolygonMode::eLine);
-    spiralScene = std::make_unique<SpiralScene>(device, commandManager, "assets/sphere.gltf", uniformBuffer);
+    spiralScene = std::make_unique<SpiralScene>(device, commandManager, "assets/sphere/sphere.gltf", uniformBuffer);
     descriptor.createComputeDescriptors(*spiralScene);
     computePipeline = std::make_unique<ComputePipeline>(device, descriptor.getComputeLayout(), sizeof(ComputePushConstants));
 

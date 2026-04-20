@@ -59,6 +59,7 @@ private:
 
 	// simplificator app interface
 	std::vector<std::string> menuModels;
+	std::vector<std::string> outModels;
 	std::string selectedModel;
 	void scanModels();
 	void showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& devices, SimplificatorRenderer& renderer, Transform& transform);

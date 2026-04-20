@@ -54,7 +54,7 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 		}
 	}
 	
-	// pick vsync mode by default, fallback to mailbox or immediate if vsync is disabled and supported
+	// pick vsync mode by default, fallback to mailbox or immediate if vsync is disabled
 	vk::PresentModeKHR presentMode = vk::PresentModeKHR::eFifo;
 	if (!enableVsync)
 	{

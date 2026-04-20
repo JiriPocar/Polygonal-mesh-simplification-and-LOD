@@ -164,6 +164,13 @@ private:
 	void loadModel(const std::string& modelPath, CommandManager& cmd);
 
 	/**
+	* @brief Loads a specific output .obj model file, exported by the simplificator, and creates a model from it.
+	* 
+	* @param modelPath The file path of the .obj model to load
+	*/
+	void loadObjModel(const std::string& modelPath);
+
+	/**
 	* @brief Processes a tinygltf::Mesh, saving them to meshes vector
 	* 
 	* @param mesh The tinygltf::Mesh to process

@@ -124,8 +124,10 @@ void UserInterface::beginFrame2(SpiralScene& spiral, SpiralRenderer& renderer, g
 void UserInterface::scanModels()
 {
 	menuModels.clear();
+	outModels.clear();
+
 	std::string path = "assets/";
-	for (const auto& entry : std::filesystem::directory_iterator(path))
+	for (const auto& entry : std::filesystem::recursive_directory_iterator(path))
 	{
 		if (entry.is_regular_file())
 		{
@@ -133,7 +135,28 @@ void UserInterface::scanModels()
 			std::string extension = entry.path().extension().string();
 			if (extension == ".gltf")
 			{
+				// replace windows returning '\' with '/'
+				std::replace(filePath.begin(), filePath.end(), '\\', '/');
 				menuModels.push_back(filePath);
+			}
+		}
+	}
+
+	std::string outPath = "out/";
+	if (std::filesystem::exists(outPath))
+	{
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(outPath))
+		{
+			if (entry.is_regular_file())
+			{
+				std::string filePath = entry.path().string();
+				std::string extension = entry.path().extension().string();
+				if (extension == ".obj")
+				{
+					// replace windows returning '\' with '/'
+					std::replace(filePath.begin(), filePath.end(), '\\', '/');
+					outModels.push_back(filePath);
+				}
 			}
 		}
 	}
@@ -192,28 +215,65 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 
 	ImGui::Separator();
 
-	if (ImGui::BeginChild("ModelList", ImVec2(0, 300), true))
+	if (ImGui::BeginTabBar("ModelTabs"))
 	{
-		for (const auto& modelPath : menuModels)
+		if (ImGui::BeginTabItem("Assets"))
 		{
-			if (ImGui::Selectable(modelPath.c_str()))
+			if (ImGui::BeginChild("ModelList", ImVec2(0, 300), true))
 			{
-				try {
-					device.operator*().waitIdle(); // wait for device to be idle before loading new model
-					currentDualModel = std::make_unique<DualModel>(device, uiCmdManager, modelPath);
-					float setScale = currentDualModel->getOriginalModel().getScaleIndex();
-					transform.setScale(glm::vec3(setScale, setScale, setScale));
-					renderer.setDualModel(*currentDualModel);
-					selectedModel = modelPath;
-					hasSimplificationResult = false;
-					std::cout << "Loaded model: " << modelPath << std::endl;
-				}
-				catch (const std::exception& e) {
-					std::cerr << "Failed to load model: " << modelPath << " - " << e.what() << std::endl;
+				for (const auto& modelPath : menuModels)
+				{
+					if (ImGui::Selectable(modelPath.c_str()))
+					{
+						try {
+							device.operator*().waitIdle(); // wait for device to be idle before loading new model
+							currentDualModel = std::make_unique<DualModel>(device, uiCmdManager, modelPath);
+							float setScale = currentDualModel->getOriginalModel().getScaleIndex();
+							transform.setScale(glm::vec3(setScale, setScale, setScale));
+							renderer.setDualModel(*currentDualModel);
+							selectedModel = modelPath;
+							hasSimplificationResult = false;
+							std::cout << "Loaded model: " << modelPath << std::endl;
+						}
+						catch (const std::exception& e) {
+							std::cerr << "Failed to load model: " << modelPath << " - " << e.what() << std::endl;
+						}
+					}
 				}
 			}
+			ImGui::EndChild();
+			ImGui::EndTabItem();
 		}
-		ImGui::EndChild();
+
+
+		if (ImGui::BeginTabItem("Output"))
+		{
+			if (ImGui::BeginChild("OutputList", ImVec2(0, 300), true))
+			{
+				for (const auto& modelPath : outModels)
+				{
+					if (ImGui::Selectable(modelPath.c_str()))
+					{
+						try {
+							device.operator*().waitIdle();
+							currentDualModel = std::make_unique<DualModel>(device, uiCmdManager, modelPath);
+							float setScale = currentDualModel->getOriginalModel().getScaleIndex();
+							transform.setScale(glm::vec3(setScale, setScale, setScale));
+							renderer.setDualModel(*currentDualModel);
+							selectedModel = modelPath;
+							hasSimplificationResult = false;
+							std::cout << "Loaded model: " << modelPath << std::endl;
+						}
+						catch (const std::exception& e) {
+							std::cerr << "Failed to load model: " << modelPath << " - " << e.what() << std::endl;
+						}
+					}
+				}
+			}
+			ImGui::EndChild();
+			ImGui::EndTabItem();
+		}
+		ImGui::EndTabBar();
 	}
 
 	ImGui::End();
@@ -595,7 +655,7 @@ void UserInterface::showSimplificationResults(std::unique_ptr<DualModel>& curren
 			// initial 'duck' model load hack
 			if (selectedModel.empty())
 			{
-				selectedModel = "assets/Duck.gltf";
+				selectedModel = "assets/Duck/Duck.gltf";
 			}
 
 			// get Duck from assets/Duck.gltf
@@ -604,18 +664,11 @@ void UserInterface::showSimplificationResults(std::unique_ptr<DualModel>& curren
 
 			std::filesystem::create_directories(outDir);
 
-			// export original model
-			std::string origPath = outDir + "/" + baseName + "_orig.obj";
-			std::vector<MeshData> origData;
-			for (const auto& mesh : currentDualModel->getOriginalModel().getMeshes())
-			{
-				origData.push_back({ mesh->extractVertices(), mesh->extractIndices() });
-			}
-			simplificator.exportOBJ(origPath, origData);
-
 			// export simplified model
 			std::string simpPath = outDir + "/" + baseName + "_simp.obj";
 			simplificator.exportOBJ(simpPath, lastResult.meshesData);
+
+			scanModels();
 		}
 	}
 	else

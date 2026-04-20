@@ -182,8 +182,8 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		VK_FALSE,					// depth clamp
 		VK_FALSE,					// rasterizer discard
 		polygonMode,				// polygon mode
-		vk::CullModeFlagBits::eFront,
-		vk::FrontFace::eClockwise,
+		vk::CullModeFlagBits::eBack,
+		vk::FrontFace::eCounterClockwise,
 		VK_FALSE,					// depth bias
 		0.0f, 0.0f, 0.0f,			// depth bias params
 		1.0f						// line width
