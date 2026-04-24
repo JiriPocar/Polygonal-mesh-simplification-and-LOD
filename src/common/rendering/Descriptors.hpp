@@ -38,6 +38,14 @@ public:
 	*/
 	void createComputeDescriptors(class SpiralScene& scene, uint32_t maxFrames = 2);
 
+	/**
+	* @brief Updates the compute shader descriptors, when max instances are changed and buffers are recreated.
+	* 
+	* @param scene Spiral scene containing the buffers to bind to the compute shader
+	* @param maxFrames The maximum number of frames to create descriptors for
+	*/
+	void updateDescriptorsCompute(class SpiralScene& scene, uint32_t maxFrames = 2);
+
 	// getters
 	vk::DescriptorSet get(uint32_t frame) const { return *descriptorSets[frame]; }
 	vk::DescriptorSet getCompute(uint32_t frame) const { return *computeDescriptorSets[frame]; };

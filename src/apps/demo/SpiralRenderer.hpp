@@ -50,6 +50,7 @@ public:
     void setComputePipeline(ComputePipeline& pipeline) { m_computePipeline = &pipeline; }
 
     void refreshTextureDescriptors();
+	void refreshComputeDescriptors();
 
     void setUseGPULODCompute(bool use)
     {

@@ -38,7 +38,6 @@ layout(push_constant) uniform Constants {
 	float lodDist0;
 	float lodDist1;
 	float lodDist2;
-	float lodDist3;
 	// spiral position push constants
 	uint computeSpiral;
 	float spacing;
@@ -90,13 +89,13 @@ void main()
 	InstanceData instance;
 	instance.pos = currentPos;
 
-	vec3 dist = currentPos - ubo.cameraPos;
-	float distSquared = dot(dist, dist);
-
 	// determine LOD level based on distance
 	uint lod = 0;
 	if(pushConsts.enableLOD == 1)
 	{
+		vec3 dist = currentPos - ubo.cameraPos;
+		float distSquared = dot(dist, dist);
+
 		lod = 3; // default to lowest LOD
 		if (distSquared < pushConsts.lodDist0)
 		{

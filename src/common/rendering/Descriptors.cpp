@@ -179,6 +179,11 @@ void Descriptor::createComputeDescriptors(SpiralScene& scene, uint32_t maxFrames
 	computeDescriptorSets = dev.operator*().allocateDescriptorSetsUnique(allocInfo);
 
 	// write descriptors for each frame
+	updateDescriptorsCompute(scene, maxFrames);
+}
+
+void Descriptor::updateDescriptorsCompute(class SpiralScene& scene, uint32_t maxFrames)
+{
 	for (uint32_t i = 0; i < maxFrames; i++) {
 		vk::DescriptorBufferInfo uniformBuffer(scene.getUniformBuffer().getBuffer(i), 0, sizeof(UniformBufferObject));
 		vk::DescriptorBufferInfo inputInstanceBuffer(scene.getInstanceBuffer(i), 0, VK_WHOLE_SIZE);

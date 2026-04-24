@@ -17,10 +17,10 @@ SpiralScene::SpiralScene(Device& dev, CommandManager& cmd, const std::string& mo
 void SpiralScene::initSpiralPositions()
 {
 	positions.clear();
-	positions.resize(MAX_INSTANCE_COUNT);
-	instanceData.resize(MAX_INSTANCE_COUNT);
+	positions.resize(maxInstanceCount);
+	instanceData.resize(maxInstanceCount);
 
-	for (int i = 0; i < config.instanceCount; i++)
+	for (uint32_t i = 0; i < maxInstanceCount; i++)
 	{
 		glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
 		positions[i] = pos;
@@ -61,7 +61,6 @@ void SpiralScene::generateLODVersions(CommandManager& cmd)
 		lodSet.lod0 = std::make_unique<Model>(dev, result0.meshesData);
 		lodSet.lod0->setTexture(originalModel->releaseTexture());
 	}
-
 
 	modelLODSet = std::move(lodSet);
 }
@@ -119,7 +118,7 @@ void SpiralScene::createLODInstanceBuffer()
 {
 	int frameCount = 2;
 	LODInstanceBuffers.resize(frameCount);
-	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * MAX_INSTANCE_COUNT * 4;
+	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * maxInstanceCount * 4;
 
 	for (int i = 0; i < frameCount; i++)
 	{
@@ -155,8 +154,22 @@ void SpiralScene::updateLODs(const glm::vec3& cameraPos, uint32_t currentFrame, 
 
 void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t currentFrame)
 {
+	// dont bother with LOD when its disabled, just copy data to buffer as is, no sorting needed
+	if (!config.enableLOD)
+	{
+		lodCounts = { config.instanceCount, 0, 0, 0 };
+
+		for (uint32_t i = 0; i < config.instanceCount; i++) {
+			instanceData[i].pos = positions[i];
+			instanceData[i].lodLevel = 0;
+		}
+
+		instanceBuffers[currentFrame]->copyData(instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
+		return;
+	}
+
 	// we are gonna want to have instances sorted by LOD level here for better GPU performance
-	// using compute sort, we can achieve time complexity of O(n)
+	// using counting sort, we can achieve time complexity of O(n)
 	// reference: https://www.geeksforgeeks.org/dsa/counting-sort/
 	lodCounts = { 0, 0, 0, 0 };
 	std::vector<uint8_t> instanceLODs(config.instanceCount);
@@ -168,26 +181,24 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t curren
 	// histogram
 	for (uint32_t i = 0; i < config.instanceCount; i++)
 	{
+		uint8_t lod = 0;
+
 		// expensive distance calculation, we only need relative distances
 		//float dist = glm::distance(cameraPos, positions[i]);
 		float dist = glm::length2(cameraPos - positions[i]); // <- can use instead
-		uint8_t lod = 0;
 
-		if (config.enableLOD)
+		lod = 3; // default to lowest LOD
+		if (dist < squaredLODdist0)
 		{
-			lod = 3; // default to lowest LOD
-			if (dist < squaredLODdist0)
-			{
-				lod = 0;
-			}
-			else if (dist < squaredLODdist1)
-			{
-				lod = 1;
-			}
-			else if (dist < squaredLODdist2)
-			{
-				lod = 2;
-			}
+			lod = 0;
+		}
+		else if (dist < squaredLODdist1)
+		{
+			lod = 1;
+		}
+		else if (dist < squaredLODdist2)
+		{
+			lod = 2;
 		}
 
 		instanceLODs[i] = lod;
@@ -259,14 +270,14 @@ void SpiralScene::updateSpiralPositions(float deltaTime, bool useGPUSpiral)
 
 }
 
-uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos, std::array<uint32_t, 4>& outLodCounts)
+uint64_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos, std::array<uint32_t, 4>& outLodCounts)
 {
 	// DO NOT CALL THIS FUNCTION EVERY FRAME SINCE ITS COSTLY
 	// USE FOR:
 	//		a) for benchmark tasks (collect only on start)
 	//		b) UI display (display only two times per sec)
 
-	uint32_t totalTriangles = 0;
+	uint64_t totalTriangles = 0;
 	outLodCounts = { 0, 0, 0, 0 };
 
 	// if LOD is disabled, then all instances are drwan with LOD0
@@ -274,7 +285,7 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos,
 	{
 		uint32_t lod0Faces = modelLODSet.getLOD(0).getIndexCount() / 3;
 		outLodCounts[0] = config.instanceCount;
-		return config.instanceCount * lod0Faces;
+		return static_cast<uint64_t>(config.instanceCount) * lod0Faces;
 	}
 
 	// if scene was computed by CPU, we know exact numbers
@@ -283,7 +294,7 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos,
 		outLodCounts = lodCounts;
 		for (int i = 0; i < 4; i++)
 		{
-			totalTriangles += lodCounts[i] * (modelLODSet.getLOD(i).getIndexCount() / 3);
+			totalTriangles += static_cast<uint64_t>(lodCounts[i]) * (modelLODSet.getLOD(i).getIndexCount() / 3);
 		}
 
 		return totalTriangles;
@@ -318,7 +329,7 @@ uint32_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos,
 
 	for (int i = 0; i < 4; i++)
 	{
-		totalTriangles += outLodCounts[i] * (modelLODSet.getLOD(i).getIndexCount() / 3);
+		totalTriangles += static_cast<uint64_t>(outLodCounts[i]) * (modelLODSet.getLOD(i).getIndexCount() / 3);
 	}
 
 	return totalTriangles;
@@ -340,9 +351,22 @@ void SpiralScene::resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFra
 		cmds[i].vertexOffset = 0;
 
 		// base offset for each LOD level
-		cmds[i].firstInstance = i * MAX_INSTANCE_COUNT;
+		cmds[i].firstInstance = i * maxInstanceCount;
 	}
 
 	// copy the commands to the indirect buffer
 	cmd.updateBuffer(indirectBuffers[currentFrame]->getBuffer(), 0, sizeof(cmds), cmds);
+}
+
+void SpiralScene::reallocBuffers(uint32_t newMaxCount)
+{
+	// realloc buffers for new max instance count
+	if (newMaxCount <= maxInstanceCount) return;
+
+	dev.operator*().waitIdle();
+	maxInstanceCount = newMaxCount;
+	initSpiralPositions();
+	createInstanceBuffer();
+	createIndirectBuffer();
+	createLODInstanceBuffer();
 }

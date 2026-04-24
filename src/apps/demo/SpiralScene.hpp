@@ -11,8 +11,6 @@
 #include "../../common/rendering/CommandManager.hpp"
 #include "../../common/rendering/UniformBuffer.hpp"
 
-const uint32_t MAX_INSTANCE_COUNT = 6000000;
-
 // matches the structure in the shader for instance data
 struct SpiralInstanceData {
 	glm::vec3 pos;		// 12 bytes
@@ -34,7 +32,6 @@ struct ComputePushConstants {
 	float lodDist0;
 	float lodDist1;
 	float lodDist2;
-	float lodDist3;
 	uint32_t computeSpiral;
 	float spacing;
 	int numArms;
@@ -58,12 +55,11 @@ struct SpiralConfig {
 	float lodDist0 = 400.0f;
 	float lodDist1 = 1200.0f;
 	float lodDist2 = 3000.0f;
-	float lodDist3 = 8000.0f;
 
 	float lodPercentageSimplification0 = 1.0f;
-	float lodPercentageSimplification1 = 0.75f;
-	float lodPercentageSimplification2 = 0.5f;
-	float lodPercentageSimplification3 = 0.25f;
+	float lodPercentageSimplification1 = 0.5f;
+	float lodPercentageSimplification2 = 0.25f;
+	float lodPercentageSimplification3 = 0.10f;
 };
 
 struct ModelLODSet {
@@ -101,7 +97,8 @@ public:
 	void rebuildLODs(CommandManager& cmd);
 
 	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return instanceBuffers[currentFrame]->getBuffer(); }
-	uint32_t getMaxInstanceCount() const { return MAX_INSTANCE_COUNT; }
+	uint32_t getMaxInstanceCount() const { return maxInstanceCount; }
+	void setMaxInstanceCount(uint32_t newMax) { maxInstanceCount = newMax; }
 	uint32_t getLODCount(uint32_t lodLevel) const { return lodCounts[lodLevel]; }
 	uint32_t getLODOffset(uint32_t lodLevel) const { return lodOffsets[lodLevel]; }
 	ModelLODSet& getModelLODSet() { return modelLODSet; }
@@ -111,10 +108,10 @@ public:
 	vk::Buffer getLODInstanceBuffer(uint32_t currentFrame) const { return LODInstanceBuffers[currentFrame]->getBuffer(); }
 	float getAnimationTime() const { return animationTime; }
 
-	uint32_t calculateCurrentDrawnTriangles(const glm::vec3& cameraPos, std::array<uint32_t, 4>& outLodCounts);
+	uint64_t calculateCurrentDrawnTriangles(const glm::vec3& cameraPos, std::array<uint32_t, 4>& outLodCounts);
 
 	void resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFrame);
-
+	void reallocBuffers(uint32_t newMaxCount);
 	void resetAnimation() { animationTime = 0.0f; }
 	SpiralConfig config;
 
@@ -126,6 +123,8 @@ private:
 
 	void createIndirectBuffer();
 	void createLODInstanceBuffer();
+
+	uint32_t maxInstanceCount = 100000;
 
 	Device& dev;
 	UniformBuffer& uniformBuffer;

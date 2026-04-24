@@ -96,7 +96,6 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
         pcs.lodDist0 = m_spiralScene.config.lodDist0 * m_spiralScene.config.lodDist0;
         pcs.lodDist1 = m_spiralScene.config.lodDist1 * m_spiralScene.config.lodDist1;
         pcs.lodDist2 = m_spiralScene.config.lodDist2 * m_spiralScene.config.lodDist2;
-        pcs.lodDist3 = m_spiralScene.config.lodDist3 * m_spiralScene.config.lodDist3;
         pcs.computeSpiral = useGPUSpiralCompute ? 1 : 0;
         pcs.enableLOD = m_spiralScene.config.enableLOD ? 1 : 0;
         pcs.spacing = m_spiralScene.config.spacing;
@@ -257,6 +256,12 @@ void SpiralRenderer::refreshTextureDescriptors()
             m_descriptor.updateTexture(i, *texture);
         }
     }
+}
+
+void SpiralRenderer::refreshComputeDescriptors()
+{
+    m_device.operator*().waitIdle();
+	m_descriptor.updateDescriptorsCompute(m_spiralScene);
 }
 
 /* End of the SpiralRenderer.cpp file */

@@ -53,7 +53,6 @@ def plotSceneFacesDynamic(df):
     x = df['CAMZ'].values
     faces = df['SceneFaces'].values / 1000000.0 
     maxFaces = (df['Instances'].iloc[0] * 960) / 1000000.0
-    print(f"LOD OFF: {maxFaces}")
     
     plt.grid(which='major', linestyle='--', color='gray', alpha=0.7, zorder=0)
     

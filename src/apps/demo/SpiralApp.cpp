@@ -64,6 +64,8 @@ void SpiralApp::update(float deltaTime)
             BenchmarkConfig cfg = benchmark.getCurrentConfig();
             spiralScene->config.instanceCount = cfg.instances;
             spiralScene->config.enableLOD = cfg.enableLOD;
+            // ... leave the simplification params to the user via gui
+
             renderer->setUseGPULODCompute(cfg.useGPULOD);
             renderer->setUseGPUSpiralCompute(cfg.useGPUSpiral);
 
@@ -75,7 +77,6 @@ void SpiralApp::update(float deltaTime)
 		else if (benchmark.getMethod() == BenchmarkMethod::MOVING_CAMERA)
 		{
             // setup the scene
-            //spiralScene->resetAnimation();
             spiralScene->config.coneFactor = 10.0f;
             spiralScene->config.instanceCount = 7000;
             spiralScene->config.speed = 1.0f;
@@ -123,7 +124,7 @@ void SpiralApp::update(float deltaTime)
     if (benchmark.isRunning())
     {
         glm::vec3 currentCamPos = camera.getPosition();
-        benchmark.update(deltaTime, *spiralScene, currentCamPos);
+        benchmark.update(deltaTime, *spiralScene, *renderer, currentCamPos);
         camera.setPosition(currentCamPos);
     }
 

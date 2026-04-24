@@ -733,70 +733,65 @@ void UserInterface::showBenchmarkStart(Benchmark& benchmark)
 void UserInterface::showBenchmarkStatus(Benchmark& benchmark)
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 10));
-	ImGui::SetNextWindowSize(ImVec2(330, 900));
-	if (benchmark.isRunning() && benchmark.getMethod() == BenchmarkMethod::STATIC_CAMERA)
+	ImGui::SetNextWindowSize(ImVec2(330, 90));
+
+	ImGui::Begin("Calibration");
+	if (!benchmark.getCalibrationStatus())
 	{
+		ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Calibrating...");
+	}
+	else
+	{
+		ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Calibration complete!");
+		ImGui::Separator();
+		auto step = benchmark.getStepSize();
+		auto maxInst = benchmark.getMaxInstanceCount();
+		ImGui::Text("Step size: %u", step);
+		ImGui::Text("Max instance count: %u", maxInst);
+	}
+	ImGui::End();
+
+	
+	if (benchmark.getCalibrationStatus())
+	{
+		ImGui::SetNextWindowPos(ImVec2(10, 110));
+		ImGui::SetNextWindowSize(ImVec2(330, 160));
 		ImGui::Begin("Benchmark Status");
-		// do a table printup for each config
-		for (int i = 0; i < benchmark.getNumberOfConfigs(); i++)
+		if (benchmark.isRunning() && benchmark.getMethod() == BenchmarkMethod::STATIC_CAMERA && benchmark.getCalibrationStatus())
 		{
-			if (ImGui::BeginTable("Benchmark information", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+			int currentIdx = benchmark.getCurrentConfigIndex();
+			int totalConfigs = benchmark.getNumberOfConfigs();
+			BenchmarkConfig cfg = benchmark.getConfigAtIdx(currentIdx);
+
+			ImGui::Text("Overall Progress: %d / %d", currentIdx, totalConfigs);
+			ImGui::ProgressBar(static_cast<float>(currentIdx) / static_cast<float>(totalConfigs));
+			ImGui::Separator();
+
+			if (ImGui::BeginTable("CurrentConfig", 2, ImGuiTableFlags_BordersInnerH))
 			{
-				ImGui::TableSetupColumn("Config");
-				ImGui::TableSetupColumn("Value");
-				ImGui::TableHeadersRow();
-
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0); ImGui::Text("Instance count:");
+				ImGui::TableSetColumnIndex(1); ImGui::Text("%u", cfg.instances);
 
 				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("Benchmarking config");
+				ImGui::TableSetColumnIndex(0); ImGui::Text("LOD Enabled:");
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%d/%d", i + 1, benchmark.getNumberOfConfigs());
+				if (cfg.enableLOD) ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "YES");
+				else ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "NO");
 
 				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("Instances");
+				ImGui::TableSetColumnIndex(0); ImGui::Text("LOD Selection:");
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%d", benchmark.getConfigAtIdx(i).instances);
+				if (cfg.useGPULOD) ImGui::Text("GPU");
+				else ImGui::Text("CPU");
 
 				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("GPU LOD compute");
+				ImGui::TableSetColumnIndex(0); ImGui::Text("Spiral positions:");
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%s", benchmark.getConfigAtIdx(i).useGPULOD ? "Yes" : "No");
-
-				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("GPU Spiral compute");
-				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%s", benchmark.getConfigAtIdx(i).useGPUSpiral ? "Yes" : "No");
-
-				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("LOD Enabled");
-				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%s", benchmark.getConfigAtIdx(i).enableLOD ? "Yes" : "No");
-
-				// DONE / IN PROGRESS / WAITS
-				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("Status");
-				ImGui::TableSetColumnIndex(1);
-				if (i < benchmark.getCurrentConfigIndex())
-				{
-					ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Done");
-				}
-				else if (i == benchmark.getCurrentConfigIndex())
-				{
-					ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "In progress");
-				}
-				else
-				{
-					ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.2f, 1.0f), "Waiting");
-				}
+				if (cfg.useGPUSpiral) ImGui::Text("GPU");
+				else ImGui::Text("CPU");
 
 				ImGui::EndTable();
-				ImGui::Spacing();
 			}
 		}
 		ImGui::End();
@@ -929,6 +924,7 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 
 	ImGui::Text("Max length:");
 	ImGui::SameLine();
+	// TODO fix the length (corresponds to 0 conefactor)
 	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%.2f units", scene.config.instanceCount * scene.config.spacing);
 
 	ImGui::Separator();
@@ -1004,11 +1000,8 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 	{
 		if (selectedInstanceCount < 0) selectedInstanceCount = 0;
 
-		if (selectedInstanceCount > static_cast<int>(scene.getMaxInstanceCount()))
-		{
-			selectedInstanceCount = scene.getMaxInstanceCount();
-		}
-		
+		scene.reallocBuffers(selectedInstanceCount);
+		renderer.refreshComputeDescriptors();
 		scene.config.instanceCount = static_cast<uint32_t>(selectedInstanceCount);
 		scene.updateSpiralPositions(0.0f, false); // reset positions
 		renderer.setUseGPULODCompute(false);
@@ -1026,8 +1019,8 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 	{
 		ImGui::SliderFloat("LOD0 Range", &scene.config.lodDist0, 10.0f,				   scene.config.lodDist1);
 		ImGui::SliderFloat("LOD1 Range", &scene.config.lodDist1, scene.config.lodDist0, scene.config.lodDist2);
-		ImGui::SliderFloat("LOD2 Range", &scene.config.lodDist2, scene.config.lodDist1, scene.config.lodDist3);
-		//ImGui::SliderFloat("LOD3 Range", &scene.config.lodDist3, scene.config.lodDist2, 20000.0f);
+		// TODO: fix the LOD2 upper range
+		ImGui::SliderFloat("LOD2 Range", &scene.config.lodDist2, scene.config.lodDist1, scene.config.instanceCount * scene.config.spacing);
 
 		ImGui::Separator();
 
