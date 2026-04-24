@@ -1,12 +1,19 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Transform.hpp
+ * @brief Transform implementation of managing position, rotation, scale and model matrix of objects in the scene.
+ * 
+ * References:
+ *		- Joey de Vries' "LearnOpenGL"
+ *			- @url https://learnopengl.com/Getting-started/Transformations
+ */
+
 #include "Transform.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 
 Transform::Transform()
-	: position(0.0f, 0.0f, 0.0f),
-	rotation(0.0f, 0.0f, 0.0f),
-	scale(1.0f, 1.0f, 1.0f)
 {
 
 }
@@ -38,3 +45,5 @@ glm::mat4 Transform::getModelMatrix() const
 	model = glm::scale(model, scale);
 	return model;
 }
+
+/* End of the Transform.cpp file */

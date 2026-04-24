@@ -163,6 +163,11 @@ void Renderer::endFrame(vk::CommandBuffer cmdBuffer, uint32_t imgIdx)
 
 void Renderer::recreateSwapchain()
 {
+    // Code of this function is adapted directly from:
+	//      - Alexander Overvoorde's "Vulkan Tutorial"
+    //          - @url https://vulkan-tutorial.com/Drawing_a_triangle/Swap_chain_recreation
+	// Licence: CC0-1.0
+
     int width = 0, height = 0;
 
     while (width == 0 || height == 0)

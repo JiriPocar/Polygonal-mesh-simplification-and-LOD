@@ -1,3 +1,12 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Simplificator.cpp
+ * @brief Simplification implementation.
+ *
+ * This file implements the simplification processes used for polygonal
+ * mesh simplification, including various algorithms and error metrics.
+ */
+
 #include "Simplificator.hpp"
 #include "utils/Geometry.hpp"
 #include "utils/Topology.hpp"
@@ -250,31 +259,6 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 	return result;
 }
 
-MeshData Simplificator::simplifyFloatingCellClustering(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t cellRadius)
-{
-	MeshData result;
-
-	size_t currentFaceCount = indices.size() / 3;
-
-	std::cout << "=== Floating-Cell Clustering ===" << std::endl;
-	std::cout << "Input vertices: " << vertices.size() << std::endl;
-	std::cout << "Input faces: " << currentFaceCount << std::endl;
-	std::cout << "Cell radius: " << cellRadius << std::endl;
-
-	float radius = FloatingCellClustering::computeRadius(vertices, cellRadius);
-	auto indexMap = FloatingCellClustering::computeRepresentative(vertices, indices, radius);
-
-	Geometry::remapIndices(indices, indexMap);
-	Geometry::removeDegeneratedTriangles(indices);
-
-	size_t finalFaceCount = indices.size() / 3;
-	std::cout << "Final faces: " << finalFaceCount << std::endl;
-
-	result.vertices = std::move(vertices);
-	result.indices = std::move(indices);
-	return result;
-}
-
 MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t targetFaceCount)
 {
 	MeshData result;
@@ -446,6 +430,31 @@ MeshData Simplificator::simplifyVertexClustering(std::vector<Vertex> vertices, s
 	size_t finalFaceCount = indices.size() / 3;
 	std::cout << "Final faces: " << finalFaceCount << std::endl;
 	std::cout << "Reduction: " << currentFaceCount << " -> " << finalFaceCount << " (" << (100.0f * finalFaceCount / currentFaceCount) << "%)" << std::endl;
+
+	result.vertices = std::move(vertices);
+	result.indices = std::move(indices);
+	return result;
+}
+
+MeshData Simplificator::simplifyFloatingCellClustering(std::vector<Vertex> vertices, std::vector<uint32_t> indices, size_t cellRadius)
+{
+	MeshData result;
+
+	size_t currentFaceCount = indices.size() / 3;
+
+	std::cout << "=== Floating-Cell Clustering ===" << std::endl;
+	std::cout << "Input vertices: " << vertices.size() << std::endl;
+	std::cout << "Input faces: " << currentFaceCount << std::endl;
+	std::cout << "Cell radius: " << cellRadius << std::endl;
+
+	float radius = FloatingCellClustering::computeRadius(vertices, cellRadius);
+	auto indexMap = FloatingCellClustering::computeRepresentative(vertices, indices, radius);
+
+	Geometry::remapIndices(indices, indexMap);
+	Geometry::removeDegeneratedTriangles(indices);
+
+	size_t finalFaceCount = indices.size() / 3;
+	std::cout << "Final faces: " << finalFaceCount << std::endl;
 
 	result.vertices = std::move(vertices);
 	result.indices = std::move(indices);
@@ -692,3 +701,5 @@ void Simplificator::exportOBJ(std::string& filename, const std::vector<MeshData>
 	objFile.close();
 	std::cout << "Exported simplified model to " << filename << std::endl;
 }
+
+/* End of the Simplificator.cpp file */

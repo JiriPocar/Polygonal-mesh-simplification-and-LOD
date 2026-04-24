@@ -37,7 +37,7 @@ VulkanApp::VulkanApp(int width, int height, bool enableVsync, const char* appNam
 	window.setMouseCallback([this](double xPos, double yPos) {
 		ui.handleMouseMove(xPos, yPos);
 		if (cameraActive) {
-			camera.handleMouseInput(xPos, yPos, cameraActive);
+			camera.handleMouseInput(xPos, yPos);
 		}
 	});
 }

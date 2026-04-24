@@ -1,3 +1,13 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file Camera.cpp
+ * @brief Camera implementation of managing the view, projection matrices and handling user input.
+ *
+ * Parts of the code are adapted from:
+ *		- Joey de Vries' "LearnOpenGL"
+ *			- @url https://learnopengl.com/Getting-started/Camera
+ */
+
 #include "Camera.hpp"
 
 Camera::Camera()
@@ -8,7 +18,8 @@ Camera::Camera()
 	up(0.0f, 1.0f, 0.0f),
 	mouseSens(0.1f),
 	xLast(0.0f),
-	yLast(0.0f)
+	yLast(0.0f),
+	movementSpeed(40.0f)
 {
 	setPerspective(45.0f, 16.0f / 9.0f, 0.1f, 10.0f);
 	setView(position, position + front, up);
@@ -29,25 +40,53 @@ void Camera::setView(glm::vec3 pos, glm::vec3 target, glm::vec3 up)
 
 void Camera::handleInput(GLFWwindow *window, float delta)
 {
-	float cameraSpeed = 40.5f * delta;
+	float cameraSpeed = movementSpeed * delta;
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
 		position += cameraSpeed * front;
+	}
+		
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
 		position -= cameraSpeed * front;
+	}
+		
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
 		position -= glm::normalize(glm::cross(front, up)) * cameraSpeed;
+	}
+		
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
 		position += glm::normalize(glm::cross(front, up)) * cameraSpeed;
-	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	}
+		
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	{
 		position -= cameraSpeed * up;
+	}
+		
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
 		position += cameraSpeed * up;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		movementSpeed += 100.0f * delta;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		movementSpeed -= 100.0f * delta;
+		movementSpeed = glm::max(movementSpeed, 0.0f);
+	}
 
 	setView(position, position + front, up);
 }
 
-void Camera::handleMouseInput(double x, double y, bool mouseDisabled)
+void Camera::handleMouseInput(double x, double y)
 {
 	if (inititalMouse)
 	{
@@ -92,3 +131,5 @@ void Camera::resetMouse()
 {
 	inititalMouse = true;
 }
+
+/* End of the Camera.cpp file */

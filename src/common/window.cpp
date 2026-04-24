@@ -1,3 +1,16 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file window.cpp
+ * @brief Window management using GLFW and Vulkan surface creation.
+ *
+ * Parts of the code may be inspired or adapted from:
+ *		- Alexander Overvoorde's "Vulkan Tutorial"
+ *			- @url https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Base_code
+ *			- @url https://vulkan-tutorial.com/Drawing_a_triangle/Swap_chain_recreation
+ *		- GLFW's "Getting started"
+ *			- @url https://www.glfw.org/docs/latest/quick.html
+ */
+
 #include "window.h"
 #include <stdexcept>
 #include <iostream>
@@ -28,7 +41,8 @@ Window::~Window()
 	glfwTerminate();
 }
 
-void Window::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+void Window::framebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
 	auto *win = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
 	win->width = width;
 	win->height = height;
@@ -38,8 +52,6 @@ void Window::framebufferResizeCallback(GLFWwindow* window, int width, int height
 	{
 		win->resizeCallback(width, height);
 	}
-
-	//std::cout << "Window resized to " << width << "x" << height << std::endl;
 }
 
 vk::UniqueSurfaceKHR Window::createSurface(vk::Instance instance)
@@ -77,3 +89,5 @@ void Window::enableCursor()
 {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
+
+/* End of the window.cpp file */
