@@ -5,10 +5,6 @@
  *
  * This file implements the SpiralRenderer class, which is responsible for
  * rendering the spiral scene in the Spiral application.
- * 
- * Rendering the spiral scene with support for GPU-based LOD computation and
- * optional wireframe mode. The renderer updates the spiral scene's LODs each
- * frame based on the camera position,
  */
 
 #pragma once
@@ -17,7 +13,6 @@
 #include "../../common/core/Pipeline.hpp"
 #include "../../common/core/ComputePipeline.hpp"
 #include "../../common/scene/Camera.hpp"
-//#include "../../common/scene/SpiralScene.hpp"
 #include "../apps/demo/SpiralScene.hpp"
 #include "../../common/rendering/UniformBuffer.hpp"
 #include "../../common/rendering/Descriptors.hpp"

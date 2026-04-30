@@ -15,7 +15,7 @@ Benchmark::Benchmark()
 
 void Benchmark::startStatic()
 {
-	csvFile.open("spiralBenchmark.csv");
+	csvFile.open("plot/spiralBenchmark.csv");
 	if (!csvFile.is_open())
 	{
 		std::cerr << "Failed to create benchmark CSV file!" << std::endl;
@@ -35,7 +35,7 @@ void Benchmark::startStatic()
 
 void Benchmark::startDynamic()
 {
-	csvFile.open("spiralBenchmarkMoving.csv");
+	csvFile.open("plot/spiralBenchmarkMoving.csv");
 	if (!csvFile.is_open())
 	{
 		std::cerr << "Failed to create benchmark CSV file!" << std::endl;

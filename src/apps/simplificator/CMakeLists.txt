@@ -36,9 +36,6 @@ else()
     message(WARNING "GlslangValidator not found! Shaders will not be compiled.")
 endif()
 
-# SHADERS COMPILATION
-#add_dependencies(${APP_NAME} CompileShaders)
-
 # COPY ASSETS INTO OUTPUT DIRECTORY
 add_custom_command(TARGET ${APP_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

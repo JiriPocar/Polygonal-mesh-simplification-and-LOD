@@ -1,205 +1,101 @@
-﻿# Level of detail in huge scenes
+﻿# Polygonal mesh simplification and rendering optimization using Level of Detail techniques
 
-## Requirements
+## Beforeword
+This repository contains the implementation of a bachelor's thesis focused on polygonal mesh
+simplification and rendering optimization using Level of Detail (LOD) techniques. The project
+is developed in ```C++``` using the ```Vulkan API``` for rendering and includes various simplification
+algorithms, an application for polygonal mesh simplification and an application for benchmarking
+the effects of Level of Detail techniques and GPU-driven rendering.
 
+## Simplificator
+The simplification application (```Simplificator```) can be freely used for mesh simplification.
+
+![SIMPLIFICATOR](images/simplificator.png)
+
+### Features
+- Simple ```glTF``` model loading with base texture.
+- Per-mesh simplification using various algorithms and metrics:
+	- ```QEM```
+	- ```Vertex Clustering```
+	- ```Floating Cell Clustering```
+	- ```Vertex Decimation```
+	- ```Naive approaches``` (for comparison purposes)
+- Wireframe mode and first person camera for better visualization of the results.
+- Hausdorff distance and MSE (Mean Squared Error) metrics for geometric quality evaluation.
+- Interactive GUI for adjusting simplification parameters and visualizing the results.
+- Flat shading or smooth shading of the simplified model.
+- Export of the simplified model to a simple ```.obj``` file and loading it back in for further simplifications.
+
+### Limitations and known issues
+- ```Simplificator``` works best with manifold meshes for geometric simplification.
+- For textured models, only ```QEM``` algorithm is currently supported via ```Lock UV Seams```
+and ```Simplify with UV Seams``` options. If there are no UV seams in the textured model, the simplification
+may not preserve the texture coordinates properly, leading to visual artifacts.
+In such cases, it is recommended to use the ```QEM``` algorithm without UV seam approaches for better results.
+- Hausdorff distance and MSE metrics are not optimized and may take longer for complex models.
+- Damaged models (ie. models with scattered meshes) are not supported by most of the simplification algoritms
+and may create holes in the mesh during simplification proccess.
+- In rare cases, some algorithms may produce non-optimal results with visual artifacts.
+
+
+## Spiral scene
+The benchmarking application (```SpiralApp```) is designed to demonstrate the performance benefits
+of LOD techniques and GPU-driven rendering.
+
+![SPIRAL](images/spiral.png)
+
+### Features
+- Rendering of a large number of instances with different LOD levels.
+- Customizable spiral parameters.
+- Scene metadata display.
+- Customizable LOD configuration for instances of the model on the spiral.
+- GPU-driven rendering using ```compute shader``` for instance spiral positions and LOD selection.
+- Wireframe mode with instances colored by their LOD level for better visualization of the LOD distribution.
+- Auto-calibrated benchmark setup for performance evaluation of different hardware configurations.
+- Semi-automated graph plotting of the benchmark results.
+
+### Limitations and known issues
+- As of now, the AMD graphics cards provide higher instance performance in the benchmarks than NVIDIA ones. Tested on several different hardware configurations.
+- Instance positioning can become unstable when changing the spiral parameters and not resetting the animation time.
+- The displayed *Drawn triangles* statistic while choosing the GPU modes is a quite precise estimation, but estimation nevertheless, and can slightly differ from the actual number of triangles drawn by the GPU.
+
+
+# Requirements
+
+- Windows 10 or later.
+- MSVC compiler (Visual Studio 2022 or later) with C++17 support.
+- Vulkan-compatible GPU and drivers.
 - Vulkan SDK [found here](https://vulkan.lunarg.com/sdk/home). Make sure to restart Visual Studio after the installation.
-- *(optional)* Python and ```matplotlib``` for performance statistics visualization
-## Project structure
+- ```CMake``` (version 3.10.2 or later) for building the project
+- *(optional)* Python and ```matplotlib```, ```pandas``` and ```numpy``` libraries for performance plotting, if desired.
 
-```
-BP Pocarovsky
-├── assets
-├── external
-├── plot
-│   ├── output.txt
-│   ├── plotLOD.py
-│   └── run.bat
-├── src
-│   ├── common
-│   │   ├── core
-│   │   │   ├── Device.hpp/cpp
-│   │   │   ├── Instance.hpp/cpp
-│   │   │   ├── Pipeline.hpp/cpp
-│   │   │   ├── SpiralPipeline.hpp/cpp
-│   │   │   ├── SpiralComputePipeline.hpp/cpp
-│   │   │   ├── Swapchain.hpp/cpp
-│   │   │   └── VulkanApp.hpp/cpp
-│   │   ├── rendering
-│   │   │   ├── CommandManager.hpp/cpp
-│   │   │   ├── Descriptors.hpp/cpp
-│   │   │   ├── FrameBuffer.hpp/cpp
-│   │   │   ├── Renderer.hpp/cpp
-│   │   │   ├── SpiralRenderer.hpp/cpp
-│   │   │   ├── RenderPass.hpp/cpp
-│   │   │   └── UniformBuffer.hpp/cpp
-│   │   ├── resources
-│   │   │   ├── Buffer.hpp/cpp
-│   │   │   ├── DualModel.hpp/cpp
-│   │   │   ├── Model.hpp/cpp
-│   │   │   ├── Textures.hpp/cpp
-│   │   │   └── VmaUsage.cpp
-│   │   ├── scene
-│   │   │   ├── Camera.hpp/cpp
-│   │   │   ├── Scene.hpp/cpp
-│   │   │   ├── SpiralScene.hpp/cpp
-│   │   │   └── Transform.hpp/cpp
-│   │   ├── simplification
-│   │   │   ├── Simplificator.hpp/cpp
-│   │   │   ├── utils
-│   │   │   │    ├── Geometry.hpp/cpp
-│   │   │   │    └── Topology.hpp/cpp
-│   │   │   └── algorithms
-│   │   │        ├── Naive.hpp/cpp
-│   │   │        ├── QEM.hpp/cpp
-│   │   │        ├── VertexClustering.hpp/cpp
-│   │   │        ├── FloatingCellClustering.hpp/cpp
-│   │   │        └── VertexDecimation.hpp/cpp
-│   │   ├── ui
-│   │   │   └── ui.hpp/cpp
-│   │   └── window.h/cpp
-│   └── apps
-│       ├── demo
-│       │   ├── shaders
-│       │   │   ├── shader.vert
-│       │   │   ├── shader.frag
-│       │   │   └── shader.comp
-│       │   ├── CMakeLists.txt
-│       │   ├── main.cpp
-│       │   └── SpiralApp.hpp/cpp
-│       └── simplificator
-│           ├── shaders
-│           │   ├── shader.vert
-│           │   └── shader.frag
-│           ├── CMakeLists.txt
-│           ├── main.cpp
-│           └── SimplificatorApp.hpp/cpp
-├── CMakeLists.txt
-├── LICENSE.txt
-└── README.md
-```
+# Building the project
 
-## TODO's
+1. Clone the repository.
+2. Open the cloned folder in Visual Studio.
+3. Wait for Visual Studio to automatically generate the CMake cache.
+4. Build the project. This will compile both the `Simplificator` and `SpiralApp` applications.
+5. Once the build is complete, you can run the applications directly from Visual Studio or from the output directory.
+6. You can add more 3D models to the output `/assets` directory, or add them to the source `/assets` directory and re-configure CMake to copy them over.
 
-- [x] Basic Vulkan setup
-- [x] Resizable window via ```glfw```
-- [x] Model loading via ```tinygltf```
-- [x] Rotate and show model + basic camera movement 
-- [x] Fix window resizing with loaded model (far plane)
-- [x] Basic ```ImGui``` integration
-- [x] Performance statistics via ```ImGui```
-- [x] Dynamic model loading via ```ImGui```
-- [x] Bounding box compute (autoscaling of a model)
-- [x] Connect mouse movement to camera rotation
-- [x] Implement split-screen render for original and simplified model  
-- [x] Setup data structures for LOD manipulation
-- [ ] Simplification algorithms for LOD generation
-	- [x] Quadric Error Metrics
-		- [x] Research
-		- [x] Optimized
-		- [x] Compute optimal position 
-		- [x] Twin tracking
-	- [x] Vertex Clustering
-		- [x] Research
-		- [x] Optimized
-	- [x] Floating-cell Clustering
-		- [x] Research
-		- [x] Optimized
-		- [x] Implementation
-	- [ ] Naive simplification
-		- [ ] Optimized
-		- [ ] Twin tracking
-	- [x] Random edge collapse
-		- [x] Implementation 
-	- [x] Vertex decimation
-		- [x] Research
-		- [x] Implementation
-		- [x] Triangulating research
-			- [x] Ear clipping 
-		- [x] Optimized
-- [ ] Demo application
-	- [x] Remake project structure for multiple demo apps support 
-	- [x] CPU LOD switching
-		- [x] Switch LOD levels based on distance from the main camera
-		- [ ] Switch LOD levels based on screen size of the model
-	- [x] GPU LOD switching
-		- [x] Switch LOD levels based on distance from the main camera
-		- [x] Compute spiral positions on GPU
-	- [ ] Implement popping effect reduction techniques
-		- [ ] Cross fading
-	- [ ] Performance comparison
-		- [x] Set up environment for performance testing 
-			- [ ] Simplification
-			- [x] Spiral
-		- [x] Save performance statistics to file
-		- [x] Create graphs using ```python```, ```matplotlib```, ...
-	- [ ] Visual comparison
-		- [x] Hausdorff Distance
-		- [x] Mean Squared Error
-		- [ ] Use MeshLab for visual comparison of models
-	- [ ] Moving scene(s) with dynamic LOD adjustment
-		- [x] Spiral scene with moving parts
-		
-- [ ] General TODO's
-	- [x] Texture loading
-	- [x] QEM optimization via priority queue
-	- [ ] Pick a set of testing models
-	- [x] UI improvements
-		- [x] Debug (result) window
-		- [x] Spiral scene - LOD threshold controls
-		- [x] Enable / disable UI option
-	- [x] Performance research
-	- [ ] Export model option (.obj is trivial, .gltf is a bit tricky)
-	- [ ] Use MeshLab for visual comparison of models
+If you don't want to bother with compiling, you can simply download the pre-compiled binaries from the **Releases** page.
 
-# Since last meeting
-- Theoretical part of the thesis
-	- Many re-iterations of existing chapters (Nanite, model repr., Vulkan chapter, ..)
-	- Some reiterations left (simpl. methods, )
-	- Completed remaining theory chapters (CLOD, View-dependent LOD, additional techniques, libraries)
-	- Structure changes in chapters (chronology)
-	- Formal side of the thesis improved (figures, equations, pointers to these)
-- Implementation part of the thesis
-	- Looked for inspiration in existing theses
-	- Format of the design and implementation chapters to be decided
-		- Added Spiral app design
-		- Added Simplificator app design
-	- Added implementation details for the simplificator app
-	- Added implementation details for the spiral app
-	- Split implementation into technical part and result part
-- Application
-	- Added VMA (Spiral CPU-compute boost, tweaking desired comparison)
-		- Some thorough testing was done here, to assure that the performance boost is not a fluke
-	- Refactored spaghetti ```main``` codes
-	- Refactored shared Vulkan code for both apps into common library
-	- Added base python scripts for performance statistics visualization
-	- SPIRAL APP
-		- Several UI and QoL Spiral app improvements (wireframe mode in particular)
-	- SIMPLIFICATOR APP 
-		- Completed twin tracking for QEM simplification
-		- Completed Vertex Decimation simplification
-		- Several UI improvements in the simplificator app
-		- Added Hausdorff distance and MSE calculations
-		- Added 'Random' edge removal
-- Other
-	- Visited a lecture about computer graphics in KCD2
-		- 50 000 up to 100 000 triangles per character
-		- up to 10 milion triangles for a whole scene
-		- use of imposters (billboards)
-		- polygonal meshes with rasterization pipeline
-		- very specific profiler for frame times
-	- Found out I was stuck on very damaged models
-		- Model with X meshes spread across the whole model 
-		- Only use apropriate models (fix in Blender) 
-
-# Known issues
-
-- [FIXED] On first run, the application might crash when loading a model. Restarting the application resolves the issue.
-- Spiral app tends to be 'tweaking' until you reset the animation time
-- Simplificator doesn't handle non-manifold meshes well, though is still functional. 
+# Used libraries
+- [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
+- [Vulkan Memory Allocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
+- [GLFW](https://github.com/glfw/glfw)
+- [Dear ImGui](https://github.com/ocornut/imgui)
+- [TinyGLTF](https://github.com/syoyo/tinygltf)
+- [GLM](https://github.com/g-truc/glm)
 
 # Assets table
+Several models were used for testing the simplification algorithms and benchmarking the rendering performance. Below is a table listing the assets and their sources.
 
-| Asset  | Source |
-| ------------- | ------------- |
-| Duck  | [Khronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Duck/glTF)  |
-| x | y |
+| Asset | Source | Licence |
+| ------------- | ------------- | --------- |
+| Duck  | [Khronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Duck/glTF)| ```SCEA 1.0```|
+| Suzanne | [Kronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Suzanne) |```none (donated to the repository by Norbert Nopper)```|
+| Stanford bunny | [SketchFab](https://sketchfab.com/3d-models/stanford-bunny-43f266d6cd6e4c6888b9943557528c0f)|```CC BY 4.0```|
+| Happy Buddha | [SketchFab](https://sketchfab.com/3d-models/happy-buddha-stanford-5f2a444ff26c4a3bb194f6d79502ee54) |```CC BY-NC 4.0```|
+| Bonsai | [SketchFab](https://sketchfab.com/3d-models/ficus-bonsai-f420ea9edb914e1b9b7adebbacecc7d8) |```X```|
+| sphere | Created in Blender |```none```|
