@@ -209,7 +209,7 @@ void UserInterface::showStatistics()
 
 void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, Device& device, SimplificatorRenderer& renderer, Transform& transform)
 {  
-	ImGui::SetNextWindowPos(ImVec2(10, 490));
+	ImGui::SetNextWindowPos(ImVec2(10.0f, ImGui::GetIO().DisplaySize.y - 10.0f), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
 	ImGui::SetNextWindowSize(ImVec2(250, 400));
 	ImGui::Begin("Models");
 
@@ -289,7 +289,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		return;
 	}
 
-	ImGui::SetNextWindowPos(ImVec2(1490, 10));
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 10.0f, 10.0f), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
 	ImGui::SetNextWindowSize(ImVec2(300, 380));
 
 	ImGui::Begin("Simplification");
@@ -568,7 +568,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 
 void UserInterface::showSimplificationResults(std::unique_ptr<DualModel>& currentDualModel)
 {
-	ImGui::SetNextWindowPos(ImVec2(1490, 610));
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 10.0f, ImGui::GetIO().DisplaySize.y - 10.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 	ImGui::SetNextWindowSize(ImVec2(300, 280));
 
 	ImGui::Begin("Simplification Results");
@@ -709,7 +709,7 @@ void UserInterface::showModelPerspectiveControls(Transform& transform)
 
 void UserInterface::showBenchmarkStart(Benchmark& benchmark)
 {
-	ImGui::SetNextWindowPos(ImVec2(1600, 835));
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 10.0f, ImGui::GetIO().DisplaySize.y - 10.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 	ImGui::SetNextWindowSize(ImVec2(190, 85));
 	ImGui::Begin("Benchmark");
 	if (ImGui::Button("Start static benchmark"))
@@ -732,6 +732,11 @@ void UserInterface::showBenchmarkStart(Benchmark& benchmark)
 
 void UserInterface::showBenchmarkStatus(Benchmark& benchmark)
 {
+	if (!benchmark.isRunning() || benchmark.getMethod() == BenchmarkMethod::MOVING_CAMERA)
+	{
+		return;
+	}
+
 	ImGui::SetNextWindowPos(ImVec2(10, 10));
 	ImGui::SetNextWindowSize(ImVec2(330, 90));
 
@@ -826,7 +831,7 @@ void UserInterface::showSmoothingControls()
 
 void UserInterface::showSurfaceApproximationErrorControls()
 {
-	ImGui::SetNextWindowPos(ImVec2(1490, 510));
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 10.0f, ImGui::GetIO().DisplaySize.y - 300.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 	ImGui::SetNextWindowSize(ImVec2(300, 90));
 	
 	ImGui::Begin("Compute approximation error");
@@ -875,7 +880,7 @@ void UserInterface::showWireframeControls2(SpiralRenderer& renderer)
 
 void UserInterface::showUseGPUCPUControls(SpiralRenderer& renderer)
 {
-	ImGui::SetNextWindowPos(ImVec2(1495, 220), ImGuiCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 10.0f, 220.0f), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
 	ImGui::SetNextWindowSize(ImVec2(300, 80), ImGuiCond_Once);
 
 	ImGui::Begin("Compute controls");
@@ -897,7 +902,7 @@ void UserInterface::showUseGPUCPUControls(SpiralRenderer& renderer)
 
 void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 {
-	ImGui::SetNextWindowPos(ImVec2(1495, 10));
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 10.0f, 10.0f), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
 	ImGui::SetNextWindowSize(ImVec2(300, 200));
 
 	ImGui::Begin("Scene info");
@@ -990,7 +995,7 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& renderer)
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 250));
-	ImGui::SetNextWindowSize(ImVec2(330, 400));
+	ImGui::SetNextWindowSize(ImVec2(330, 330));
 
 	ImGui::Begin("General Settings");
 	static int selectedInstanceCount = scene.config.instanceCount;
@@ -1042,7 +1047,7 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 
 void UserInterface::showSpiralControls(SpiralScene& scene)
 {
-	ImGui::SetNextWindowPos(ImVec2(10, 660));
+	ImGui::SetNextWindowPos(ImVec2(10.0f, ImGui::GetIO().DisplaySize.y - 10.0f), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
 	ImGui::SetNextWindowSize(ImVec2(400, 240));
 
 	ImGui::Begin("Spiral settings");
