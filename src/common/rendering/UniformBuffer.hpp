@@ -11,8 +11,8 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
-#include "../resources/Buffer.hpp"
-#include "../core/Device.hpp"
+#include "common/resources/Buffer.hpp"
+#include "common/core/Device.hpp"
 
 struct UniformBufferObject {
 	alignas(16) glm::mat4 model;

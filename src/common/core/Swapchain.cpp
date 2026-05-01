@@ -22,7 +22,7 @@
 #include <iostream>
 
 Swapchain::Swapchain(Device& device, vk::SurfaceKHR surface, bool enableVsync, uint32_t width, uint32_t height)
-	: swapchainDevice(device), enableVsync(enableVsync)
+	: m_device(device), enableVsync(enableVsync)
 {
 	createSwapchain(surface, width, height);
 	createImageViews();
@@ -36,7 +36,7 @@ Swapchain::~Swapchain()
 
 void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t height)
 {
-	vk::PhysicalDevice physicalDevice = swapchainDevice.getPhysicalDevice();
+	vk::PhysicalDevice physicalDevice = m_device.getPhysicalDevice();
 	
 	// get swapchain support
 	SwapchainSupportDetails supportDetails = {
@@ -106,8 +106,8 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 		VK_TRUE										// clipped
 	);
 
-	swapchain = swapchainDevice.operator*().createSwapchainKHRUnique(createInfo);
-	images = swapchainDevice.operator*().getSwapchainImagesKHR(*swapchain);
+	swapchain = m_device.operator*().createSwapchainKHRUnique(createInfo);
+	images = m_device.operator*().getSwapchainImagesKHR(*swapchain);
 
 	std::cout << "Swapchain created with " << images.size() << " images, format: "
 		<< vk::to_string(imageFormat) << ", extent: " << extent.width << "x" << extent.height << std::endl;
@@ -136,7 +136,7 @@ void Swapchain::createImageViews()
 			}
 		);
 
-		imageViews.push_back(swapchainDevice.operator*().createImageViewUnique(createInfo));
+		imageViews.push_back(m_device.operator*().createImageViewUnique(createInfo));
 	}
 
 	std::cout << "Created " << imageViews.size() << " image views for the swapchain images." << std::endl;
@@ -145,7 +145,7 @@ void Swapchain::createImageViews()
 void Swapchain::createDepthResources()
 {
 	// find a supported depth format
-	depthFormat = swapchainDevice.findDepthFormat();
+	depthFormat = m_device.findDepthFormat();
 
 	// create depth image using VMA
 	VkImageCreateInfo imageInfo = {};
@@ -165,7 +165,7 @@ void Swapchain::createDepthResources()
 	VmaAllocationCreateInfo allocInfo = {};
 	allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	VkImage rawImage;
-	if (vmaCreateImage(swapchainDevice.getAllocator(), &imageInfo, &allocInfo, &rawImage, &depthImageAllocation, nullptr) != VK_SUCCESS)
+	if (vmaCreateImage(m_device.getAllocator(), &imageInfo, &allocInfo, &rawImage, &depthImageAllocation, nullptr) != VK_SUCCESS)
 	{
 		throw std::runtime_error("Failed to create depth image with VMA...");
 	}
@@ -184,12 +184,12 @@ void Swapchain::createDepthResources()
 			0, 1, 0, 1
 		}
 	);
-	depthImageView = swapchainDevice.operator*().createImageViewUnique(viewInfo);
+	depthImageView = m_device.operator*().createImageViewUnique(viewInfo);
 }
 
 uint32_t Swapchain::acquireNextImage(vk::Semaphore signalSemaphore)
 {
-	auto result = swapchainDevice.operator*().acquireNextImageKHR(*swapchain, UINT64_MAX, signalSemaphore, nullptr);
+	auto result = m_device.operator*().acquireNextImageKHR(*swapchain, UINT64_MAX, signalSemaphore, nullptr);
 	
 	if (result.result != vk::Result::eSuccess)
 	{
@@ -208,7 +208,7 @@ void Swapchain::presentImage(uint32_t imageIndex, vk::Semaphore waitSemaphore)
 		nullptr // pResults
 	);
 
-	auto result = swapchainDevice.getPresentQueue().presentKHR(presentInfo);
+	auto result = m_device.getPresentQueue().presentKHR(presentInfo);
 	if (result != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("Failed to present swapchain image.");
@@ -218,7 +218,7 @@ void Swapchain::presentImage(uint32_t imageIndex, vk::Semaphore waitSemaphore)
 void Swapchain::recreateOnResize(vk::SurfaceKHR surface, uint32_t width, uint32_t height)
 {
 	// wait for the device to be idle before recreating
-	swapchainDevice.operator*().waitIdle();
+	m_device.operator*().waitIdle();
 
 	// cleanup old swapchain
 	cleanup();
@@ -238,7 +238,7 @@ void Swapchain::cleanup()
 
 	if (depthImage)
 	{
-		vmaDestroyImage(swapchainDevice.getAllocator(), depthImage, depthImageAllocation);
+		vmaDestroyImage(m_device.getAllocator(), depthImage, depthImageAllocation);
 		depthImage = VK_NULL_HANDLE;
 		depthImageAllocation = VK_NULL_HANDLE;
 	}

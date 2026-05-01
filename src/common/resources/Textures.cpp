@@ -17,8 +17,8 @@
 
 #include "Textures.hpp"
 
-#include "../external/tinygltf/stb_image.h"
-#include "../resources/Buffer.hpp"
+#include "stb_image.h"
+#include "common/resources/Buffer.hpp"
 #include <stdexcept>
 #include <iostream>
 

@@ -11,7 +11,7 @@
  *			- @url https://www.glfw.org/docs/latest/quick.html
  */
 
-#include "window.h"
+#include "common/window.h"
 #include <stdexcept>
 #include <iostream>
 

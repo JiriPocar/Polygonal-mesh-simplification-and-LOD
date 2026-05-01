@@ -11,7 +11,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include <vk_mem_alloc.h>
-#include "../core/Device.hpp"
+#include "common/core/Device.hpp"
 
 class Buffer {
 public:

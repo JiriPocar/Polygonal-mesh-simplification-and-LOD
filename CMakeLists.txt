@@ -82,14 +82,13 @@ target_compile_features(BPEngine PUBLIC cxx_std_17)
 
 # COMMON INCLUDE DIRECTORIES
 target_include_directories(BPEngine PUBLIC 
-    src/common
-    src/apps
-    external
-    external/glfw/include
-    external/tinygltf
-    external/imgui
-    external/imgui/backends
-    external/vma
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/external
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/glfw/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/tinygltf
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/vma
 )
 
 # LIBRARY LINKING

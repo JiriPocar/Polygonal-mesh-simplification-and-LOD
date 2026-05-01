@@ -53,9 +53,12 @@ namespace VertexClustering {
 
 		// alloc grid
 		grid.cells.resize(grid.sizeX);
-		for (int x = 0; x < grid.sizeX; x++) {
+		for (int x = 0; x < grid.sizeX; x++)
+		{
 			grid.cells[x].resize(grid.sizeY);
-			for (int y = 0; y < grid.sizeY; y++) {
+
+			for (int y = 0; y < grid.sizeY; y++)
+			{
 				grid.cells[x][y].resize(grid.sizeZ);
 			}
 		}
@@ -249,9 +252,12 @@ namespace VertexClustering {
 	{
 		std::unordered_map<uint32_t, uint32_t> indexRemap;
 
-		for (int x = 0; x < grid.sizeX; x++) {
-			for (int y = 0; y < grid.sizeY; y++) {
-				for (int z = 0; z < grid.sizeZ; z++) {
+		for (int x = 0; x < grid.sizeX; x++)
+		{
+			for (int y = 0; y < grid.sizeY; y++)
+			{
+				for (int z = 0; z < grid.sizeZ; z++)
+				{
 					auto& cell = grid.cells[x][y][z];
 
 					// ignore empty cells

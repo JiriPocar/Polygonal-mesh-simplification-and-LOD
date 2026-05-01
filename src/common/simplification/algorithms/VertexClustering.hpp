@@ -28,9 +28,9 @@
 #include <vector>
 #include <unordered_map>
 #include <glm/glm.hpp>
-#include "../../resources/Model.hpp"
-#include "../utils/Topology.hpp"
-#include "../utils/Geometry.hpp"
+#include "common/resources/Model.hpp"
+#include "common/simplification/utils/Topology.hpp"
+#include "common/simplification/utils/Geometry.hpp"
 #include "QEM.hpp"
 
 namespace VertexClustering {

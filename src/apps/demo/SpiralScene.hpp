@@ -5,11 +5,11 @@
 #include <vector>
 #include <memory>
 
-#include "core/Device.hpp"
-#include "resources/Model.hpp"
-#include "../../common/simplification/Simplificator.hpp"
-#include "../../common/rendering/CommandManager.hpp"
-#include "../../common/rendering/UniformBuffer.hpp"
+#include "common/core/Device.hpp"
+#include "common/resources/Model.hpp"
+#include "common/simplification/Simplificator.hpp"
+#include "common/rendering/CommandManager.hpp"
+#include "common/rendering/UniformBuffer.hpp"
 
 // matches the structure in the shader for instance data
 struct SpiralInstanceData {

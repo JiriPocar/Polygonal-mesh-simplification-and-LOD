@@ -82,7 +82,7 @@ private:
 	// creates depth resources (image, memory allocation, and image view) for depth buffering.
 	void createDepthResources();
 
-	Device& swapchainDevice;
+	Device& m_device;
 	vk::UniqueSwapchainKHR swapchain;
 	std::vector<vk::Image> images;
 	std::vector<vk::UniqueImageView> imageViews;

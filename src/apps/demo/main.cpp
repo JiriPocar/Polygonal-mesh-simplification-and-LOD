@@ -36,6 +36,8 @@ void help()
 	std::cout << "  N - Lock camera" << std::endl;
 	std::cout << "      Movement: WASD" << std::endl;
 	std::cout << "  U - Toggle UI" << std::endl;
+	std::cout << "	Up arrow - Increase camera speed" << std::endl;
+	std::cout << "	Down arrow - Decrease camera speed" << std::endl;
 	std::cout << "  ESC - Exit application" << std::endl;
 	std::cout << "===============================================================" << std::endl;
 }

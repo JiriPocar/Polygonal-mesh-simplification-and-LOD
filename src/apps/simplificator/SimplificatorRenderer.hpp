@@ -13,16 +13,16 @@
 
 #pragma once
 
-#include "../common/rendering/Renderer.hpp"
-#include "../common/core/Pipeline.hpp"
-#include "../common/resources/Model.hpp"
-#include "../common/scene/Camera.hpp"
-#include "../common/ui/ui.hpp"
-#include "../common/scene/Transform.hpp"
-#include "../common/resources/DualModel.hpp"
-#include "../common/rendering/UniformBuffer.hpp"
-#include "../common/rendering/Descriptors.hpp"
-#include "../common/core/Device.hpp"
+#include "common/rendering/Renderer.hpp"
+#include "common/core/Pipeline.hpp"
+#include "common/resources/Model.hpp"
+#include "common/scene/Camera.hpp"
+#include "common/ui/ui.hpp"
+#include "common/scene/Transform.hpp"
+#include "common/resources/DualModel.hpp"
+#include "common/rendering/UniformBuffer.hpp"
+#include "common/rendering/Descriptors.hpp"
+#include "common/core/Device.hpp"
 
 class UserInterface;
 

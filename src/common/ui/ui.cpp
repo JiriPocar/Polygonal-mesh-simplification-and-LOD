@@ -11,10 +11,10 @@
 #include <filesystem>
 #include <iostream>
 #include <chrono>
-#include "../../apps/demo/SpiralScene.hpp"
+#include "apps/demo/SpiralScene.hpp"
 
 UserInterface::UserInterface(Instance &instance, Device& dev, Swapchain& swapchain, RenderPass& renderPass, Window& window, CommandManager& cmdManager)
-	: uiDevice(dev), uiInstance(instance), uiSwapchain(swapchain), uiRenderPass(renderPass), uiWindow(window), uiCmdManager(cmdManager), simplificator()
+	: m_device(dev), m_instance(instance), m_swapchain(swapchain), m_renderPass(renderPass), m_window(window), m_cmd(cmdManager), simplificator()
 {
 	scanModels();
 	init();
@@ -30,23 +30,23 @@ void UserInterface::init()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsClassic();
-	ImGui_ImplGlfw_InitForVulkan(uiWindow.getGLFWWindow(), true);
+	ImGui_ImplGlfw_InitForVulkan(m_window.getGLFWWindow(), true);
 
 	createDescriptorPool();
 
 	ImGui_ImplVulkan_InitInfo initInfo = {};
-		initInfo.Instance = uiInstance.get();
-		initInfo.PhysicalDevice = uiDevice.getPhysicalDevice();
-		initInfo.Device = uiDevice.operator*();
-		initInfo.QueueFamily = uiDevice.getGraphicsQueueFamily();
-		initInfo.Queue = uiDevice.getGraphicsQueue();
+		initInfo.Instance = m_instance.get();
+		initInfo.PhysicalDevice = m_device.getPhysicalDevice();
+		initInfo.Device = m_device.operator*();
+		initInfo.QueueFamily = m_device.getGraphicsQueueFamily();
+		initInfo.Queue = m_device.getGraphicsQueue();
 		initInfo.PipelineCache = nullptr;
 		initInfo.DescriptorPool = *descriptorPool;
 		initInfo.Subpass = 0;
 		initInfo.MinImageCount = 2;
-		initInfo.ImageCount = static_cast<uint32_t>(uiSwapchain.getImages().size());
+		initInfo.ImageCount = static_cast<uint32_t>(m_swapchain.getImages().size());
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		initInfo.RenderPass = uiRenderPass.get();
+		initInfo.RenderPass = m_renderPass.get();
 
 	ImGui_ImplVulkan_Init(&initInfo);
 
@@ -75,7 +75,7 @@ void UserInterface::createDescriptorPool()
 		poolSizes.data()
 	);
 
-	descriptorPool = uiDevice.operator*().createDescriptorPoolUnique(poolInfo);
+	descriptorPool = m_device.operator*().createDescriptorPoolUnique(poolInfo);
 }
 
 void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Device& device, SimplificatorRenderer& renderer, Transform& transform, bool show)
@@ -227,7 +227,7 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 					{
 						try {
 							device.operator*().waitIdle(); // wait for device to be idle before loading new model
-							currentDualModel = std::make_unique<DualModel>(device, uiCmdManager, modelPath);
+							currentDualModel = std::make_unique<DualModel>(device, m_cmd, modelPath);
 							float setScale = currentDualModel->getOriginalModel().getScaleIndex();
 							transform.setScale(glm::vec3(setScale, setScale, setScale));
 							renderer.setDualModel(*currentDualModel);
@@ -256,7 +256,7 @@ void UserInterface::showModelMenu(std::unique_ptr<DualModel>& currentDualModel, 
 					{
 						try {
 							device.operator*().waitIdle();
-							currentDualModel = std::make_unique<DualModel>(device, uiCmdManager, modelPath);
+							currentDualModel = std::make_unique<DualModel>(device, m_cmd, modelPath);
 							float setScale = currentDualModel->getOriginalModel().getScaleIndex();
 							transform.setScale(glm::vec3(setScale, setScale, setScale));
 							renderer.setDualModel(*currentDualModel);
@@ -839,7 +839,6 @@ void UserInterface::showSurfaceApproximationErrorControls()
 	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enables Mean squared error computation during simplification.");
 
 	ImGui::End();
-	ImGui::Separator();
 }
 
 void UserInterface::showWireframeControls(SimplificatorRenderer& renderer)
@@ -1033,7 +1032,7 @@ void UserInterface::showGeneralControls(SpiralScene& scene, SpiralRenderer& rend
 	
 		if (ImGui::Button("Apply and regenerate meshes"))
 		{
-			scene.rebuildLODs(uiCmdManager);
+			scene.rebuildLODs(m_cmd);
 			renderer.refreshTextureDescriptors();
 		}
 	}
@@ -1086,7 +1085,7 @@ const char* UserInterface::getAlgName(Algorithm algorithm)
 
 void UserInterface::handleMouseMove(double x, double y)
 {
-	ImGui_ImplGlfw_CursorPosCallback(uiWindow.getGLFWWindow(), x, y);
+	ImGui_ImplGlfw_CursorPosCallback(m_window.getGLFWWindow(), x, y);
 }
 
 void UserInterface::render(vk::CommandBuffer cmdBuffer)
@@ -1097,7 +1096,7 @@ void UserInterface::render(vk::CommandBuffer cmdBuffer)
 
 void UserInterface::cleanUp()
 {
-	uiDevice.operator*().waitIdle();
+	m_device.operator*().waitIdle();
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();

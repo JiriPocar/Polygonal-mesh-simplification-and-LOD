@@ -8,10 +8,10 @@
  */
 
 #pragma once
-#include "../../common/core/VulkanApp.hpp"
-#include "../../common/core/Pipeline.hpp"
-#include "../../common/resources/DualModel.hpp"
-#include "../../common/scene/Transform.hpp"
+#include "common/core/VulkanApp.hpp"
+#include "common/core/Pipeline.hpp"
+#include "common/resources/DualModel.hpp"
+#include "common/scene/Transform.hpp"
 #include "SimplificatorRenderer.hpp"
 
 class SimplificatorApp : public VulkanApp {

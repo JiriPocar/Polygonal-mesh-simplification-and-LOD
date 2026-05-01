@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "../resources/Model.hpp"
+#include "common/resources/Model.hpp"
 
 #define DONT_DECIMATE_ERROR 1e9
 

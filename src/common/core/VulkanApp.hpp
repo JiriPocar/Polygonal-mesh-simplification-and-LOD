@@ -13,22 +13,22 @@
 #include <memory>
 #include <chrono>
 
-#include "core/Instance.hpp"
-#include "core/Device.hpp"
-#include "core/Swapchain.hpp"
-#include "core/Pipeline.hpp"
-#include "rendering/RenderPass.hpp"
-#include "rendering/FrameBuffer.hpp"
-#include "rendering/CommandManager.hpp"
-#include "rendering/Renderer.hpp"
-#include "rendering/Descriptors.hpp"
-#include "rendering/UniformBuffer.hpp"
-#include "resources/Model.hpp"
-#include "resources/DualModel.hpp"
-#include "scene/Camera.hpp"
-#include "scene/Transform.hpp"
-#include "ui/ui.hpp"
-#include "window.h"
+#include "common/core/Instance.hpp"
+#include "common/core/Device.hpp"
+#include "common/core/Swapchain.hpp"
+#include "common/core/Pipeline.hpp"
+#include "common/rendering/RenderPass.hpp"
+#include "common/rendering/FrameBuffer.hpp"
+#include "common/rendering/CommandManager.hpp"
+#include "common/rendering/Renderer.hpp"
+#include "common/rendering/Descriptors.hpp"
+#include "common/rendering/UniformBuffer.hpp"
+#include "common/resources/Model.hpp"
+#include "common/resources/DualModel.hpp"
+#include "common/scene/Camera.hpp"
+#include "common/scene/Transform.hpp"
+#include "common/ui/ui.hpp"
+#include "common/window.h"
 
 class VulkanApp {
 public:

@@ -17,7 +17,7 @@
  */
 
 #include "CommandManager.hpp"
-#include "../core/Device.hpp"
+#include "common/core/Device.hpp"
 #include <stdexcept>
 #include <iostream>
 

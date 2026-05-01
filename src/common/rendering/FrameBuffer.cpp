@@ -17,8 +17,8 @@
  */
 
 #include "FrameBuffer.hpp"
-#include "../core/Device.hpp"
-#include "../core/Swapchain.hpp"
+#include "common/core/Device.hpp"
+#include "common/core/Swapchain.hpp"
 #include "RenderPass.hpp"
 #include <stdexcept>
 #include <iostream>

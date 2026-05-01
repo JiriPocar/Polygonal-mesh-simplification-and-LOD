@@ -10,8 +10,8 @@
 #include <vector>
 #include <cstdint>
 #include <glm/glm.hpp>
-#include "../../resources/Model.hpp"
-#include "../Simplificator.hpp"
+#include "common/resources/Model.hpp"
+#include "common/simplification/Simplificator.hpp"
 
 namespace Topology {
 

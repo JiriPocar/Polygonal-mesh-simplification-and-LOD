@@ -9,13 +9,14 @@
 
 #pragma once
 
-#include "../../common/rendering/Renderer.hpp"
-#include "../../common/core/Pipeline.hpp"
-#include "../../common/core/ComputePipeline.hpp"
-#include "../../common/scene/Camera.hpp"
-#include "../apps/demo/SpiralScene.hpp"
-#include "../../common/rendering/UniformBuffer.hpp"
-#include "../../common/rendering/Descriptors.hpp"
+#include "common/rendering/Renderer.hpp"
+#include "common/core/Pipeline.hpp"
+#include "common/core/ComputePipeline.hpp"
+#include "common/scene/Camera.hpp"
+#include "apps/demo/SpiralScene.hpp"
+#include "common/rendering/UniformBuffer.hpp"
+#include "common/rendering/Descriptors.hpp"
+#include "common/window.h"
 
 class UserInterface;
 class SpiralComputePipeline;

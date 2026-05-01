@@ -12,8 +12,8 @@
 #include <vulkan/vulkan.hpp>
 #include <string.h>
 #include <vk_mem_alloc.h>
-#include "../core/Device.hpp"
-#include "../rendering/CommandManager.hpp"
+#include "common/core/Device.hpp"
+#include "common/rendering/CommandManager.hpp"
 
 class Texture {
 public:

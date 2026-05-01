@@ -37,7 +37,7 @@ Instance::Instance(bool validation)
 	}
 
 	vk::ApplicationInfo appInfo = {
-		"LOD in huge scenes",	// application name
+		"Level of Detail techniques",	// application name
 		VK_MAKE_VERSION(0,0,0), // application version
 		nullptr,				// engine name
 		VK_MAKE_VERSION(0,0,0), // engine version

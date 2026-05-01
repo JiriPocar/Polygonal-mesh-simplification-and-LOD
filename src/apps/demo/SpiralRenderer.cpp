@@ -12,7 +12,7 @@
  */
 
 #include "SpiralRenderer.hpp"
-#include "../common/ui/ui.hpp"
+#include "common/ui/ui.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <array>

@@ -32,10 +32,10 @@
 #include <cstdint>
 #include <algorithm>
 #include <set>
-#include "../../resources/Model.hpp"
-#include "../utils/Topology.hpp"
-#include "../utils/Geometry.hpp"
-#include "../utils/LazyPriorityQueue.hpp"
+#include "common/resources/Model.hpp"
+#include "common/simplification/utils/Topology.hpp"
+#include "common/simplification/utils/Geometry.hpp"
+#include "common/simplification/utils/LazyPriorityQueue.hpp"
 
 namespace QEM {
     

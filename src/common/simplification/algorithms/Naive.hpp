@@ -9,9 +9,9 @@
 #pragma once
 #include <vector>
 #include <algorithm>
-#include "../../resources/Model.hpp"
-#include "../utils/Geometry.hpp"
-#include "../utils/Topology.hpp"
+#include "common/resources/Model.hpp"
+#include "common/simplification/utils/Geometry.hpp"
+#include "common/simplification/utils/Topology.hpp"
 
 namespace Naive {
 

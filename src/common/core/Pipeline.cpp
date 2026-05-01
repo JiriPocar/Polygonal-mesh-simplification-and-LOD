@@ -22,7 +22,7 @@
 
 #include "Pipeline.hpp"
 #include "Device.hpp"
-#include "../rendering/RenderPass.hpp"
+#include "common/rendering/RenderPass.hpp"
 
 static std::vector<char> readFile(const std::string& filename)
 {
@@ -58,7 +58,7 @@ Pipeline::Pipeline(Device& device,
 	vk::DescriptorSetLayout descriptorSetLayout,
 	PipelineType type,
 	vk::PolygonMode polygonMode)
-	: pipelineDevice(device)
+	: m_device(device)
 {
 	createPipeline(renderPass, swapchainExtent, descriptorSetLayout, type, polygonMode);
 }
@@ -71,7 +71,7 @@ vk::UniqueShaderModule Pipeline::createShaderModule(const std::vector<char>& inp
 		reinterpret_cast<const uint32_t*>(inputCode.data())
 	);
 
-	return pipelineDevice.operator*().createShaderModuleUnique(createInfo);
+	return m_device.operator*().createShaderModuleUnique(createInfo);
 }
 
 void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExtent, vk::DescriptorSetLayout descriptorSetLayout, PipelineType type, vk::PolygonMode polygonMode)
@@ -105,7 +105,7 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		0,
 		nullptr					// no push constants
 	);
-	pipelineLayout = pipelineDevice.operator*().createPipelineLayoutUnique(pipelineLayoutInfo);
+	pipelineLayout = m_device.operator*().createPipelineLayoutUnique(pipelineLayoutInfo);
 
 	// vertex input
 	std::vector<vk::VertexInputBindingDescription> bindings;
@@ -266,7 +266,7 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		-1						// base pipeline index
 	);
 
-	auto result = pipelineDevice.operator*().createGraphicsPipelineUnique(VK_NULL_HANDLE, pipelineInfo);
+	auto result = m_device.operator*().createGraphicsPipelineUnique(VK_NULL_HANDLE, pipelineInfo);
 	if (result.result != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("Failed to create graphics pipeline");

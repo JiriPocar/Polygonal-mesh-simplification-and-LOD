@@ -17,9 +17,9 @@
 #include "RenderPass.hpp"
 #include "FrameBuffer.hpp"
 #include "CommandManager.hpp"
-#include "../window.h"
-#include "../core/Device.hpp"
-#include "../core/Swapchain.hpp"
+#include "common/window.h"
+#include "common/core/Device.hpp"
+#include "common/core/Swapchain.hpp"
 
 class Renderer {
 public:

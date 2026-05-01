@@ -43,7 +43,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <algorithm>
-#include "../../resources/Model.hpp"
+#include "common/resources/Model.hpp"
 namespace ErrorMetrics {
 
 	/**

@@ -208,15 +208,19 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 		qedgeQueue.push(edge);
 	}
 
+	// build a context struct to pass around necessary data
 	QEM::QEMContext context{vertices, indices, quadrics, vertexDeleted, isBorderVertex, twinMap, allNeighborhoods};
 
+	// simplification loop
 	while (currentFaceCount > targetFaceCount)
 	{
+		// pop a valid, minimal error edge from the prio queue
 		QEM::Qedge minEdge;
 		bool foundValidEdge = qedgeQueue.popValid(minEdge, [&](const QEM::Qedge& e) {
 			return QEM::isEdgeValidForCollapse(context, e, qedgeQueue, options);
 		});
 
+		// if no valid edge was found or the error is too high, stop the simplification
 		if (!foundValidEdge)
 		{
 			std::cout << "Abrupt stop - no more edges to collapse that would fit the criteria." << std::endl;
@@ -292,6 +296,7 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 
 	// init priority queue
 	LazyPriorityQueue<VertexDecimation::DecimationCandidate, VertexDecimation::DecimationCompare> candidatesQueue;
+
 	// fill with initial candidates
 	for (uint32_t i = 0; i < vertices.size(); i++)
 	{
@@ -303,10 +308,11 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 		}
 	}
 
+	// simplification loop
 	while (currentFaceCount > targetFaceCount)
 	{
+		// pop a valid, minimal error candidate from the prio queue
 		VertexDecimation::DecimationCandidate minErrCandidate;
-
 		bool foundValid = candidatesQueue.popValid(minErrCandidate, [&](const VertexDecimation::DecimationCandidate& c) {
 			// skip inactive
 			if (!vInfo[c.vertexIdx].isActive) return false;
@@ -328,6 +334,7 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 			break;
 		}
 
+		// retriangulate the hole left by vertex removal
 		uint32_t vIdx = minErrCandidate.vertexIdx;
 		std::vector<uint32_t> newTriangles = VertexDecimation::triangulateHole(vIdx, vertices, indices, vInfo[vIdx]);
 
@@ -340,6 +347,7 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 
 		// every triangle of the removed vertex is removed
 		size_t deletedFaces = vInfo[vIdx].neighborhood.triangles.size();
+
 		// every triangle in the triangulated hole is added
 		size_t addedFaces = newTriangles.size() / 3;
 
@@ -371,16 +379,18 @@ MeshData Simplificator::simplifyVertexClustering(std::vector<Vertex> vertices, s
 	std::cout << "Input faces: " << currentFaceCount << std::endl;
 	std::cout << "Cells per axis: " << cellsPerAxis << std::endl;
 
+	// get cell size based on longest axis of the models bounding box
 	float gridSize = VertexClustering::computeGridCellSize(vertices, cellsPerAxis);
 
+	// create the 3D grid and fill it with vertex indices
 	auto grid = VertexClustering::createGrid(vertices, gridSize);
-	std::cout << "Grid dimensions: " << grid.sizeX << "x"
-		<< grid.sizeY << "x" << grid.sizeZ << std::endl;
-
+	std::cout << "Grid dimensions: " << grid.sizeX << "x" << grid.sizeY << "x" << grid.sizeZ << std::endl;
 	VertexClustering::fillGrid(grid, vertices);
 
+	// map for remapping indices
 	std::unordered_map<uint32_t, uint32_t> indexMap;
 
+	// pick a representative vertex strategy
 	switch (clusteringMethod)
 	{
 		case ClusteringMethod::CellCenter:
@@ -424,6 +434,7 @@ MeshData Simplificator::simplifyVertexClustering(std::vector<Vertex> vertices, s
 			break;
 	}
 
+	// remap indices and remove degenerated triangles
 	Geometry::remapIndices(indices, indexMap);
 	Geometry::removeDegeneratedTriangles(indices);
 
@@ -447,9 +458,11 @@ MeshData Simplificator::simplifyFloatingCellClustering(std::vector<Vertex> verti
 	std::cout << "Input faces: " << currentFaceCount << std::endl;
 	std::cout << "Cell radius: " << cellRadius << std::endl;
 
+	// radius is computed based on the user defined cells per axis parameter
 	float radius = FloatingCellClustering::computeRadius(vertices, cellRadius);
 	auto indexMap = FloatingCellClustering::computeRepresentative(vertices, indices, radius);
 
+	// remap indices and remove degenerated triangles
 	Geometry::remapIndices(indices, indexMap);
 	Geometry::removeDegeneratedTriangles(indices);
 
@@ -494,9 +507,6 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 		Naive::Edge shortestEdge;
 		bool foundValidEdge = edgeQueue.popValid(shortestEdge, [&](const Naive::Edge& e) {
 			return !vertexDeleted[e.v1] && !vertexDeleted[e.v2];
-
-			//float currentLen = glm::distance(vertices[e.v1].pos, vertices[e.v2].pos);
-			//if (std::abs(currentLen - e.length) > 1e-4f) return false;
 		});
 		
 		if (!foundValidEdge)

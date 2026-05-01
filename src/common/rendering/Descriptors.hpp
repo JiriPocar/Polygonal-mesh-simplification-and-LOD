@@ -13,7 +13,7 @@
 #include <vulkan/vulkan.hpp>
 #include <memory>
 #include "UniformBuffer.hpp"
-#include "../core/Device.hpp"
+#include "common/core/Device.hpp"
 
 class Texture;
 

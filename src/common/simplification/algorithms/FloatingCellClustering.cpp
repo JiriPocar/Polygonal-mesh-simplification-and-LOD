@@ -27,8 +27,8 @@
 #include <algorithm>
 #include <numeric>
 
-#include "../utils/Topology.hpp"
-#include "../utils/Geometry.hpp"
+#include "common/simplification/utils/Topology.hpp"
+#include "common/simplification/utils/Geometry.hpp"
 #include "VertexClustering.hpp"
 
 namespace FloatingCellClustering {

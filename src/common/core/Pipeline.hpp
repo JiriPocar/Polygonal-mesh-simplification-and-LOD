@@ -11,9 +11,9 @@
 #include <memory>
 #include <vector>
 
-#include "../resources/Model.hpp"
+#include "common/resources/Model.hpp"
 #include "Device.hpp"
-#include "../rendering/RenderPass.hpp"
+#include "common/rendering/RenderPass.hpp"
 
 // differentiate between apps to use different pipelines
 // TODO: make this a builder class instead
@@ -57,7 +57,7 @@ private:
 	*/
 	vk::UniqueShaderModule createShaderModule(const std::vector<char>& inputCode);
 
-	Device& pipelineDevice;
+	Device& m_device;
 	vk::UniquePipelineLayout pipelineLayout;
 	vk::UniquePipeline graphicsPipeline;
 };

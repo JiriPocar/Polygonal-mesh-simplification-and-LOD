@@ -9,13 +9,13 @@
 
 #pragma once
 #include <vulkan/vulkan.hpp>
-#include "../core/Device.hpp"
+#include "common/core/Device.hpp"
 #include "Buffer.hpp"
 #include <vector>
 #include <string>
 #include <glm/glm.hpp>
-#include "../../external/tinygltf/tiny_gltf.h"
-#include "../common/resources/Textures.hpp"
+#include "tiny_gltf.h"
+#include "common/resources/Textures.hpp"
 
 class CommandManager;
 

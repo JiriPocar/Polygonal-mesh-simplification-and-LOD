@@ -27,7 +27,7 @@
 #include <vector>
 #include <unordered_map>
 #include <glm/glm.hpp>
-#include "../../resources/Model.hpp"
+#include "common/resources/Model.hpp"
 
 namespace FloatingCellClustering {
 

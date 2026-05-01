@@ -16,8 +16,8 @@
  */
 
 #include "Model.hpp"
-#include "../rendering/CommandManager.hpp"
-#include "../common/simplification/utils/Geometry.hpp"
+#include "common/rendering/CommandManager.hpp"
+#include "common/simplification/utils/Geometry.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
@@ -27,7 +27,7 @@
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../../external/tinygltf/tiny_gltf.h"
+#include "tiny_gltf.h"
 
 vk::VertexInputBindingDescription Vertex::getBindingDesc()
 {

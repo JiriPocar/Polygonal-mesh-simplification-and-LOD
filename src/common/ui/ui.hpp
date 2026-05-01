@@ -15,20 +15,20 @@
 #include <deque>
 #include <vector>
 
-#include "../window.h"
-#include "../core/Device.hpp"
-#include "../core/Instance.hpp"
-#include "../core/Swapchain.hpp"
-#include "../rendering/Renderpass.hpp"
-#include "../rendering/CommandManager.hpp"
-#include "../scene/Camera.hpp"
-#include "../scene/Transform.hpp"
-#include "../resources/Model.hpp"
-#include "../resources/DualModel.hpp"
-#include "../simplification/Simplificator.hpp"
-#include "../apps/simplificator/SimplificatorRenderer.hpp"
-#include "../apps/demo/SpiralRenderer.hpp"
-#include "../apps/demo/Benchmark.hpp"
+#include "common/window.h"
+#include "common/core/Device.hpp"
+#include "common/core/Instance.hpp"
+#include "common/core/Swapchain.hpp"
+#include "common/rendering/Renderpass.hpp"
+#include "common/rendering/CommandManager.hpp"
+#include "common/scene/Camera.hpp"
+#include "common/scene/Transform.hpp"
+#include "common/resources/Model.hpp"
+#include "common/resources/DualModel.hpp"
+#include "common/simplification/Simplificator.hpp"
+#include "apps/simplificator/SimplificatorRenderer.hpp"
+#include "apps/demo/SpiralRenderer.hpp"
+#include "apps/demo/Benchmark.hpp"
 
 class SpiralScene;
 class SimplificatorRenderer;
@@ -80,12 +80,13 @@ private:
 	void showBenchmarkStart(Benchmark& benchmark);
 	void showBenchmarkStatus(Benchmark& benchmark);
 
-	Instance& uiInstance;
-	Device& uiDevice;
-	Swapchain& uiSwapchain;
-	RenderPass& uiRenderPass;
-	Window& uiWindow;
-	CommandManager& uiCmdManager;
+	Instance& m_instance;
+	Device& m_device;
+	Swapchain& m_swapchain;
+	RenderPass& m_renderPass;
+	Window& m_window;
+	CommandManager& m_cmd;
+
 	vk::UniqueDescriptorPool descriptorPool;
 	Simplificator simplificator;
 
