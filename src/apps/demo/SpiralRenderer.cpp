@@ -200,6 +200,20 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
         );
     }
 
+    vk::Viewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(m_swapchain.getExtent().width);
+    viewport.height = static_cast<float>(m_swapchain.getExtent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    cmdBuffer.setViewport(0, 1, &viewport);
+
+    vk::Rect2D scissor{};
+    scissor.offset = vk::Offset2D{ 0, 0 };
+    scissor.extent = m_swapchain.getExtent();
+    cmdBuffer.setScissor(0, 1, &scissor);
+
     vk::Buffer instanceBuffer[] = { useGPULODCompute ? m_spiralScene.getLODInstanceBuffer(currentFrame) : m_spiralScene.getInstanceBuffer(currentFrame) };
     vk::DeviceSize instanceOffsets[] = { 0 };
     cmdBuffer.bindVertexBuffers(1, 1, instanceBuffer, instanceOffsets);

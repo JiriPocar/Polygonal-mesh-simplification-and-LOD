@@ -118,7 +118,11 @@ void SpiralApp::update(float deltaTime)
     {
         window.resetResizedFlag();
 		farPlane = farPlaneChange;
-        camera.setPerspective(60.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, farPlane);
+
+        float width = std::max(1.0f, static_cast<float>(window.getWidth()));
+        float height = std::max(1.0f, static_cast<float>(window.getHeight()));
+
+        camera.setPerspective(60.0f, width / height, 0.1f, farPlane);
     }
 
     if (benchmark.isRunning())
