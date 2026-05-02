@@ -74,6 +74,10 @@ SimplificatorResult Simplificator::simplify(Model& model, float targetFaceCountR
 		else
 		{
 			targetFaceCount = static_cast<size_t>(originalFaceCount * targetFaceCountRatio);
+
+			// prevent over-simplification for small meshes in the model
+			size_t minFaces = std::min<size_t>(originalFaceCount, 24);
+			targetFaceCount = std::max(targetFaceCount, minFaces);
 		}
 		// =========================================================================
 
@@ -615,7 +619,7 @@ MeshData Simplificator::simplifyRandom(std::vector<Vertex> vertices, std::vector
 
 		if (options.checkFaceFlipping)
 		{
-			if (Topology::checkFaceFlipping(vertices[randomVertexIdx].pos, vertices[keepIdx].pos, randomVertexIdx, indices, vertices))
+			if (Topology::checkFaceFlipping(vertices[randomVertexIdx].pos, vertices[keepIdx].pos, randomVertexIdx, indices, vertices, allNeighborhoods[randomVertexIdx]))
 			{
 				continue;
 			}

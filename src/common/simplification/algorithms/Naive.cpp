@@ -250,7 +250,7 @@ namespace Naive {
 
         if (options.checkFaceFlipping)
         {
-            if (Topology::checkFaceFlipping(vertices[v2].pos, vertices[v1].pos, v2, indices, vertices))
+            if (Topology::checkFaceFlipping(vertices[v2].pos, vertices[v1].pos, v2, indices, vertices, allNeighborhoods[v1]))
             {
                 return false;
             }

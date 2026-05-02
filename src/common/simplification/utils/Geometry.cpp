@@ -232,7 +232,7 @@ namespace Geometry
 		// normalize normals
 		for (auto& v : vertices)
 		{
-			if (glm::length(v.normal) > 1e-6f)
+			if (glm::length(v.normal) > 1e-12f)
 			{
 				v.normal = glm::normalize(v.normal);
 			}

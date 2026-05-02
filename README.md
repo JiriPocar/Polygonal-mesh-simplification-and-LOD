@@ -13,7 +13,7 @@ The simplification application (```Simplificator```) can be freely used for mesh
 ![SIMPLIFICATOR](images/simplificator.PNG)
 
 ### Features
-- Simple ```glTF``` model loading with base texture.
+- Simple ```glTF``` model loading with a **single** base texture.
 - Per-mesh simplification using various algorithms and metrics:
 	- ```QEM```
 	- ```Vertex Clustering```
@@ -91,11 +91,13 @@ If you don't want to bother with compiling, you can simply download the pre-comp
 # Assets table
 Several models were used for testing the simplification algorithms and benchmarking the rendering performance. Below is a table listing the assets and their sources.
 
-| Asset | Source | Licence |
-| ------------- | ------------- | --------- |
-| Duck  | [Khronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Duck/glTF)| ```SCEA 1.0```|
-| Suzanne | [Kronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Suzanne) |```none (donated to the repository by Norbert Nopper)```|
-| Stanford bunny | [SketchFab](https://sketchfab.com/3d-models/stanford-bunny-43f266d6cd6e4c6888b9943557528c0f)|```CC BY 4.0```|
-| Happy Buddha | [SketchFab](https://sketchfab.com/3d-models/happy-buddha-stanford-5f2a444ff26c4a3bb194f6d79502ee54) |```CC BY-NC 4.0```|
-| Bonsai | [SketchFab](https://sketchfab.com/3d-models/ficus-bonsai-f420ea9edb914e1b9b7adebbacecc7d8) |```X```|
+| Asset | Source | Author | Licence |Note |
+| ------------- | ------------- | --------- | ---- |
+| Duck  | [Khronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Duck/glTF)|KhronosGroup| ```SCEA 1.0```|
+| Suzanne | [Kronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Suzanne) |Norbert Nopper|```none (donated to the repository by Norbert Nopper)```|
+| Stanford bunny | [SketchFab](https://sketchfab.com/3d-models/stanford-bunny-43f266d6cd6e4c6888b9943557528c0f)|darwinsenior|```CC BY 4.0```|
+| Happy Buddha | [SketchFab](https://sketchfab.com/3d-models/happy-buddha-stanford-5f2a444ff26c4a3bb194f6d79502ee54) |3D graphics 101|```CC BY-NC 4.0```|
+| Skull | [SketchFab](https://sketchfab.com/3d-models/skull-downloadable-1a9db900738d44298b0bc59f68123393) |martinjario|```CC BY 4.0```|
+| Male Body | [SketchFab](https://sketchfab.com/3d-models/male-body-base-mesh-highpoly-9311f4f8fa1a4fe4bb0027ff7e8fd795) |Mandrake|```CC BY 4.0```| Fixed in Blender|
+| Boot | [SketchFab](https://sketchfab.com/3d-models/caterpillar-work-boot-d551ce74dcd24528a05cbb0f4b7434d7) |inciprocal| ```CC BY 4.0```| Stripped off of the 4k PBR textures |
 | sphere | Created in Blender |```none```|

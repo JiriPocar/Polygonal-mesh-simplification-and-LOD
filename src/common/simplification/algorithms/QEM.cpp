@@ -138,10 +138,16 @@ namespace QEM {
 			// solve for v in MAT * v = -b
 			glm::dvec3 exactOptPos = -glm::inverse(MAT) * b;
 
-			outErr = q.evalError(exactOptPos);
-			if (outErr < 0.0) outErr = 0.0;
-
-			return glm::vec3(exactOptPos);
+			// if the optPos is too far away from the edge, indicates unwanted spike
+			glm::vec3 optPos(exactOptPos);
+			float edgeLen = glm::length(v2 - v1);
+			glm::vec3 center = 0.5f * (v1 + v2);
+			if (glm::distance(optPos, center) <= edgeLen * 2.0f)
+			{
+				outErr = q.evalError(exactOptPos);
+				if (outErr < 0.0) outErr = 0.0;
+				return glm::vec3(exactOptPos);
+			}
 		}
 
 		// FALLBACK - choose between v1, v2 and midpoint
@@ -444,8 +450,8 @@ namespace QEM {
 		if (options.checkFaceFlipping)
 		{
 			// since it is a full edge collapse, check both vertices for potential face flipping
-			bool willFlip = Topology::checkFaceFlipping(context.vertices[e.v1].pos, currentOptPos, e.v1, context.indices, context.vertices) ||
-				Topology::checkFaceFlipping(context.vertices[e.v2].pos, currentOptPos, e.v2, context.indices, context.vertices);
+			bool willFlip = Topology::checkFaceFlipping(context.vertices[e.v1].pos, currentOptPos, e.v1, context.indices, context.vertices, context.allNeighborhoods[e.v1]) ||
+				Topology::checkFaceFlipping(context.vertices[e.v2].pos, currentOptPos, e.v2, context.indices, context.vertices, context.allNeighborhoods[e.v2]);
 			
 			// prevent twin flipping 
 			if (options.resolveUVSeams && !willFlip)
@@ -453,7 +459,7 @@ namespace QEM {
 				// again - check both vertices, if either has a twin that would flip, the collapse is invalid
 				for (uint32_t twin : context.twinMap[e.v1])
 				{
-					if (!context.vertexDeleted[twin] && Topology::checkFaceFlipping(context.vertices[twin].pos, currentOptPos, twin, context.indices, context.vertices))
+					if (!context.vertexDeleted[twin] && Topology::checkFaceFlipping(context.vertices[twin].pos, currentOptPos, twin, context.indices, context.vertices, context.allNeighborhoods[twin]))
 					{
 						willFlip = true;
 						break;
@@ -463,7 +469,7 @@ namespace QEM {
 				{
 					for (uint32_t twin : context.twinMap[e.v2])
 					{
-						if (!context.vertexDeleted[twin] && Topology::checkFaceFlipping(context.vertices[twin].pos, currentOptPos, twin, context.indices, context.vertices))
+						if (!context.vertexDeleted[twin] && Topology::checkFaceFlipping(context.vertices[twin].pos, currentOptPos, twin, context.indices, context.vertices, context.allNeighborhoods[twin]))
 						{
 							willFlip = true;
 							break;

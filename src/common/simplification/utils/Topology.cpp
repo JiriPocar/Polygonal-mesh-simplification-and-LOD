@@ -241,13 +241,13 @@ namespace Topology
 		return isLocked;
 	}
 
-	bool checkFaceFlipping(glm::vec3 beforePos, glm::vec3 afterPos, uint32_t movingVertexIdx, std::vector<uint32_t>& indices, std::vector<Vertex>& vertices)
+	bool checkFaceFlipping(glm::vec3 beforePos, glm::vec3 afterPos, uint32_t movingVertexIdx, std::vector<uint32_t>& indices, std::vector<Vertex>& vertices, const Neighborhood& n)
 	{
-		for (size_t i = 0; i < indices.size(); i += 3)
+		for (uint32_t tri : n.triangles)
 		{
-			uint32_t idx1 = indices[i];
-			uint32_t idx2 = indices[i + 1];
-			uint32_t idx3 = indices[i + 2];
+			uint32_t idx1 = indices[tri];
+			uint32_t idx2 = indices[tri + 1];
+			uint32_t idx3 = indices[tri + 2];
 
 			// only triangles that share the moving vertex can potentially flip, skip others
 			if (idx1 != movingVertexIdx && idx2 != movingVertexIdx && idx3 != movingVertexIdx)

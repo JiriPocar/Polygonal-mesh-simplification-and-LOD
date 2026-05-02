@@ -24,17 +24,12 @@ namespace Topology {
 	std::vector<Neighborhood> buildAllNeighborhoods(size_t vertexCount, std::vector<uint32_t>& indices);
 
 	std::vector<bool> findLockedVertices(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<uint32_t>& representatives, const SimplificationOptions& options);
-	bool checkFaceFlipping(glm::vec3 beforePos, glm::vec3 afterPos, uint32_t movingVertexIdx, std::vector<uint32_t>& indices, std::vector<Vertex>& vertices);
+	bool checkFaceFlipping(glm::vec3 beforePos, glm::vec3 afterPos, uint32_t movingVertexIdx, std::vector<uint32_t>& indices, std::vector<Vertex>& vertices, const Neighborhood& n);
 	bool checkConnectivity(uint32_t v1, uint32_t v2, std::vector<uint32_t>& indices, const Neighborhood& n1, const Neighborhood& n2);
 	size_t countActiveFaces(const std::vector<uint32_t>& indices, const std::vector<uint32_t>& reps);
 
 	std::vector<uint32_t> buildSamePlaceRepresentatives(const std::vector<Vertex>& vertices);
 	std::vector<std::vector<uint32_t>> buildTwinMap(const std::vector<uint32_t>& representatives);
-
-	bool isCollapseValid(uint32_t v1, uint32_t v2,
-		std::vector<Vertex>& vertices, std::vector<uint32_t>& indices,
-		SimplificationOptions& options, const std::vector<bool>& isBorderVertex,
-		const std::vector<std::vector<uint32_t>>& twinMap, std::vector<Topology::Neighborhood>& allNeighborhoods);
 }
 
  /* End of the Topology.hpp file */
