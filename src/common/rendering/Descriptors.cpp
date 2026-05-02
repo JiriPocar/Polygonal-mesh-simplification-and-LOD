@@ -9,11 +9,11 @@
  * 
  * Parts of the code may be inspired or adapted from:
  *		- Alexander Overvoorde's "Vulkan Tutorial"
- *			- @url https://vulkan-tutorial.com/
+ *			- @url https://vulkan-tutorial.com/Uniform_buffers/Descriptor_set_layout_and_buffer
+ *			- @url https://vulkan-tutorial.com/Uniform_buffers/Descriptor_pool_and_sets
+ *			- @url https://vulkan-tutorial.com/Texture_mapping/Combined_image_sampler
+ *			- @url https://vulkan-tutorial.com/Compute_Shader#page_Descriptors
  *			- @url https://github.com/Overv/VulkanTutorial
- *		- Victor Blanco's "Vulkan Guide"
- *			- @url https://vkguide.dev/
- *			- @url https://github.com/vblanco20-1/vulkan-guide
  */
 
 #include "Descriptors.hpp"
@@ -187,7 +187,7 @@ void Descriptor::updateDescriptorsCompute(class SpiralScene& scene, uint32_t max
 	for (uint32_t i = 0; i < maxFrames; i++) {
 		vk::DescriptorBufferInfo uniformBuffer(scene.getUniformBuffer().getBuffer(i), 0, sizeof(UniformBufferObject));
 		vk::DescriptorBufferInfo inputInstanceBuffer(scene.getInstanceBuffer(i), 0, VK_WHOLE_SIZE);
-		vk::DescriptorBufferInfo outputInstanceBuffer(scene.getLODInstanceBuffer(i), 0, VK_WHOLE_SIZE);
+		vk::DescriptorBufferInfo outputInstanceBuffer(scene.getOutputInstanceBuffer(i), 0, VK_WHOLE_SIZE);
 		vk::DescriptorBufferInfo indirectBuffer(scene.getIndirectBuffer(i), 0, VK_WHOLE_SIZE);
 
 		std::array<vk::WriteDescriptorSet, 4> writes = {

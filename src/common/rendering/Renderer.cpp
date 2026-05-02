@@ -9,11 +9,10 @@
  * 
  * Parts of the code may be inspired or adapted from:
  *		- Alexander Overvoorde's "Vulkan Tutorial"
- *			- @url https://vulkan-tutorial.com/
+ *			- @url https://vulkan-tutorial.com/Drawing_a_triangle/Drawing/Rendering_and_presentation
  *			- @url https://github.com/Overv/VulkanTutorial
  *		- Victor Blanco's "Vulkan Guide"
- *			- @url https://vkguide.dev/
- *			- @url https://github.com/vblanco20-1/vulkan-guide
+ *			- @url https://vkguide.dev/docs/new_chapter_1/vulkan_mainloop/
  */
 
 #include "Renderer.hpp"

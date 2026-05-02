@@ -1,3 +1,14 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file SpiralScene.hpp
+ * @brief Implementation of the SpiralScene class for the Spiral application.
+ *
+ * This file implements the SpiralScene class, which is responsible for managing
+ * the data and logic of the spiral scene in the Spiral application. It handles
+ * the generation of spiral instance positions, LOD management, and buffer creation
+ * for both CPU and GPU-based rendering approaches.
+ */
+
 #pragma once
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -92,10 +103,32 @@ public:
 	SpiralScene(Device& dev, CommandManager& cmd, const std::string& modelPath, UniformBuffer& uniformBuffer);
 	~SpiralScene() = default;
 
+	/**
+	* @brief Based on the computational mode (CPU x GPU) updates the instance data with correct LOD levels for each instance.
+	* 
+	* @param cameraPos The position of the camera to determine LOD levels based on distance
+	* @param currentFrame The current frame index for double buffering
+	* @param useGPULOD Where to do LOD selection
+	* @param useGPUSpiral Where to compute spiral positions for instances
+	*/
 	void updateLODs(const glm::vec3& cameraPos, uint32_t currentFrame, bool useGPULOD, bool useGPUSpiral);
+
+	/**
+	* @brief Updates the positions of the spiral instances based on the current animation time and configuration parameters.
+	* 
+	* @param deltaTime Time delta since the last update, used to advance the animation
+	* @param useGPUSpiral Where to compute spiral positions for instances
+	*/
 	void updateSpiralPositions(float deltaTime, bool useGPUSpiral);
+
+	/**
+	* @brief Rebuilds the LOD versions of the model based on the current simplification configuration parameters.
+	* 
+	* @param cmd For recording a single time command to reset indirect buffers after LOD generation
+	*/
 	void rebuildLODs(CommandManager& cmd);
 
+	// getters and setters
 	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return instanceBuffers[currentFrame]->getBuffer(); }
 	uint32_t getMaxInstanceCount() const { return maxInstanceCount; }
 	void setMaxInstanceCount(uint32_t newMax) { maxInstanceCount = newMax; }
@@ -105,25 +138,75 @@ public:
 	const std::vector<SpiralInstanceData>& getInstanceData() const { return instanceData; }
 	vk::Buffer getIndirectBuffer(uint32_t currentFrame) const { return indirectBuffers[currentFrame]->getBuffer(); }
 	UniformBuffer& getUniformBuffer() const { return uniformBuffer; }
-	vk::Buffer getLODInstanceBuffer(uint32_t currentFrame) const { return LODInstanceBuffers[currentFrame]->getBuffer(); }
+	vk::Buffer getOutputInstanceBuffer(uint32_t currentFrame) const { return outputInstanceBuffers[currentFrame]->getBuffer(); }
 	float getAnimationTime() const { return animationTime; }
 
+	/**
+	* @brief Calculates the total number of triangles currently being drawn based on the camera position and LOD counts.
+	* 
+	* @param cameraPos The position of the camera to determine LOD levels based on distance
+	* @param outLodCounts Output array to store the count of instances for each LOD level
+	* 
+	* @return The total number of triangles currently being drawn in the scene.
+	*/
 	uint64_t calculateCurrentDrawnTriangles(const glm::vec3& cameraPos, std::array<uint32_t, 4>& outLodCounts);
 
+	/**
+	* @brief Resets the indirect draw command buffer before compute shader dispatch.
+	* 
+	* @param cmd The command buffer to record into
+	* @param currentFrame The current frame index for double buffering
+	*/
 	void resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFrame);
+
+	/**
+	* @brief Reallocates buffers of the scene after new max instance count is set.
+	* 
+	* @param newMaxCount The new maximum instance count to allocate buffers for
+	*/
 	void reallocBuffers(uint32_t newMaxCount);
+
+	// resets animation time
 	void resetAnimation() { animationTime = 0.0f; }
 	SpiralConfig config;
 
 private:
+	/**
+	* @brief Initializes the spiral positions for all instances.
+	*/
 	void initSpiralPositions();
+
+	/**
+	* @brief Generates LOD versions of the model using the simplificator.
+	* 
+	* @param cmd Command manager for textures processing (transition layouts).
+	*/
 	void generateLODVersions(CommandManager& cmd);
+
+	/**
+	* @brief Creates the CPU side instance buffer.
+	*/
 	void createInstanceBuffer();
+
+	/**
+	* @brief Creates the indirect draw command buffer for GPU-driven rendering.
+	*/
+	void createIndirectBuffer();
+
+	/**
+	* @brief Creates the output instance buffer that the compute shader will write to.
+	*/
+	void createOutputInstanceBuffer();
+
+	/**
+	* @brief Updates the instances on CPU. Sorts the instance data into LOD order and copies it to the instance buffer.
+	* 
+	* @param cameraPos The position of the camera to determine LOD levels based on distance
+	* @param currentFrame The current frame index for double buffering
+	*/
 	void updateInstancesCPU(const glm::vec3& cameraPos, uint32_t currentFrame);
 
-	void createIndirectBuffer();
-	void createLODInstanceBuffer();
-
+	// this is a dynamic value that can grow when set higher
 	uint32_t maxInstanceCount = 100000;
 
 	Device& dev;
@@ -135,7 +218,7 @@ private:
 	ModelLODSet modelLODSet;
 
 	std::vector<std::unique_ptr<Buffer>> indirectBuffers;
-	std::vector<std::unique_ptr<Buffer>> LODInstanceBuffers;
+	std::vector<std::unique_ptr<Buffer>> outputInstanceBuffers;
 	std::vector<std::unique_ptr<Buffer>> instanceBuffers;
 
 	std::array<uint32_t, 4> lodCounts = { 0, 0, 0, 0 };
@@ -145,3 +228,5 @@ private:
 
 	float animationTime = 0.0f;
 };
+
+/* End of the SpiralScene.hpp file */

@@ -5,7 +5,7 @@
  *
  * Parts of the code may be inspired or adapted from:
  *		- Alexander Overvoorde's "Vulkan Tutorial"
- *			- @url https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Base_code
+ *			- @url https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Base_code#page_Integrating-GLFW
  *			- @url https://vulkan-tutorial.com/Drawing_a_triangle/Swap_chain_recreation
  *		- GLFW's "Getting started"
  *			- @url https://www.glfw.org/docs/latest/quick.html

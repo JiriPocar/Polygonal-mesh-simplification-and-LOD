@@ -1,3 +1,14 @@
+/**
+ * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
+ * @file SpiralScene.cpp
+ * @brief Implementation of the SpiralScene class for the Spiral application.
+ *
+ * This file implements the SpiralScene class, which is responsible for managing
+ * the data and logic of the spiral scene in the Spiral application. It handles
+ * the generation of spiral instance positions, LOD management, and buffer creation
+ * for both CPU and GPU-based rendering approaches.
+ */
+
 #include "SpiralScene.hpp"
 #include <cmath>
 #include <iostream>
@@ -10,8 +21,7 @@ SpiralScene::SpiralScene(Device& dev, CommandManager& cmd, const std::string& mo
 	generateLODVersions(cmd);
 	createInstanceBuffer();
 	createIndirectBuffer();
-	createLODInstanceBuffer();
-	std::cout << "SpiralScene created" << std::endl;
+	createOutputInstanceBuffer();
 }
 
 void SpiralScene::initSpiralPositions()
@@ -42,13 +52,13 @@ void SpiralScene::generateLODVersions(CommandManager& cmd)
 	simplificator.options.enableMerging = true;
 	simplificator.options.mergeCloseVertivesPos = true;
 
-	auto result1 = simplificator.simplify(*originalModel, config.lodPercentageSimplification1); // 75% faces
+	auto result1 = simplificator.simplify(*originalModel, config.lodPercentageSimplification1);
 	lodSet.lod1 = std::make_unique<Model>(dev, result1.meshesData);
 
-	auto result2 = simplificator.simplify(*originalModel, config.lodPercentageSimplification2); // 50% faces
+	auto result2 = simplificator.simplify(*originalModel, config.lodPercentageSimplification2);
 	lodSet.lod2 = std::make_unique<Model>(dev, result2.meshesData);
 
-	auto result3 = simplificator.simplify(*originalModel, config.lodPercentageSimplification3); // 25% faces
+	auto result3 = simplificator.simplify(*originalModel, config.lodPercentageSimplification3);
 	lodSet.lod3 = std::make_unique<Model>(dev, result3.meshesData);
 
 	if (config.lodPercentageSimplification0 >= 0.99f)
@@ -73,6 +83,7 @@ void SpiralScene::rebuildLODs(CommandManager& cmd)
 	// clear existing LODs and generate new ones based on current model path
 	generateLODVersions(cmd);
 
+	// reset indirect buffers synchronously
 	vk::CommandBuffer singleCmd = cmd.beginSingleTimeCommands();
 	resetIndirectBuffer(singleCmd, 0);
 	resetIndirectBuffer(singleCmd, 1);
@@ -114,15 +125,15 @@ void SpiralScene::createIndirectBuffer()
 	}
 }
 
-void SpiralScene::createLODInstanceBuffer()
+void SpiralScene::createOutputInstanceBuffer()
 {
 	int frameCount = 2;
-	LODInstanceBuffers.resize(frameCount);
+	outputInstanceBuffers.resize(frameCount);
 	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * maxInstanceCount * 4;
 
 	for (int i = 0; i < frameCount; i++)
 	{
-		LODInstanceBuffers[i] = std::make_unique<Buffer>(
+		outputInstanceBuffers[i] = std::make_unique<Buffer>(
 			dev,
 			bufferSize,
 			vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eStorageBuffer,
@@ -230,6 +241,7 @@ void SpiralScene::updateSpiralPositions(float deltaTime, bool useGPUSpiral)
 {
 	animationTime += deltaTime * config.speed;
 
+	// exit early if GPU is handling spiral positions
 	if (useGPUSpiral) return;
 
 	float totalLength = config.instanceCount * config.spacing;
@@ -368,5 +380,7 @@ void SpiralScene::reallocBuffers(uint32_t newMaxCount)
 	initSpiralPositions();
 	createInstanceBuffer();
 	createIndirectBuffer();
-	createLODInstanceBuffer();
+	createOutputInstanceBuffer();
 }
+
+/* End of the SpiralScene.cpp file */

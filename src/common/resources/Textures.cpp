@@ -10,9 +10,8 @@
  *		- Alexander Overvoorde's "Vulkan Tutorial"
  *			- @url https://vulkan-tutorial.com/
  *			- @url https://github.com/Overv/VulkanTutorial
- *		- Victor Blanco's "Vulkan Guide"
- *			- @url https://vkguide.dev/
- *			- @url https://github.com/vblanco20-1/vulkan-guide
+ *		- VMA's "VulkanSample"
+ *			- @url https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/blob/master/src/VulkanSample.cpp
  */
 
 #include "Textures.hpp"

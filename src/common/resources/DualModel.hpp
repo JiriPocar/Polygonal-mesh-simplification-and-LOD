@@ -4,7 +4,8 @@
  * @brief Header file for the DualModel class.
  *
  * This file implements the DualModel class, which is an abstraction
- * for managing both the original and simplified versions of a 3D model.
+ * for managing both the original and simplified versions of a 3D model
+ * for split-screen rendering in the Simplificator application.
  */
 
 #pragma once

@@ -5,6 +5,12 @@
  *
  * This file contains the UserInterface class, which integrates ImGui into the Vulkan application.
  * Provides methods for initializing ImGui, creating a descriptor pool, and rendering the UI elements each frame.
+ * 
+ * * Parts of the code may be inspired or adapted from:
+ *		- ImGui's example implementation for Vulkan and GLFW
+ *			- @url https://github.com/ocornut/imgui/blob/master/examples/example_glfw_vulkan/main.cpp#L265
+ *		- Victor Blanco's "Vulkan Guide" ImGui integration
+ *			- @url https://vkguide.dev/docs/new_chapter_2/vulkan_imgui_setup/
 */
 
 #include "ui.hpp"
@@ -35,18 +41,18 @@ void UserInterface::init()
 	createDescriptorPool();
 
 	ImGui_ImplVulkan_InitInfo initInfo = {};
-		initInfo.Instance = m_instance.get();
-		initInfo.PhysicalDevice = m_device.getPhysicalDevice();
-		initInfo.Device = m_device.operator*();
-		initInfo.QueueFamily = m_device.getGraphicsQueueFamily();
-		initInfo.Queue = m_device.getGraphicsQueue();
-		initInfo.PipelineCache = nullptr;
-		initInfo.DescriptorPool = *descriptorPool;
-		initInfo.Subpass = 0;
-		initInfo.MinImageCount = 2;
-		initInfo.ImageCount = static_cast<uint32_t>(m_swapchain.getImages().size());
-		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		initInfo.RenderPass = m_renderPass.get();
+	initInfo.Instance = m_instance.get();
+	initInfo.PhysicalDevice = m_device.getPhysicalDevice();
+	initInfo.Device = m_device.operator*();
+	initInfo.QueueFamily = m_device.getGraphicsQueueFamily();
+	initInfo.Queue = m_device.getGraphicsQueue();
+	initInfo.PipelineCache = nullptr;
+	initInfo.DescriptorPool = *descriptorPool;
+	initInfo.Subpass = 0;
+	initInfo.MinImageCount = 2;
+	initInfo.ImageCount = static_cast<uint32_t>(m_swapchain.getImages().size());
+	initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	initInfo.RenderPass = m_renderPass.get();
 
 	ImGui_ImplVulkan_Init(&initInfo);
 
@@ -168,7 +174,7 @@ void UserInterface::showStatistics()
 	float delta = ImGui::GetIO().DeltaTime;
 
 	frameTimes.push_back(fps);
-	if (frameTimes.size() > 1000)
+	if (frameTimes.size() > 300)
 	{
 		frameTimes.pop_front();
 	}
@@ -428,7 +434,7 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	}
 	else if (currentAlgorithm == Algorithm::VertexClustering || currentAlgorithm == Algorithm::FloatingCellClustering)
 	{
-		ImGui::Text("Clustering algorithms do not consider topology or face flipping");
+		ImGui::Text("No additional simplification options.");
 	}
 	else if (currentAlgorithm == Algorithm::VertexDecimation)
 	{

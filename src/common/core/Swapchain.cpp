@@ -9,11 +9,10 @@
  *
  * Parts of the code may be inspired or adapted from:
  *		- Alexander Overvoorde's "Vulkan Tutorial"
- *			- @url https://vulkan-tutorial.com/
+ *			- @url https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain
+ *			- @url https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Image_views
+ *			- @url https://vulkan-tutorial.com/Depth_buffering
  *			- @url https://github.com/Overv/VulkanTutorial
- *		- Victor Blanco's "Vulkan Guide"
- *			- @url https://vkguide.dev/
- *			- @url https://github.com/vblanco20-1/vulkan-guide
  */
 
 #include "Swapchain.hpp"
@@ -60,11 +59,11 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 	{
 		for (const auto& availablePresentMode : supportDetails.presentModes)
 		{
-			if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
+			/*if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
 				std::cout << "Mailbox present mode supported, using it for swapchain." << std::endl;
 				presentMode = availablePresentMode;
 				break;
-			}
+			}*/
 			if (availablePresentMode == vk::PresentModeKHR::eImmediate)
 			{
 				std::cout << "Immediate present mode supported, using it for swapchain." << std::endl;
@@ -108,9 +107,6 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 
 	swapchain = m_device.operator*().createSwapchainKHRUnique(createInfo);
 	images = m_device.operator*().getSwapchainImagesKHR(*swapchain);
-
-	std::cout << "Swapchain created with " << images.size() << " images, format: "
-		<< vk::to_string(imageFormat) << ", extent: " << extent.width << "x" << extent.height << std::endl;
 }
 
 void Swapchain::createImageViews()
@@ -138,8 +134,6 @@ void Swapchain::createImageViews()
 
 		imageViews.push_back(m_device.operator*().createImageViewUnique(createInfo));
 	}
-
-	std::cout << "Created " << imageViews.size() << " image views for the swapchain images." << std::endl;
 }
 
 void Swapchain::createDepthResources()
@@ -172,7 +166,7 @@ void Swapchain::createDepthResources()
 
 	depthImage = rawImage;
 
-	// create image view for the depth image (C++ API)
+	// create image view for the depth image
 	vk::ImageViewCreateInfo viewInfo(
 		{},										// flags
 		depthImage,								// image

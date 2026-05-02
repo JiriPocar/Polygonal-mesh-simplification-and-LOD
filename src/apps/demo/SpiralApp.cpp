@@ -78,7 +78,7 @@ void SpiralApp::update(float deltaTime)
 		{
             // setup the scene
             spiralScene->config.coneFactor = 10.0f;
-            spiralScene->config.instanceCount = 7000;
+            spiralScene->config.instanceCount = 7008; // must be divisible by 12 to prevent artifacts
             spiralScene->config.speed = 1.0f;
             spiralScene->config.numArms = 12;
             spiralScene->config.twistSpeed = 0.2f;
@@ -90,15 +90,15 @@ void SpiralApp::update(float deltaTime)
 			// reset camera to the start position
             camera.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
             camera.setPerspective(60.0f, swapchain.getExtent().width / (float)swapchain.getExtent().height, 0.1f, 100000.0f);
-            spiralScene->updateSpiralPositions(0.0f, false);
+            spiralScene->updateSpiralPositions(deltaTime, false);
 
 			// reset benchmark timer and data
             benchmark.clearApplyConfigFlag();
 		}
-		
     }
 
 	// update spiral positions and LODs
+    // will exit early if GPU mode is on
     spiralScene->updateSpiralPositions(deltaTime, renderer->getUseGPUSpiralCompute());
     spiralScene->updateLODs(camera.getPosition(), renderer->getCurrentFrame(), renderer->getUseGPULODCompute(), renderer->getUseGPUSpiralCompute());
     
@@ -154,7 +154,15 @@ void SpiralApp::update(float deltaTime)
 
 void SpiralApp::drawFrame()
 {
-    renderer->drawFrame(camera, ui);
+    try {
+        renderer->drawFrame(camera, ui);
+    }
+    catch (const vk::OutOfDateKHRError&) {
+        renderer->recreateSwapchain();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error during frame rendering: " << e.what() << std::endl;
+    }
 }
 
 /* End of the SpiralApp.cpp file */

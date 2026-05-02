@@ -89,16 +89,6 @@ Mesh::Mesh(Device& device, const tinygltf::Model& model, const tinygltf::Primiti
 	createIndexBuffer(indices);
 
 	std::cout << "Loaded mesh with " << vertexCount << " vertices and " << indexCount << " indices." << std::endl;
-	if (!vertices.empty()) {
-		glm::vec3 minPos = vertices[0].pos;
-		glm::vec3 maxPos = vertices[0].pos;
-		for (const auto& v : vertices) {
-			minPos = glm::min(minPos, v.pos);
-			maxPos = glm::max(maxPos, v.pos);
-		}
-		std::cout << "(" << minPos.x << "," << minPos.y << "," << minPos.z << ") to "
-			<< "(" << maxPos.x << "," << maxPos.y << "," << maxPos.z << ")" << std::endl;
-	}
 }
 
 Mesh::Mesh(Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
@@ -416,7 +406,6 @@ void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 		auto it = material.values.find("baseColorTexture");
 		if (it != material.values.end())
 		{
-			std::cout << "color texture" << std::endl;
 			int textureIndex = it->second.TextureIndex();
 
 			if (textureIndex >= 0 && textureIndex < model.textures.size())
@@ -454,7 +443,7 @@ void Model::loadModel(const std::string& modelPath, CommandManager& cmd)
 		}
 	}
 
-	std::cout << "Loaded GLTF model: " << modelPath << std::endl;
+	std::cout << "Loaded glTF model: " << modelPath << "\n" << std::endl;
 }
 
 void Model::loadObjModel(const std::string& modelPath)

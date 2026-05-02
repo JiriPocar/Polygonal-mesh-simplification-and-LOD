@@ -7,11 +7,8 @@
  * 
  * Parts of the code may be inspired or adapted from:
  *		- Alexander Overvoorde's "Vulkan Tutorial"
- *			- @url https://vulkan-tutorial.com/
+ *			- @url https://vulkan-tutorial.com/Uniform_buffers/Descriptor_set_layout_and_buffer
  *			- @url https://github.com/Overv/VulkanTutorial
- *		- Victor Blanco's "Vulkan Guide"
- *			- @url https://vkguide.dev/
- *			- @url https://github.com/vblanco20-1/vulkan-guide
  */
 
 #include "UniformBuffer.hpp"

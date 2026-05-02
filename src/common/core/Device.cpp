@@ -9,11 +9,8 @@
  * 
  * Parts of the code may be inspired or adapted from:
  *		- Alexander Overvoorde's "Vulkan Tutorial"
- *			- @url https://vulkan-tutorial.com/
- *			- @url https://github.com/Overv/VulkanTutorial
- *		- Victor Blanco's "Vulkan Guide"
- *			- @url https://vkguide.dev/
- *			- @url https://github.com/vblanco20-1/vulkan-guide
+ *			- @url https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Physical_devices_and_queue_families
+ *			- @url https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Logical_device_and_queues
  */
 
 #include "Device.hpp"
@@ -83,9 +80,7 @@ void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface)
 
 		// print device info
 		vk::PhysicalDeviceProperties props = dev.getProperties();
-		std::cout << "Found GPU: " << props.deviceName
-			<< " (Suitable: " << (indices.isComplete() && swapchainSupport ? "YES" : "NO")
-			<< ")" << std::endl;
+		std::cout << "Found device: " << props.deviceName << std::endl;
 	}
 
 	// select the first suitable device
@@ -97,7 +92,8 @@ void Device::pickPhysicalDevice(vk::Instance instance, vk::SurfaceKHR surface)
 
 		// print selected device info
 		vk::PhysicalDeviceProperties props = physicalDevice.getProperties();
-		std::cout << "Selected GPU: " << props.deviceName << std::endl;
+		std::cout << "Selected device: " << props.deviceName << std::endl;
+		std::cout << "===============================================================\n" << std::endl;
 		return;
 	}
 

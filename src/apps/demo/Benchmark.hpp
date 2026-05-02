@@ -48,7 +48,7 @@ struct BenchmarkConfigDataDynamic {
 class Benchmark {
 public:
 	Benchmark();
-	~Benchmark() { if (csvFile.is_open()) csvFile.close(); }
+	~Benchmark() = default;
 
 	/**
 	* @brief Sets the benchmark process to start. Opens the CSV file and

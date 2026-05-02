@@ -1,5 +1,8 @@
 #version 450
 
+// Based on Victor Blanco's "GPU-driven rendering" chapter in Vulkan guide
+// @url https://vkguide.dev/docs/gpudriven/compute_shaders/
+
 // 256 threads per work group
 layout(local_size_x = 256) in;
 

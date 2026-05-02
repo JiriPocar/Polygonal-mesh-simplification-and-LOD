@@ -31,9 +31,7 @@ struct Vertex {
 	static vk::VertexInputBindingDescription getBindingDesc();
 	static std::array<vk::VertexInputAttributeDescription, 3> getAttributeDesc();
 
-	bool operator==(const Vertex& other) const {
-		return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
-	}
+	
 };
 
 // represents a single mesh in the model

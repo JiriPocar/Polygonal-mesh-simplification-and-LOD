@@ -4,14 +4,15 @@
  * @brief Buffer management for Vulkan application.
  *
  * This file implements creating and managing Vulkan buffers using VMA for memory management.
+ * Via 'usage' and 'memoryUsage' parameters, it can be used to create vertex buffers, index buffers,
+ * uniform buffers, staging buffers, etc.
  * 
  * Parts of the code may be inspired or adapted from:
  *		- Alexander Overvoorde's "Vulkan Tutorial"
- *			- @url https://vulkan-tutorial.com/
+ *			- @url https://vulkan-tutorial.com/Vertex_buffers/Staging_buffer
+ *			- @url https://vulkan-tutorial.com/Vertex_buffers/Vertex_buffer_creation
+ *			- @url https://vulkan-tutorial.com/Vertex_buffers/Index_buffer
  *			- @url https://github.com/Overv/VulkanTutorial
- *		- Victor Blanco's "Vulkan Guide"
- *			- @url https://vkguide.dev/
- *			- @url https://github.com/vblanco20-1/vulkan-guide
  *		- VMA starter code
  *			- @url https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/quick_start.html
  */
