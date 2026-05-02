@@ -10,7 +10,7 @@ the effects of Level of Detail techniques and GPU-driven rendering.
 ## Simplificator
 The simplification application (```Simplificator```) can be freely used for mesh simplification.
 
-![SIMPLIFICATOR](images/simplificator.png)
+![SIMPLIFICATOR](images/simplificator.PNG)
 
 ### Features
 - Simple ```glTF``` model loading with base texture.
@@ -42,7 +42,7 @@ and may create holes in the mesh during simplification proccess.
 The benchmarking application (```SpiralApp```) is designed to demonstrate the performance benefits
 of LOD techniques and GPU-driven rendering.
 
-![SPIRAL](images/spiral.png)
+![SPIRAL](images/spiral.PNG)
 
 ### Features
 - Rendering of a large number of instances with different LOD levels.
