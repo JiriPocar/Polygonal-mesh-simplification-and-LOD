@@ -388,9 +388,13 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		ImGui::Text("Holes and tearing prevention");
 		ImGui::Checkbox("Lock UV seams", &simplificator.options.lockUVSeams);
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Locks edges on UV seam the same way 'Preserve border' locks border edges.");
-		ImGui::Checkbox("Simplify with UV seams", &simplificator.options.resolveUVSeams);
-		if (ImGui::IsItemHovered()) ImGui::SetTooltip("The simplification process will attempt to preserve UV seams. Use for models with textures.");
-
+		
+		if (currentAlgorithm == Algorithm::QEM)
+		{
+			ImGui::Checkbox("Simplify with UV seams", &simplificator.options.resolveUVSeams);
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("The simplification process will attempt to preserve UV seams. Use for models with textures.");
+		}
+		
 		if (ImGui::Checkbox("Enable merging vertices", &simplificator.options.enableMerging))
 		{
 			if (simplificator.options.enableMerging)
@@ -546,17 +550,10 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 	auto& originalModel = currentDualModel->getOriginalModel();
 	if (ImGui::Button("Apply"))
 	{
-		try {
-			lastResult = simplificator.simplify(originalModel, parameterValue);
-			hasSimplificationResult = true;
-
-			device.operator*().waitIdle(); // wait for device to be idle before applying simplification
-			currentDualModel->simplifyModel(lastResult.meshesData);
-		}
-		catch (const std::exception& e)
-		{
-			std::cerr << "Simplification failed: " << e.what() << std::endl;
-		}
+		lastResult = simplificator.simplify(originalModel, parameterValue);
+		hasSimplificationResult = true;
+		device.operator*().waitIdle(); // wait for device to be idle before applying simplification
+		currentDualModel->simplifyModel(lastResult.meshesData);
 	}
 
 	if (currentDualModel->wasModelSimplified())

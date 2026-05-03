@@ -148,11 +148,10 @@ namespace QEM {
     * 
 	* @param context The QEM context structure
 	* @param edge The quadric edge to be collapsed
-	* @param outDeletedFaces Output parameter to store the number of faces that were deleted due to the collapse
-    * 
-	* @return index of the vertex that was kept after the collapse
+	* 
+	* @return Number of deleted faces.
     */
-    uint32_t collapseQedge(QEMContext& context, Qedge& edge, int& outDeletedFaces);
+    int collapseQedge(QEMContext& context, Qedge& edge);
 
     /**
     * @brief Checks if a quadric edge is valid for collapse. Face flipping and mesh connectivity checks.

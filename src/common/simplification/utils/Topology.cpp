@@ -3,7 +3,8 @@
  * @file Topology.cpp
  * @brief Utility functions for mesh topology tracking.
  *
- * This file contains ...
+ * This file contains implementation of various utility functions for topology of meshes. Includes
+ * neighborhood creating, face flipping and connectivity checks and twin map building.
  */
 
 #include "Topology.hpp"
@@ -186,6 +187,25 @@ namespace Topology
 		{
 			std::map<std::pair<uint32_t, uint32_t>, int> edgeCount;
 
+			// count how many triangles each edge belongs to
+			for (size_t i = 0; i < indices.size(); i += 3)
+			{
+				for (int j = 0; j < 3; j++)
+				{
+					// use representatives for early exit
+					// dont lock: a) polygon soups edges
+					//			  b) UV Seams edges
+					uint32_t r1 = representatives[indices[i + j]];
+					uint32_t r2 = representatives[indices[i + (j + 1) % 3]];
+					if (r1 == r2) continue;
+
+					// real edge
+					std::pair<uint32_t, uint32_t> edge = std::minmax(r1, r2);
+					edgeCount[edge]++;
+				}
+			}
+
+			// lock vertices of edges that belong to only one triangle
 			for (size_t i = 0; i < indices.size(); i += 3)
 			{
 				for (int j = 0; j < 3; j++)
@@ -195,27 +215,10 @@ namespace Topology
 
 					if (r1 == r2) continue;
 
-					std::pair<uint32_t, uint32_t> edge = std::minmax(r1, r2);
-					edgeCount[edge]++;
-				}
-			}
-
-			for (size_t i = 0; i < indices.size(); i += 3)
-			{
-				for (int j = 0; j < 3; j++)
-				{
-					uint32_t rawV1 = indices[i + j];
-					uint32_t rawV2 = indices[i + (j + 1) % 3];
-
-					uint32_t r1 = representatives[rawV1];
-					uint32_t r2 = representatives[rawV2];
-
-					if (r1 == r2) continue;
-
 					if (edgeCount[std::minmax(r1, r2)] == 1)
 					{
-						isLocked[rawV1] = true;
-						isLocked[rawV2] = true;
+						isLocked[indices[i + j]] = true;
+						isLocked[indices[i + (j + 1) % 3]] = true;
 					}
 				}
 			}
@@ -224,11 +227,14 @@ namespace Topology
 		if (options.lockUVSeams)
 		{
 			std::vector<int> repCount(vertices.size(), 0);
+
+			// count how many vertices share the same representative
 			for (uint32_t i = 0; i < vertices.size(); i++)
 			{
 				repCount[representatives[i]]++;
 			}
 
+			// lock all duplicate vertices
 			for (uint32_t i = 0; i < vertices.size(); i++)
 			{
 				if (repCount[representatives[i]] > 1)
@@ -245,23 +251,23 @@ namespace Topology
 	{
 		for (uint32_t tri : n.triangles)
 		{
-			uint32_t idx1 = indices[tri];
-			uint32_t idx2 = indices[tri + 1];
-			uint32_t idx3 = indices[tri + 2];
+			uint32_t idx0 = indices[tri];
+			uint32_t idx1 = indices[tri + 1];
+			uint32_t idx2 = indices[tri + 2];
 
 			// only triangles that share the moving vertex can potentially flip, skip others
-			if (idx1 != movingVertexIdx && idx2 != movingVertexIdx && idx3 != movingVertexIdx)
+			if (idx0 != movingVertexIdx && idx1 != movingVertexIdx && idx2 != movingVertexIdx)
 			{
 				continue;
 			}
 
 			// pos before collapse
+			glm::vec3 pos0 = (idx0 == movingVertexIdx) ? beforePos : vertices[idx0].pos;
 			glm::vec3 pos1 = (idx1 == movingVertexIdx) ? beforePos : vertices[idx1].pos;
 			glm::vec3 pos2 = (idx2 == movingVertexIdx) ? beforePos : vertices[idx2].pos;
-			glm::vec3 pos3 = (idx3 == movingVertexIdx) ? beforePos : vertices[idx3].pos;
 
-			glm::vec3 d1 = pos2 - pos1;
-			glm::vec3 d2 = pos3 - pos1;
+			glm::vec3 d1 = pos1 - pos0;
+			glm::vec3 d2 = pos2 - pos0;
 			glm::vec3 normOld = glm::cross(d1, d2);
 
 			// ignore degenerated triangles
@@ -273,12 +279,12 @@ namespace Topology
 			normOld = glm::normalize(normOld);
 
 			// pos after collapse
-			if (idx1 == movingVertexIdx) pos1 = afterPos;
+			if (idx0 == movingVertexIdx) pos0 = afterPos;
+			else if (idx1 == movingVertexIdx) pos1 = afterPos;
 			else if (idx2 == movingVertexIdx) pos2 = afterPos;
-			else if (idx3 == movingVertexIdx) pos3 = afterPos;
 
-			d1 = pos2 - pos1;
-			d2 = pos3 - pos1;
+			d1 = pos1 - pos0;
+			d2 = pos2 - pos0;
 			glm::vec3 normNew = glm::cross(d1, d2);
 
 			if (glm::length(normNew) < 1e-6f)
@@ -386,4 +392,5 @@ namespace Topology
 	}
 
 }
+
 /* End of the Topology.cpp file */

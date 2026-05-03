@@ -115,49 +115,43 @@ std::vector<uint32_t> Mesh::extractIndices() const
 
 void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<Vertex>& vertices)
 {
+	// positions
 	if (primitive.attributes.find("POSITION") == primitive.attributes.end())
 	{
 		throw std::runtime_error("Mesh missing POSITION attribute");
 	}
-
-	const auto& positionsAccessor = model.accessors[primitive.attributes.at("POSITION")];
-	const auto& positionsView = model.bufferViews[positionsAccessor.bufferView];
-	const float* positionsData = reinterpret_cast<const float*>(
-		&model.buffers[positionsView.buffer].data[positionsView.byteOffset + positionsAccessor.byteOffset]
-		);
+	const tinygltf::Accessor& positionsAccessor = model.accessors[primitive.attributes.at("POSITION")];
+	const tinygltf::BufferView& positionsView = model.bufferViews[positionsAccessor.bufferView];
+	const tinygltf::Buffer& buffer = model.buffers[positionsView.buffer];
+	const float* positionsData = reinterpret_cast<const float*>(&buffer.data[positionsView.byteOffset + positionsAccessor.byteOffset]);
 
 	// normals (optional)
 	bool hasNormals = primitive.attributes.find("NORMAL") != primitive.attributes.end();
 	std::vector<float> normalsData;
-
 	if (hasNormals)
 	{
-		const auto& normalsAccessor = model.accessors[primitive.attributes.at("NORMAL")];
-		const auto& normalsView = model.bufferViews[normalsAccessor.bufferView];
-		const float* normalsRawData = reinterpret_cast<const float*>(
-			&model.buffers[normalsView.buffer].data[normalsView.byteOffset + normalsAccessor.byteOffset]
-			);
+		const tinygltf::Accessor& normalsAccessor = model.accessors[primitive.attributes.at("NORMAL")];
+		const tinygltf::BufferView& normalsView = model.bufferViews[normalsAccessor.bufferView];
+		const tinygltf::Buffer& buffer = model.buffers[normalsView.buffer];
+		const float* normalsRawData = reinterpret_cast<const float*>(&buffer.data[normalsView.byteOffset + normalsAccessor.byteOffset]);
 		normalsData.assign(normalsRawData, normalsRawData + normalsAccessor.count * 3);
 	}
 
 	// texcoords (optional)
 	bool hasTexCoords = primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end();
 	std::vector<float> texCoordsData;
-
 	if (hasTexCoords)
 	{
-		const auto& texCoordsAccessor = model.accessors[primitive.attributes.at("TEXCOORD_0")];
-		const auto& texCoordsView = model.bufferViews[texCoordsAccessor.bufferView];
-		const float* texCoordsRawData = reinterpret_cast<const float*>(
-			&model.buffers[texCoordsView.buffer].data[texCoordsView.byteOffset + texCoordsAccessor.byteOffset]
-			);
+		const tinygltf::Accessor& texCoordsAccessor = model.accessors[primitive.attributes.at("TEXCOORD_0")];
+		const tinygltf::BufferView& texCoordsView = model.bufferViews[texCoordsAccessor.bufferView];
+		const tinygltf::Buffer& buffer = model.buffers[texCoordsView.buffer];
+		const float* texCoordsRawData = reinterpret_cast<const float*>(&buffer.data[texCoordsView.byteOffset + texCoordsAccessor.byteOffset]);
 		texCoordsData.assign(texCoordsRawData, texCoordsRawData + texCoordsAccessor.count * 2);
 	}
 
-	// Create vertices
+	// create vertices
 	vertexCount = positionsAccessor.count;
 	vertices.resize(vertexCount);
-
 	for (size_t i = 0; i < vertexCount; i++)
 	{
 		vertices[i].pos = glm::vec3(
@@ -209,17 +203,24 @@ void Mesh::loadIndices(const tinygltf::Model& model, const tinygltf::Primitive& 
 		return;
 	}
 
-	const auto& indicesAccessor = model.accessors[primitive.indices];
-	const auto& indicesView = model.bufferViews[indicesAccessor.bufferView];
+	const tinygltf::Accessor& indicesAccessor = model.accessors[primitive.indices];
+	const tinygltf::BufferView& indicesView = model.bufferViews[indicesAccessor.bufferView];
+	const tinygltf::Buffer& buffer = model.buffers[indicesView.buffer];
 
 	indexCount = indicesAccessor.count;
 	indices.resize(indexCount);
 
-	if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
+	if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)
 	{
-		const uint16_t* indicesData = reinterpret_cast<const uint16_t*>(
-			&model.buffers[indicesView.buffer].data[indicesView.byteOffset + indicesAccessor.byteOffset]);
-
+		const uint8_t* indicesData = reinterpret_cast<const uint8_t*>(&buffer.data[indicesView.byteOffset + indicesAccessor.byteOffset]);
+		for (size_t i = 0; i < indexCount; i++)
+		{
+			indices[i] = indicesData[i];
+		}
+	}
+	else if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
+	{
+		const uint16_t* indicesData = reinterpret_cast<const uint16_t*>(&buffer.data[indicesView.byteOffset + indicesAccessor.byteOffset]);
 		for (size_t i = 0; i < indexCount; i++)
 		{
 			indices[i] = indicesData[i];
@@ -227,9 +228,7 @@ void Mesh::loadIndices(const tinygltf::Model& model, const tinygltf::Primitive& 
 	}
 	else if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
 	{
-		const uint32_t* indicesData = reinterpret_cast<const uint32_t*>(
-			&model.buffers[indicesView.buffer].data[indicesView.byteOffset + indicesAccessor.byteOffset]);
-
+		const uint32_t* indicesData = reinterpret_cast<const uint32_t*>(&buffer.data[indicesView.byteOffset + indicesAccessor.byteOffset]);
 		for (size_t i = 0; i < indexCount; i++)
 		{
 			indices[i] = indicesData[i];

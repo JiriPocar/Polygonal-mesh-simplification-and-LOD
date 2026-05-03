@@ -65,7 +65,7 @@ of LOD techniques and GPU-driven rendering.
 - Windows 10 or later.
 - MSVC compiler (Visual Studio 2022 or later) with C++17 support.
 - Vulkan-compatible GPU and drivers.
-- Vulkan SDK [found here](https://vulkan.lunarg.com/sdk/home). Make sure to restart Visual Studio after the installation.
+- ```Vulkan SDK``` [found here](https://vulkan.lunarg.com/sdk/home). Make sure to restart Visual Studio after the installation.
 - ```CMake``` (version 3.10.2 or later) for building the project
 - *(optional)* Python and ```matplotlib```, ```pandas``` and ```numpy``` libraries for performance plotting, if desired.
 

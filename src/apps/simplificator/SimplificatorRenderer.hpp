@@ -43,15 +43,31 @@ public:
     );
 
     ~SimplificatorRenderer() override = default;
+
+    /**
+	* @brief Draws the current frame, rendering the original model on the left and the simplified model on the right.
+    * 
+	* @param camera The camera object containing the view and projection matrices
+	* @param transform The transform object containing the model matrix
+	* @param ui The user interface object for rendering UI elements
+    */
     void drawSplitScreen(const Camera& camera, const Transform& transform, UserInterface& ui);
 
+    // setters
     void setModel(Model& newModel) { m_model = &newModel; }
     void setDualModel(DualModel& newDualModel) { m_dualModel = &newDualModel; }
-
     void setShowWireframe(bool show) { showWireframe = show; }
     void setWireframePipeline(Pipeline& pipeline) { m_wireframePipeline = &pipeline; }
 
 private:
+    /**
+	* @brief Sets up the viewport and scissor rectangles for split-screen rendering.
+    * 
+	* @param cmd The command buffer to record the viewport and scissor commands into
+	* @param extent The extent of the swapchain images
+	* @param width The width of the viewport for each side of the split-screen
+	* @param side The side of the split-screen to set up (LEFT or RIGHT)
+    */
     void setupViewportScissor(vk::CommandBuffer cmd, vk::Extent2D extent, uint32_t width, int side);
 
     Pipeline& m_pipeline;

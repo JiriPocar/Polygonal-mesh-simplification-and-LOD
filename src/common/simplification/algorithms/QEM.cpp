@@ -219,11 +219,11 @@ namespace QEM {
 		return qedges;
 	}
 
-	uint32_t collapseQedge(QEMContext& context, Qedge& edge, int& outDeletedFaces)
+	int collapseQedge(QEMContext& context, Qedge& edge)
 	{
 		uint32_t keepIdx = edge.v1;
 		uint32_t removeIdx = edge.v2;
-		outDeletedFaces = 0;
+		int outDeletedFaces = 0;
 
 		// set vertex position with optimal position
 		context.vertices[keepIdx].pos = edge.optimalPos;
@@ -276,7 +276,7 @@ namespace QEM {
 		// mark removed vertex as deleted
 		context.vertexDeleted[removeIdx] = true;
 
-		return keepIdx;
+		return outDeletedFaces;
 	}
 
 	int syncSeamTwinsAfterCollapse(QEMContext& context, uint32_t keepIdx, uint32_t removeIdx, const glm::vec3& optimalPos)
@@ -315,8 +315,7 @@ namespace QEM {
 			twinEdge.v1 = bestV1twin;
 			twinEdge.v2 = v2twin;
 			twinEdge.optimalPos = optimalPos;
-			int deletedByTwin = 0;
-			collapseQedge(context, twinEdge, deletedByTwin);
+			int deletedByTwin = collapseQedge(context, twinEdge);
 			totalDeletedFaces += deletedByTwin;
 
 			// update cross-references in the twin map for the twins of the removed vertex

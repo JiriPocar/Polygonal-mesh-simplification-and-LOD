@@ -242,9 +242,9 @@ MeshData Simplificator::simplifyQEM(std::vector<Vertex> vertices, std::vector<ui
 			}
 		}
 
-		int deletedFaces = 0;
-		uint32_t keepIdx = QEM::collapseQedge(context, minEdge, deletedFaces);
-		uint32_t removeIdx = (keepIdx == minEdge.v1) ? minEdge.v2 : minEdge.v1;
+		int deletedFaces = QEM::collapseQedge(context, minEdge);
+		uint32_t keepIdx = minEdge.v1;
+		uint32_t removeIdx = minEdge.v2;
 
 		if (options.resolveUVSeams)
 		{
@@ -518,45 +518,30 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 			break;
 		}
 
-		if (!Naive::isCollapseValid(shortestEdge.v1, shortestEdge.v2, vertices, indices, options, isBorderVertex, twinMap, allNeighborhoods))
+		if (!Naive::isCollapseValid(shortestEdge.v1, shortestEdge.v2, vertices, indices, options, isBorderVertex, allNeighborhoods))
 		{
 			continue;
 		}
 		
-		int deletedFaces = 0;
-		auto actualKeepidx = Naive::collapseEdge(vertices, indices, shortestEdge, twinMap, options.resolveUVSeams, vertexDeleted, allNeighborhoods, deletedFaces);
+		int deletedFaces = Naive::collapseEdge(vertices, indices, shortestEdge, vertexDeleted, allNeighborhoods);
 		currentFaceCount -= deletedFaces;
+		uint32_t keepIdx = shortestEdge.v1;
 
-		std::vector<uint32_t> affectedVertices = { actualKeepidx };
-		if (options.resolveUVSeams)
+		for (uint32_t tri : allNeighborhoods[keepIdx].triangles)
 		{
-			for (uint32_t twin : twinMap[actualKeepidx])
-			{
-				if (!vertexDeleted[twin])
-				{
-					affectedVertices.push_back(twin);
-				}
-			}
-		}
+			uint32_t i0 = indices[tri];
+			uint32_t i1 = indices[tri + 1];
+			uint32_t i2 = indices[tri + 2];
 
-		for (uint32_t aff : affectedVertices)
-		{
-			for (uint32_t tri : allNeighborhoods[aff].triangles)
-			{
-				uint32_t i0 = indices[tri];
-				uint32_t i1 = indices[tri + 1];
-				uint32_t i2 = indices[tri + 2];
+			if (i0 == i1 || i1 == i2 || i2 == i0) continue;
 
-				if (i0 == i1 || i1 == i2 || i2 == i0) continue;
+			Naive::Edge e1 = { std::min(i0, i1), std::max(i0, i1), glm::distance(vertices[i0].pos, vertices[i1].pos) };
+			Naive::Edge e2 = { std::min(i1, i2), std::max(i1, i2), glm::distance(vertices[i1].pos, vertices[i2].pos) };
+			Naive::Edge e3 = { std::min(i2, i0), std::max(i2, i0), glm::distance(vertices[i2].pos, vertices[i0].pos) };
 
-				Naive::Edge e1 = { std::min(i0, i1), std::max(i0, i1), glm::distance(vertices[i0].pos, vertices[i1].pos) };
-				Naive::Edge e2 = { std::min(i1, i2), std::max(i1, i2), glm::distance(vertices[i1].pos, vertices[i2].pos) };
-				Naive::Edge e3 = { std::min(i2, i0), std::max(i2, i0), glm::distance(vertices[i2].pos, vertices[i0].pos) };
-
-				edgeQueue.push(e1);
-				edgeQueue.push(e2);
-				edgeQueue.push(e3);
-			}
+			edgeQueue.push(e1);
+			edgeQueue.push(e2);
+			edgeQueue.push(e3);
 		}
 	}
 
