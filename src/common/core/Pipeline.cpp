@@ -237,12 +237,6 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		dynamicStates.data()
 	);
 
-	vk::PipelineDynamicStateCreateInfo* pDynamicState = nullptr;
-	if (type == PipelineType::Simplificator)
-	{
-		pDynamicState = &dynamicStateInfo;
-	}
-
 	// create the graphics pipeline
 	vk::GraphicsPipelineCreateInfo pipelineInfo(
 		{},						// flags
@@ -255,7 +249,7 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		&multisampling,			// multisampling
 		&depthStencil,			// depth stencil
 		&colorBlending,			// color blending
-		pDynamicState,			// dynamic state
+		&dynamicStateInfo,		// dynamic state
 		*pipelineLayout,		// pipeline layout
 		renderPass.get(),		// render pass
 		0,						// subpass
