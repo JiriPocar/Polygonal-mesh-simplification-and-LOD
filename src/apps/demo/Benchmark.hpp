@@ -15,7 +15,7 @@ const float WARMUPTIME = 2.0f;
 const float CALIBRATION_TIME = 10.0f;
 const float BENCHMARK_CONFIG_TIME = 5.0f;
 
-const int TARGETSTEPNUMBER = 15;
+const int TARGET_STEP_NUMBER = 15;
 
 enum class BenchmarkMethod {
 	STATIC_CAMERA,

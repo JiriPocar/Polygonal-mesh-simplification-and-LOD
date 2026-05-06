@@ -31,6 +31,9 @@ void Benchmark::startStatic()
 	applyConfigFlag = true;
 	inWarmup = true;
 	currentTimer = 0.0f;
+	configs.clear();
+	isCalibrated = false;
+	calibrationStage = 0;
 }
 
 void Benchmark::startDynamic()
@@ -49,6 +52,7 @@ void Benchmark::startDynamic()
 	inWarmup = true;
 	currentTimer = 0.0f;
 	applyConfigFlag = true;
+	configs.clear();
 }
 
 void Benchmark::calibrate(float deltaTime)
@@ -80,7 +84,7 @@ void Benchmark::calibrate(float deltaTime)
 
 			// calculate step size
 			// get rough step size by dividing estimated max by target number of steps
-			uint32_t roughStepSize = static_cast<uint32_t>(estimatedMax / TARGETSTEPNUMBER);
+			uint32_t roughStepSize = static_cast<uint32_t>(estimatedMax / TARGET_STEP_NUMBER);
 			// round to nearest power of 10
 			uint32_t magnitude = static_cast<uint32_t>(pow(10, floor(log10(roughStepSize))));
 			// round to nearest multiple of magnitude
