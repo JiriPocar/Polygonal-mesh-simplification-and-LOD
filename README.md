@@ -55,10 +55,9 @@ of LOD techniques and GPU-driven rendering.
 - Semi-automated graph plotting of the benchmark results.
 
 ### Limitations and known issues
-- As of now, the AMD graphics cards provide higher instance performance in the benchmarks than NVIDIA ones. Tested on several different hardware configurations.
+- As of now, the AMD graphics cards provide higher instance performance in the benchmarks than NVIDIA ones. This is most likely due to architecture (see [RDNA2's NGG](https://timur.hu/blog/2022/what-is-ngg), which most likely does a shader culling). Tested on several different hardware configurations.
 - Instance positioning can become unstable when changing the spiral parameters and not resetting the animation time.
 - The displayed *Drawn triangles* statistic while choosing the GPU modes is a quite precise estimation, but estimation nevertheless, and can slightly differ from the actual number of triangles drawn by the GPU.
-
 
 # Requirements
 
@@ -74,9 +73,9 @@ of LOD techniques and GPU-driven rendering.
 1. Clone the repository.
 2. Open the cloned folder in Visual Studio.
 3. Wait for Visual Studio to automatically generate the CMake cache.
-4. Build the project. This will compile both the `Simplificator` and `SpiralApp` applications.
+4. The `Simplificator` and `SpiralApp` applications are separate CMake target and you can select which one to build in the Visual Studio.
 5. Once the build is complete, you can run the applications directly from Visual Studio or from the output directory.
-6. You can add more 3D models to the output `/assets` directory, or add them to the source `/assets` directory and re-configure CMake to copy them over.
+6. You can add more 3D models to the output `/assets` directory, or add them to the source `/assets` directory and re-configure CMake to copy them over to the output directory.
 
 If you don't want to bother with compiling, you can simply download the pre-compiled binaries from the **Releases** page.
 
@@ -92,12 +91,12 @@ If you don't want to bother with compiling, you can simply download the pre-comp
 Several models were used for testing the simplification algorithms and benchmarking the rendering performance. Below is a table listing the assets and their sources.
 
 | Asset | Source | Author | Licence |Note |
-| ------------- | ------------- | --------- | ---- |
-| Duck  | [Khronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Duck/glTF)|KhronosGroup| ```SCEA 1.0```|
-| Suzanne | [Kronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Suzanne) |Norbert Nopper|```none (donated to the repository by Norbert Nopper)```|
-| Stanford bunny | [SketchFab](https://sketchfab.com/3d-models/stanford-bunny-43f266d6cd6e4c6888b9943557528c0f)|darwinsenior|```CC BY 4.0```|
-| Happy Buddha | [SketchFab](https://sketchfab.com/3d-models/happy-buddha-stanford-5f2a444ff26c4a3bb194f6d79502ee54) |3D graphics 101|```CC BY-NC 4.0```|
-| Skull | [SketchFab](https://sketchfab.com/3d-models/skull-downloadable-1a9db900738d44298b0bc59f68123393) |martinjario|```CC BY 4.0```|
+| ------------- | ------------- | --------- | ---- | ---- |
+| Duck  | [Khronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Duck/glTF)|KhronosGroup| ```SCEA 1.0```| |
+| Suzanne | [Kronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Suzanne) |Norbert Nopper|```none (donated to the repository by Norbert Nopper)```| |
+| Stanford bunny | [SketchFab](https://sketchfab.com/3d-models/stanford-bunny-43f266d6cd6e4c6888b9943557528c0f)|darwinsenior|```CC BY 4.0```| |
+| Happy Buddha | [SketchFab](https://sketchfab.com/3d-models/happy-buddha-stanford-5f2a444ff26c4a3bb194f6d79502ee54) |3D graphics 101|```CC BY-NC 4.0```| |
+| Skull | [SketchFab](https://sketchfab.com/3d-models/skull-downloadable-1a9db900738d44298b0bc59f68123393) |martinjario|```CC BY 4.0```| |
 | Male Body | [SketchFab](https://sketchfab.com/3d-models/male-body-base-mesh-highpoly-9311f4f8fa1a4fe4bb0027ff7e8fd795) |Mandrake|```CC BY 4.0```| Fixed in Blender|
 | Boot | [SketchFab](https://sketchfab.com/3d-models/caterpillar-work-boot-d551ce74dcd24528a05cbb0f4b7434d7) |inciprocal| ```CC BY 4.0```| Stripped off of the 4k PBR textures |
 | sphere | Created in Blender |```none```|
