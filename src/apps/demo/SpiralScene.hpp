@@ -129,7 +129,7 @@ public:
 	void rebuildLODs(CommandManager& cmd);
 
 	// getters and setters
-	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return instanceBuffers[currentFrame]->getBuffer(); }
+	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return gpuInstanceBuffers[currentFrame]->getBuffer(); }
 	uint32_t getMaxInstanceCount() const { return maxInstanceCount; }
 	void setMaxInstanceCount(uint32_t newMax) { maxInstanceCount = newMax; }
 	uint32_t getLODCount(uint32_t lodLevel) const { return lodCounts[lodLevel]; }
@@ -140,6 +140,8 @@ public:
 	UniformBuffer& getUniformBuffer() const { return uniformBuffer; }
 	vk::Buffer getOutputInstanceBuffer(uint32_t currentFrame) const { return outputInstanceBuffers[currentFrame]->getBuffer(); }
 	float getAnimationTime() const { return animationTime; }
+	vk::Buffer getVRAMVertexBuffer(uint32_t lodLevel) const { return vramVertexBuffers[lodLevel]->getBuffer(); }
+	vk::Buffer getVRAMIndexBuffer(uint32_t lodLevel) const { return vramIndexBuffers[lodLevel]->getBuffer(); }
 
 	/**
 	* @brief Calculates the total number of triangles currently being drawn based on the camera position and LOD counts.
@@ -158,6 +160,14 @@ public:
 	* @param currentFrame The current frame index for double buffering
 	*/
 	void resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFrame);
+
+	/**
+	* @brief Records commands to transfer instance data from the staging buffer to the GPU buffer for the current frame.
+	* 
+	* @param cmd The command buffer to record into
+	* @param currentFrame The current frame index for double buffering
+	*/
+	void recordInstanceTransfer(vk::CommandBuffer cmd, uint32_t currentFrame);
 
 	/**
 	* @brief Reallocates buffers of the scene after new max instance count is set.
@@ -184,9 +194,21 @@ private:
 	void generateLODVersions(CommandManager& cmd);
 
 	/**
-	* @brief Creates the CPU side instance buffer.
+	* @brief Creates the staging buffer for instance data that will be updated on CPU and copied to GPU buffer.
 	*/
-	void createInstanceBuffer();
+	void createStagingInstanceBuffer();
+
+	/**
+	* @brief Creates the GPU buffer for instance data that will be used for rendering and possibly updated by compute shader.
+	*/
+	void createGPUInstanceBuffer();
+
+	/**
+	* @brief Uploads the vertex and index data of all LOD levels to GPU buffers for rendering.
+	* 
+	* @param cmd Command manager for recording copy commands to transfer vertex and index data to GPU buffers.
+	*/
+	void uploadGeometryToVRAM(CommandManager& cmd);
 
 	/**
 	* @brief Creates the indirect draw command buffer for GPU-driven rendering.
@@ -209,24 +231,27 @@ private:
 	// this is a dynamic value that can grow when set higher
 	uint32_t maxInstanceCount = 100000;
 
+	// misc
 	Device& dev;
 	UniformBuffer& uniformBuffer;
 	std::string modelPath;
 
+	// spiral and LOD specific data
 	std::vector<glm::vec3> positions;
 	std::vector<SpiralInstanceData> instanceData;
 	ModelLODSet modelLODSet;
-
-	std::vector<std::unique_ptr<Buffer>> indirectBuffers;
-	std::vector<std::unique_ptr<Buffer>> outputInstanceBuffers;
-	std::vector<std::unique_ptr<Buffer>> instanceBuffers;
-
 	std::array<uint32_t, 4> lodCounts = { 0, 0, 0, 0 };
 	std::array<uint32_t, 4> lodOffsets = { 0, 0, 0, 0 };
-
 	Simplificator simplificator;
-
 	float animationTime = 0.0f;
+
+	// used buffers
+	std::vector<std::unique_ptr<Buffer>> indirectBuffers;
+	std::vector<std::unique_ptr<Buffer>> outputInstanceBuffers;
+	std::vector<std::unique_ptr<Buffer>> stagingInstanceBuffers;
+	std::vector<std::unique_ptr<Buffer>> gpuInstanceBuffers;
+	std::array<std::unique_ptr<Buffer>, 4> vramVertexBuffers;
+	std::array<std::unique_ptr<Buffer>, 4> vramIndexBuffers;
 };
 
 /* End of the SpiralScene.hpp file */

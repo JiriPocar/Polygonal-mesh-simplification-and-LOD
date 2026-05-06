@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
  * @file SpiralScene.cpp
  * @brief Implementation of the SpiralScene class for the Spiral application.
@@ -19,7 +19,8 @@ SpiralScene::SpiralScene(Device& dev, CommandManager& cmd, const std::string& mo
 {
 	initSpiralPositions();
 	generateLODVersions(cmd);
-	createInstanceBuffer();
+	createGPUInstanceBuffer();
+	createStagingInstanceBuffer();
 	createIndirectBuffer();
 	createOutputInstanceBuffer();
 }
@@ -73,6 +74,7 @@ void SpiralScene::generateLODVersions(CommandManager& cmd)
 	}
 
 	modelLODSet = std::move(lodSet);
+	uploadGeometryToVRAM(cmd);
 }
 
 void SpiralScene::rebuildLODs(CommandManager& cmd)
@@ -90,20 +92,37 @@ void SpiralScene::rebuildLODs(CommandManager& cmd)
 	cmd.endSingleTimeCommands(singleCmd);
 }
 
-void SpiralScene::createInstanceBuffer()
+void SpiralScene::createStagingInstanceBuffer()
 {
 	int frameCount = 2;
-	instanceBuffers.resize(frameCount);
-	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * instanceData.size();
+	stagingInstanceBuffers.resize(frameCount);
+	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * maxInstanceCount;
 
 	for (int i = 0; i < frameCount; i++)
 	{
-		instanceBuffers[i] = std::make_unique<Buffer>(
+		stagingInstanceBuffers[i] = std::make_unique<Buffer>(
 			dev,
 			bufferSize,
-			vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eStorageBuffer,
-			VMA_MEMORY_USAGE_CPU_TO_GPU,
-			VMA_ALLOCATION_CREATE_MAPPED_BIT
+			vk::BufferUsageFlagBits::eTransferSrc,
+			VMA_MEMORY_USAGE_CPU_ONLY,
+			VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+		);
+	}
+}
+
+void SpiralScene::createGPUInstanceBuffer()
+{
+	int frameCount = 2;
+	gpuInstanceBuffers.resize(frameCount);
+	vk::DeviceSize bufferSize = sizeof(SpiralInstanceData) * maxInstanceCount;
+
+	for (int i = 0; i < frameCount; i++)
+	{
+		gpuInstanceBuffers[i] = std::make_unique<Buffer>(
+			dev,
+			bufferSize,
+			vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
+			VMA_MEMORY_USAGE_GPU_ONLY
 		);
 	}
 }
@@ -152,7 +171,7 @@ void SpiralScene::updateLODs(const glm::vec3& cameraPos, uint32_t currentFrame, 
 				instanceData[i].pos = positions[i];
 				instanceData[i].lodLevel = 0;
 			}
-			instanceBuffers[currentFrame]->copyData(instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
+			stagingInstanceBuffers[currentFrame]->copyData(instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
 		}
 		
 		return;
@@ -175,7 +194,7 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t curren
 			instanceData[i].lodLevel = 0;
 		}
 
-		instanceBuffers[currentFrame]->copyData(instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
+		stagingInstanceBuffers[currentFrame]->copyData(instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
 		return;
 	}
 
@@ -234,7 +253,7 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t curren
 		instanceData[targetIdx].lodLevel = lod;
 	}
 
-	instanceBuffers[currentFrame]->copyData(instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
+	stagingInstanceBuffers[currentFrame]->copyData(instanceData.data(), sizeof(SpiralInstanceData) * config.instanceCount);
 }
 
 void SpiralScene::updateSpiralPositions(float deltaTime, bool useGPUSpiral)
@@ -347,6 +366,49 @@ uint64_t SpiralScene::calculateCurrentDrawnTriangles(const glm::vec3& cameraPos,
 	return totalTriangles;
 }
 
+void SpiralScene::recordInstanceTransfer(vk::CommandBuffer cmd, uint32_t currentFrame)
+{
+	vk::DeviceSize copySize = sizeof(SpiralInstanceData) * config.instanceCount;
+	vk::BufferCopy copyRegion{ 0, 0, copySize };
+
+	cmd.copyBuffer(
+		stagingInstanceBuffers[currentFrame]->getBuffer(),
+		gpuInstanceBuffers[currentFrame]->getBuffer(),
+		1,
+		&copyRegion
+	);
+}
+
+void SpiralScene::uploadGeometryToVRAM(CommandManager& cmd)
+{
+	vk::CommandBuffer copyCmd = cmd.beginSingleTimeCommands();
+
+	for (int i = 0; i < 4; i++)
+	{
+		Model& model = modelLODSet.getLOD(i);
+		vk::DeviceSize vBufferSize = sizeof(Vertex) * model.getVertexCount();
+		vk::DeviceSize iBufferSize = sizeof(uint32_t) * model.getIndexCount();
+
+		vramVertexBuffers[i] = std::make_unique<Buffer>(
+			dev, vBufferSize,
+			vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,
+			VMA_MEMORY_USAGE_GPU_ONLY
+		);
+		vramIndexBuffers[i] = std::make_unique<Buffer>(
+			dev, iBufferSize,
+			vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
+			VMA_MEMORY_USAGE_GPU_ONLY
+		);
+
+		vk::BufferCopy vCopy{ 0, 0, vBufferSize };
+		copyCmd.copyBuffer(model.getVertexBuffer(), vramVertexBuffers[i]->getBuffer(), 1, &vCopy);
+		vk::BufferCopy iCopy{ 0, 0, iBufferSize };
+		copyCmd.copyBuffer(model.getIndexBuffer(), vramIndexBuffers[i]->getBuffer(), 1, &iCopy);
+	}
+
+	cmd.endSingleTimeCommands(copyCmd);
+}
+
 void SpiralScene::resetIndirectBuffer(vk::CommandBuffer cmd, uint32_t currentFrame)
 {
 	// prepare four commands for four LOD levels, instance count will be updated by compute shader after culling
@@ -378,7 +440,8 @@ void SpiralScene::reallocBuffers(uint32_t newMaxCount)
 	dev.operator*().waitIdle();
 	maxInstanceCount = newMaxCount;
 	initSpiralPositions();
-	createInstanceBuffer();
+	createGPUInstanceBuffer();
+	createStagingInstanceBuffer();
 	createIndirectBuffer();
 	createOutputInstanceBuffer();
 }

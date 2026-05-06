@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @author Jiri Pocarovsky (xpocar01@stud.fit.vutbr.cz)
  * @file SpiralRenderer.cpp
  * @brief Implementation of the SpiralRenderer class for the Spiral application.
@@ -53,6 +53,34 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
     ubo.cameraPos = camera.getPosition();
     ubo.showLodColors = showWireframe ? 1 : 0;
     m_uniformBuffer.update(ubo, currentFrame);
+
+    if (!useGPUSpiralCompute)
+    {
+        // if spiral positions come from cpu, we need to transfer them to GPU
+        m_spiralScene.recordInstanceTransfer(cmdBuffer, currentFrame);
+
+        // wait for transfer to finish
+        vk::BufferMemoryBarrier transferBarrier(
+            vk::AccessFlagBits::eTransferWrite,
+            vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eVertexAttributeRead,
+            VK_QUEUE_FAMILY_IGNORED,
+            VK_QUEUE_FAMILY_IGNORED,
+            m_spiralScene.getInstanceBuffer(currentFrame),
+            0,
+            VK_WHOLE_SIZE
+        );
+        cmdBuffer.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::PipelineStageFlagBits::eComputeShader | vk::PipelineStageFlagBits::eVertexInput,
+            {},
+            0,
+            nullptr,
+            1,
+            &transferBarrier,
+            0,
+            nullptr
+        );
+    }
 
     if (useGPULODCompute)
     {
@@ -229,10 +257,10 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
         Model& lodModel = m_spiralScene.getModelLODSet().getLOD(lod);
 
         // smaller vertex buffer for the LOD level
-        vk::Buffer vertexBuffers[] = { lodModel.getVertexBuffer() };
-        vk::DeviceSize offsets[] = { 0 };
+		vk::DeviceSize offsets[] = { 0 };
+        vk::Buffer vertexBuffers[] = { m_spiralScene.getVRAMVertexBuffer(lod) };
         cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-        cmdBuffer.bindIndexBuffer(lodModel.getIndexBuffer(), 0, vk::IndexType::eUint32);
+        cmdBuffer.bindIndexBuffer(m_spiralScene.getVRAMIndexBuffer(lod), 0, vk::IndexType::eUint32);
 
         if (useGPULODCompute) // GPU computed, drawing with indirect commands
         {
