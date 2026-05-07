@@ -1,11 +1,15 @@
 ﻿# Polygonal mesh simplification and rendering optimization using Level of Detail techniques
 
 ## Beforeword
-This repository contains the implementation of a bachelor's thesis focused on polygonal mesh
-simplification and rendering optimization using Level of Detail (LOD) techniques. The project
+This repository contains the implementation of a bachelor's thesis at **Brno University of Technology, Faculty of Information Technology** focused on polygonal mesh
+simplification and rendering optimization using Level of Detail (LOD) techniques. The thesis is supervised by **Ing. Jan Pečiva, Ph.D.** The project
 is developed in ```C++``` using the ```Vulkan API``` for rendering and includes various simplification
 algorithms, an application for polygonal mesh simplification and an application for benchmarking
 the effects of Level of Detail techniques and GPU-driven rendering.
+
+- Once published, the thesis in Czech can be found [here](https://www.vut.cz/studenti/zav-prace/detail/172919).
+- The project is published on the **Vulkan-FIT** repository, which can be found [here](https://github.com/Vulkan-FIT).
+
 
 ## Simplificator
 The simplification application (```Simplificator```) can be freely used for mesh simplification.
@@ -59,6 +63,18 @@ of LOD techniques and GPU-driven rendering.
 - Instance positioning can become unstable when changing the spiral parameters and not resetting the animation time.
 - The displayed *Drawn triangles* statistic while choosing the GPU modes is a quite precise estimation, but estimation nevertheless, and can slightly differ from the actual number of triangles drawn by the GPU.
 
+
+## Controls
+- ```N``` lock  the camera
+- ```M``` unlock the camera
+	- ```WASD``` movement
+	- ```SHIFT``` move down
+	- ```SPACE``` move up
+	- ```DOWN ARROW``` descrease camera speed
+	- ```UP ARROW``` increase camera speed
+- ```U``` disable UI
+- ```ESC``` exit the application
+
 # Requirements
 
 - Windows 10 or later.
@@ -100,3 +116,28 @@ Several models were used for testing the simplification algorithms and benchmark
 | Male Body | [SketchFab](https://sketchfab.com/3d-models/male-body-base-mesh-highpoly-9311f4f8fa1a4fe4bb0027ff7e8fd795) |Mandrake|```CC BY 4.0```| Fixed in Blender|
 | Boot | [SketchFab](https://sketchfab.com/3d-models/caterpillar-work-boot-d551ce74dcd24528a05cbb0f4b7434d7) |inciprocal| ```CC BY 4.0```| Stripped off of the 4k PBR textures |
 | sphere | Created in Blender |```none```|
+
+# Citation
+If you find this code or the benchmark results useful in your academic or professional work, please consider citing the thesis as follows:
+
+```
+@thesis{pocarovsky:2026:thesis,
+	author		= {Počarovský, Jiří},
+	title		= {Polygonal Mesh Simplification and Rendering Optimization Using Level of Detail Techniques},
+	address		= {Brno},
+	school		= {Brno University of Technology, Faculty of Information Technology},
+	year		= {2026},
+	type		= {Bachelor's thesis},
+	supervisor	= {Ing. Jan Pečiva, Ph.D.},
+	url		= {https://www.vut.cz/studenti/zav-prace/detail/172919}
+}
+
+@misc{pocarovsky:2026:program,
+	author		= {Počarovský, Jiří},
+	title		= {Polygonal Mesh Simplification and Rendering Optimization Using Level of Detail Techniques - Code Repository},
+	year		= {2026},
+	month		= {5},
+	url		= {https://github.com/JiriPocar/Polygonal-mesh-simplification-and-LOD}
+	howpublished	= {online}
+}
+```

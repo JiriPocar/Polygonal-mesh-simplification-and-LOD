@@ -3,7 +3,7 @@
 # 
 # This script plots graphs corresponding to the Spiral scene benchmark results.
 #
-# For specific parts of the code concerning the plotting methods and data analysis, Google Gemini 3 LLM was used.
+# Google Gemini 3 LLM was used for specific parts of the code concerning the plotting methods and data analysis.
 
 import os
 import matplotlib.pyplot as plt
@@ -81,6 +81,7 @@ def plotLODEnablingCombined(df):
     ax1.set_xticks(xPos)
     ax1.set_xticklabels(formattedLabels, rotation=30)
     ax1.set_title('Vliv LOD na čas vykreslení (CPU výpočetní režim)', pad=20)
+    ax1.set_ylabel('Čas vykreslení snímku [ms]', labelpad=10)
     ax1.set_xlabel('Počet instancí modelu ve scéně', labelpad=10)
     ax1.legend()
 
@@ -100,7 +101,6 @@ def plotLODEnablingCombined(df):
     ax2.set_xticks(xPos)
     ax2.set_xticklabels(formattedLabels, rotation=30)
     ax2.set_title('Vliv LOD na čas vykreslení (GPU výpočetní režim)', pad=20)
-    ax2.set_ylabel('Čas vykreslení snímku [ms]', labelpad=10)
     ax2.set_xlabel('Počet instancí modelu ve scéně', labelpad=10)
     ax2.legend()
 
@@ -179,9 +179,9 @@ def plotScalability(df):
     plt.plot(xLabels, gpuOnlyOFF, marker='X', linewidth=2.5, linestyle='--', color='#d62728', label='LOD Vypnuto, GPU pozice na spirále, GPU výběr LOD')
 
     # mix LOD ON
+    plt.plot(xLabels, gpuOnlyON, marker='s', linewidth=2.5, linestyle='-', label='LOD Zapnuto, GPU pozice na spirále, GPU výběr LOD')
     plt.plot(xLabels, cpuOnlyON, marker='o', linewidth=2.5, linestyle='-', label='LOD Zapnuto, CPU pozice na spirále, CPU výběr LOD ')
     plt.plot(xLabels, gpuLODcpuSpiralON, marker='v', linewidth=2.5, linestyle='-', label='LOD Zapnuto, CPU pozice na spirále, GPU výběr LOD')
-    plt.plot(xLabels, gpuOnlyON, marker='s', linewidth=2.5, linestyle='-', label='LOD Zapnuto, GPU pozice na spirále, GPU výběr LOD')
     
     plt.title('Závislost doby vykreslení snímku na počtu instancí pro různé režimy', pad=20)
     plt.ylabel('Čas vykreslení snímku [ms]', labelpad=10)

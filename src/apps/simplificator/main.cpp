@@ -21,13 +21,15 @@
 void help()
 {
 	std::cout << "===============================================================" << std::endl;
-	std::cout << "Welcome to the Simplificator app!" << std::endl;
+	std::cout << "Welcome to the Spiral app!" << std::endl;
 	std::cout << "@author Jiri Pocarovsky" << std::endl;
 	std::cout << "===============================================================" << std::endl;
 	std::cout << "Controls:" << std::endl;
 	std::cout << "  M - Unlock camera" << std::endl;
 	std::cout << "  N - Lock camera" << std::endl;
 	std::cout << "      Movement: WASD" << std::endl;
+	std::cout << "      Shift: Move down" << std::endl;
+	std::cout << "      Space: Move up" << std::endl;
 	std::cout << "  U - Toggle UI" << std::endl;
 	std::cout << "	Up arrow - Increase camera speed" << std::endl;
 	std::cout << "	Down arrow - Decrease camera speed" << std::endl;
