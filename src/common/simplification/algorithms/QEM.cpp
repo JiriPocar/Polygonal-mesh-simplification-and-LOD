@@ -103,7 +103,7 @@ namespace QEM {
 		double d = -glm::dot(n, v1);
 
 		// get area of the triangle
-		double area = 0.5 * glm::length(c);
+		double area = 0.5 * glm::length(cross);
 
 		// multiply the coefficients of the plane equation by the area of the triangle
 		// this makes bigger triangles in the mesh more important
