@@ -366,16 +366,16 @@ void UserInterface::showSimplificationControls(std::unique_ptr<DualModel>& curre
 		if (currentAlgorithm == Algorithm::VertexClustering)
 		{
 			// choose clustering method
-			ClusteringMethod currentMethod = simplificator.getClusteringMethod();
+			ClusteringStrategy currentStrategy = simplificator.getClusteringStrategy();
 			const char* method[] = { "Cell Center", "Quadric Error Metric", "Highest Weight", "Mean Weight"};
 
-			if (ImGui::BeginCombo("Method", method[static_cast<int>(currentMethod)]))
+			if (ImGui::BeginCombo("Method", method[static_cast<int>(currentStrategy)]))
 			{
 				for (int i = 0; i < 4; i++) {
-					if (ImGui::Selectable(method[i], currentMethod == static_cast<ClusteringMethod>(i)))
+					if (ImGui::Selectable(method[i], currentStrategy == static_cast<ClusteringStrategy>(i)))
 					{
-						currentMethod = static_cast<ClusteringMethod>(i);
-						simplificator.setClusteringMethod(currentMethod);
+						currentStrategy = static_cast<ClusteringStrategy>(i);
+						simplificator.setClusteringStrategy(currentStrategy);
 					}
 				}
 

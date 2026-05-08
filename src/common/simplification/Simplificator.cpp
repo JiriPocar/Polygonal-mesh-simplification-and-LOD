@@ -395,18 +395,18 @@ MeshData Simplificator::simplifyVertexClustering(std::vector<Vertex> vertices, s
 	std::unordered_map<uint32_t, uint32_t> indexMap;
 
 	// pick a representative vertex strategy
-	switch (clusteringMethod)
+	switch (clusteringStrategy)
 	{
-		case ClusteringMethod::CellCenter:
+		case ClusteringStrategy::CellCenter:
 			indexMap = VertexClustering::computeRepresentativesCellCentre(grid, vertices);
 			break;
-		case ClusteringMethod::QuadricErrorMetric:
+		case ClusteringStrategy::QuadricErrorMetric:
 		{
 			auto quadrics = QEM::initQuadrics(vertices, indices);
 			indexMap = VertexClustering::computeRepresentativesQEM(grid, vertices, quadrics);
 		}
 			break;
-		case ClusteringMethod::HighestWeightedVertex:
+		case ClusteringStrategy::HighestWeightedVertex:
 		{
 			std::vector<float> vertexWeights(vertices.size(), 0.0f);
 
@@ -420,7 +420,7 @@ MeshData Simplificator::simplifyVertexClustering(std::vector<Vertex> vertices, s
 			indexMap = VertexClustering::computeRepresentativesHighestWeight(grid, vertices, vertexWeights);
 		}
 			break;
-		case ClusteringMethod::WeightedAverage:
+		case ClusteringStrategy::WeightedAverage:
 		{
 			std::vector<float> vertexWeights(vertices.size(), 0.0f);
 

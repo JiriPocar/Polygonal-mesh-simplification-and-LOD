@@ -22,7 +22,7 @@ enum class Algorithm {
 	Random
 };
 
-enum class ClusteringMethod {
+enum class ClusteringStrategy {
 	CellCenter,
 	QuadricErrorMetric,
 	HighestWeightedVertex,
@@ -82,8 +82,8 @@ public:
 
 	// getters and setters
 	Algorithm getCurrentAlgorithm() const { return currentAlgorithm; };
-	ClusteringMethod getClusteringMethod() const { return clusteringMethod; };
-	void setClusteringMethod(ClusteringMethod method) { clusteringMethod = method; };
+	ClusteringStrategy getClusteringStrategy() const { return clusteringStrategy; };
+	void setClusteringStrategy(ClusteringStrategy strategy) { clusteringStrategy = strategy; };
 	
 	// exports the simplified meshes to an .obj file
 	void exportOBJ(std::string& filename, const std::vector<MeshData>& meshData);
@@ -101,7 +101,7 @@ public:
 
 private:
 	Algorithm currentAlgorithm;
-	ClusteringMethod clusteringMethod = ClusteringMethod::CellCenter;
+	ClusteringStrategy clusteringStrategy = ClusteringStrategy::CellCenter;
 	bool flatShading = false;
 
 	/**
