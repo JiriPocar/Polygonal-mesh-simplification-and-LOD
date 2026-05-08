@@ -100,6 +100,7 @@ void UserInterface::beginFrame(std::unique_ptr<DualModel>& currentDualModel, Dev
 		showWireframeControls(renderer);
 		showSmoothingControls();
 		showSurfaceApproximationErrorControls();
+		showTextureControls(currentDualModel);
 	}
 	
 }
@@ -194,15 +195,27 @@ void UserInterface::showStatistics()
 		avgFps /= frameTimes.size();
 	}
 
+	static float updateTimer = 1.0f;
+	static float timerAvg = 0.0f, timerMin = 0.0f, timerMax = 0.0f;
+
+	updateTimer += delta;
+	if (updateTimer >= 1.0f)
+	{
+		timerAvg = avgFps;
+		timerMin = (minFps == FLT_MAX) ? 0.0f : minFps;
+		timerMax = maxFps;
+		updateTimer = 0.0f;
+	}
+
 	ImGui::SetNextWindowPos(ImVec2(10, 10));
 	ImGui::SetNextWindowSize(ImVec2(200, 235));
 	ImGui::Begin("Statistics");
 	ImGui::Text("FPS: %.1f", fps);
 	ImGui::Text("Delta time: %.3f ms", delta * 1000.0f);
 	ImGui::Separator();
-	ImGui::Text("Average: %.1f", avgFps);
-	ImGui::Text("Min: %.1f", minFps);
-	ImGui::Text("Max: %.1f", maxFps);
+	ImGui::Text("Average: %.1f", timerAvg);
+	ImGui::Text("Min: %.1f", timerMin);
+	ImGui::Text("Max: %.1f", timerMax);
 
 	if (!frameTimes.empty())
 	{
@@ -845,6 +858,25 @@ void UserInterface::showSurfaceApproximationErrorControls()
 
 	ImGui::Checkbox("Mean squared error", &simplificator.options.computeMSE);
 	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enables Mean squared error computation during simplification.");
+
+	ImGui::End();
+}
+
+void UserInterface::showTextureControls(std::unique_ptr<DualModel>& currentDualModel)
+{
+	ImGui::SetNextWindowPos(ImVec2(10, 245), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(180, 60), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Textures");
+
+	if (ImGui::Button("Set fallback texture"))
+	{
+		m_device.operator*().waitIdle();
+		std::string fallbackPath = "assets/fallback.png";
+		auto newOrigTex = std::make_unique<Texture>(m_device, m_cmd, fallbackPath);
+		currentDualModel->getOriginalModel().setTexture(std::move(newOrigTex));
+		auto newSimpTex = std::make_unique<Texture>(m_device, m_cmd, fallbackPath);
+		currentDualModel->getSimplifiedModel().setTexture(std::move(newSimpTex));
+	}
 
 	ImGui::End();
 }

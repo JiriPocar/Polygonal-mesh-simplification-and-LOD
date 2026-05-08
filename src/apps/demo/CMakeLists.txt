@@ -45,11 +45,16 @@ else()
     message(WARNING "GlslangValidator not found! Shaders will not be compiled.")
 endif()
 
-# COPY ASSETS INTO OUTPUT DIRECTORY
+# COPY ASSETS
 add_custom_command(TARGET ${APP_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/assets"
+    COMMAND ${CMAKE_COMMAND} -E make_directory
         "${CMAKE_CURRENT_BINARY_DIR}/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets/sphere"
+        "${CMAKE_CURRENT_BINARY_DIR}/assets/sphere"
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/assets/fallback.png"
+        "${CMAKE_CURRENT_BINARY_DIR}/assets/fallback.png"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/plot"
         "${CMAKE_CURRENT_BINARY_DIR}/plot"

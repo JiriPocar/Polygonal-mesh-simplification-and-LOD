@@ -2,7 +2,9 @@
 
 ## Beforeword
 This repository contains the implementation of a bachelor's thesis at **Brno University of Technology, Faculty of Information Technology** focused on polygonal mesh
-simplification and rendering optimization using Level of Detail (LOD) techniques. The thesis is supervised by **Ing. Jan Pečiva, Ph.D.** The project
+simplification and rendering optimization using Level of Detail (LOD) techniques. The thesis is supervised by **Ing. Jan Pečiva, Ph.D.**
+
+The project
 is developed in ```C++``` using the ```Vulkan API``` for rendering and includes various simplification
 algorithms, an application for polygonal mesh simplification and an application for benchmarking
 the effects of Level of Detail techniques and GPU-driven rendering.
@@ -39,7 +41,8 @@ In such cases, it is recommended to use the ```QEM``` algorithm without UV seam 
 - Hausdorff distance and MSE metrics are not optimized and may take longer for complex models.
 - Damaged models (ie. models with scattered meshes) are not supported by most of the simplification algoritms
 and may create holes in the mesh during simplification proccess.
-- In rare cases, some algorithms may produce non-optimal results with visual artifacts.
+- In rare cases, some algorithms may produce non-optimal geometric results.
+- In some cases, visual artifacts with triangle normals can occur.
 
 
 ## Spiral scene
@@ -49,7 +52,7 @@ of LOD techniques and GPU-driven rendering.
 ![SPIRAL](images/spiral.PNG)
 
 ### Features
-- Rendering of a large number of instances with different LOD levels.
+- Rendering of a large number of instances with different LOD levels based on the camera distance.
 - Customizable spiral parameters.
 - Scene metadata display.
 - Customizable LOD configuration for instances of the model on the spiral.
@@ -123,21 +126,23 @@ If you find this code or the benchmark results useful in your academic or profes
 ```
 @thesis{pocarovsky:2026:thesis,
 	author		= {Počarovský, Jiří},
-	title		= {Polygonal Mesh Simplification and Rendering Optimization Using Level of Detail Techniques},
+	title		= {Polygonal Mesh Simplification and Rendering Optimization
+				   Using Level of Detail Techniques},
 	address		= {Brno},
 	school		= {Brno University of Technology, Faculty of Information Technology},
 	year		= {2026},
 	type		= {Bachelor's thesis},
 	supervisor	= {Ing. Jan Pečiva, Ph.D.},
-	url		= {https://www.vut.cz/studenti/zav-prace/detail/172919}
+	url			= {https://www.vut.cz/studenti/zav-prace/detail/172919}
 }
 
 @misc{pocarovsky:2026:program,
 	author		= {Počarovský, Jiří},
-	title		= {Polygonal Mesh Simplification and Rendering Optimization Using Level of Detail Techniques - Code Repository},
+	title		= {Polygonal Mesh Simplification and Rendering Optimization
+				   Using Level of Detail Techniques - Code Repository},
 	year		= {2026},
 	month		= {5},
-	url		= {https://github.com/JiriPocar/Polygonal-mesh-simplification-and-LOD}
+	url			= {https://github.com/JiriPocar/Polygonal-mesh-simplification-and-LOD}
 	howpublished	= {online}
 }
 ```

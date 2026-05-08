@@ -274,7 +274,7 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 	size_t currentFaceCount = indices.size() / 3;
 	size_t resultCompareFaceCount = currentFaceCount;
 
-	std::cout << "=== Vertex Decimation ===" << std::endl;
+	std::cout << "\n=== Vertex Decimation ===" << std::endl;
 	std::cout << "Input: " << vertices.size() << " vertices, "
 		<< currentFaceCount << " faces" << std::endl;
 	std::cout << "Target: " << targetFaceCount << " faces" << std::endl;
@@ -378,7 +378,7 @@ MeshData Simplificator::simplifyVertexClustering(std::vector<Vertex> vertices, s
 
 	size_t currentFaceCount = indices.size() / 3;
 
-	std::cout << "=== Vertex Clustering Debug ===" << std::endl;
+	std::cout << "\n=== Vertex Clustering ===" << std::endl;
 	std::cout << "Input vertices: " << vertices.size() << std::endl;
 	std::cout << "Input faces: " << currentFaceCount << std::endl;
 	std::cout << "Cells per axis: " << cellsPerAxis << std::endl;
@@ -457,7 +457,7 @@ MeshData Simplificator::simplifyFloatingCellClustering(std::vector<Vertex> verti
 
 	size_t currentFaceCount = indices.size() / 3;
 
-	std::cout << "=== Floating-Cell Clustering ===" << std::endl;
+	std::cout << "\n=== Floating-Cell Clustering ===" << std::endl;
 	std::cout << "Input vertices: " << vertices.size() << std::endl;
 	std::cout << "Input faces: " << currentFaceCount << std::endl;
 	std::cout << "Cell radius: " << cellRadius << std::endl;
@@ -489,7 +489,7 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 	size_t currentFaceCount = indices.size() / 3;
 	size_t resultFaceCount = currentFaceCount;
 
-	std::cout << "=== Naive shortest edge collapse ===" << std::endl;
+	std::cout << "\n=== Naive shortest edge collapse ===" << std::endl;
 	std::cout << "Input: " << vertices.size() << " vertices, "
 		<< currentFaceCount << " faces" << std::endl;
 	std::cout << "Target: " << targetFaceCount << " faces" << std::endl;

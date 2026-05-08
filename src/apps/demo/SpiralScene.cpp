@@ -45,20 +45,21 @@ void SpiralScene::generateLODVersions(CommandManager& cmd)
 	ModelLODSet lodSet;
 	lodSet.name = modelPath;
 
+	// get model
 	auto originalModel = std::make_unique<Model>(dev, cmd, modelPath);
 
+	// setup simplificator
 	simplificator.setCurrentAlgorithm(Algorithm::QEM);
 	simplificator.options.checkConnectivity = true;
 	simplificator.options.checkFaceFlipping = true;
 	simplificator.options.enableMerging = true;
 	simplificator.options.mergeCloseVertivesPos = true;
 
+	// simplify for different LODs
 	auto result1 = simplificator.simplify(*originalModel, config.lodPercentageSimplification1);
 	lodSet.lod1 = std::make_unique<Model>(dev, result1.meshesData);
-
 	auto result2 = simplificator.simplify(*originalModel, config.lodPercentageSimplification2);
 	lodSet.lod2 = std::make_unique<Model>(dev, result2.meshesData);
-
 	auto result3 = simplificator.simplify(*originalModel, config.lodPercentageSimplification3);
 	lodSet.lod3 = std::make_unique<Model>(dev, result3.meshesData);
 
@@ -198,8 +199,7 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t curren
 		return;
 	}
 
-	// we are gonna want to have instances sorted by LOD level here for better GPU performance
-	// using counting sort, we can achieve time complexity of O(n)
+	// sort instances by LOD level here for better GPU performance using counting sort
 	// reference: https://www.geeksforgeeks.org/dsa/counting-sort/
 	lodCounts = { 0, 0, 0, 0 };
 	std::vector<uint8_t> instanceLODs(config.instanceCount);
@@ -212,10 +212,8 @@ void SpiralScene::updateInstancesCPU(const glm::vec3& cameraPos, uint32_t curren
 	for (uint32_t i = 0; i < config.instanceCount; i++)
 	{
 		uint8_t lod = 0;
-
-		// expensive distance calculation, we only need relative distances
-		//float dist = glm::distance(cameraPos, positions[i]);
-		float dist = glm::length2(cameraPos - positions[i]); // <- can use instead
+		// length2 due to optimization
+		float dist = glm::length2(cameraPos - positions[i]);
 
 		lod = 3; // default to lowest LOD
 		if (dist < squaredLODdist0)

@@ -70,6 +70,7 @@ private:
 	void showSmoothingControls();
 	void showSimplificationResults(std::unique_ptr<DualModel>& currentDualModel);
 	void showSurfaceApproximationErrorControls();
+	void showTextureControls(std::unique_ptr<DualModel>& currentDualModel);
 
 	// spiral app interface
 	void showSpiralControls(SpiralScene& scene);

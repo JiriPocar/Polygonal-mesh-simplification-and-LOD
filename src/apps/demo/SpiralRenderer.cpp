@@ -56,7 +56,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
 
     if (!useGPUSpiralCompute)
     {
-        // if spiral positions come from cpu, we need to transfer them to GPU
+		// transfer instances to GPU when CPU is responsible for updating spiral positions
         m_spiralScene.recordInstanceTransfer(cmdBuffer, currentFrame);
 
         // wait for transfer to finish
@@ -145,6 +145,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
             &pcs
         );
 
+        // 256 threads per workgroup is a safe bet, can go up to 1024 though
         uint32_t groupCount = (m_spiralScene.config.instanceCount + 255) / 256;
 
         // dispatch group count for compute shader to update instance data and indirect draw commands
