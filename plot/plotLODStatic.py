@@ -1,7 +1,7 @@
 ﻿# Author: Jiri Pocarovsky
-# File: plotLOD.py
+# File: plotLODStatic.py
 # 
-# This script plots graphs corresponding to the Spiral scene benchmark results.
+# This script plots graphs for the static Spiral scene benchmark results.
 #
 # Google Gemini 3 LLM was used for specific parts of the code concerning the plotting methods and data analysis.
 

@@ -1,4 +1,11 @@
-﻿import os
+﻿# Author: Jiri Pocarovsky
+# File: plotLODDynamic.py
+# 
+# This script plots graphs for the dynamic Spiral scene benchmark results.
+#
+# Google Gemini 3 LLM was used for specific parts of the code concerning the plotting methods and data analysis.
+
+import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -61,6 +68,7 @@ def plotSceneFacesDynamic(df):
     
     plt.axhline(y=maxFaces, color='red', linestyle='--', linewidth=2, label='LOD vypnut')
 
+    # plot vertical LOD thresholds
     plt.axvline(x=1000, color='black', linestyle=':', linewidth=2, alpha=0.6, zorder=1)
     plt.text(1050, maxFaces * 0.05, 'Práh LOD 0', rotation=0, va='top', ha='left', alpha=0.8, fontsize=11)
     plt.axvline(x=2000, color='black', linestyle=':', linewidth=2, alpha=0.6, zorder=1)
