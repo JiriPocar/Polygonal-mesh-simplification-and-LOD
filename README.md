@@ -79,7 +79,7 @@ of LOD techniques and GPU-driven rendering. Focused on the geometry through-put 
 # Requirements
 
 - Windows 10 or later.
-- MSVC compiler (Visual Studio 2022 or later) with C++17 support.
+- Visual Studio 2022 or later and MSVC compiler with C++17 support.
 - Vulkan-compatible GPU and drivers.
 - ```Vulkan SDK``` [found here](https://vulkan.lunarg.com/sdk/home). Make sure to restart Visual Studio after the installation.
 - ```CMake``` (version 3.10.2 or later) for building the project
@@ -87,11 +87,13 @@ of LOD techniques and GPU-driven rendering. Focused on the geometry through-put 
 
 # Building the project
 
+Make sure to see [requirements](#requirements)
+
 1. Clone the repository.
-2. Open the cloned folder in Visual Studio.
+2. Open the cloned repository in Visual Studio.
 3. Wait for Visual Studio to automatically generate the CMake cache.
-4. The `Simplificator` and `SpiralApp` applications are separate CMake target and you can select which one to build in the Visual Studio.
-5. Once the build is complete, you can run the applications directly from Visual Studio or from the output directory.
+4. The `Simplificator` and `SpiralApp` applications are separate CMake targets and you can select which one to build in the Visual Studio.
+5. Once building is complete, you can run the executables directly from Visual Studio or from the build directory.
 6. You can add more 3D models to the output `/assets` directory, or add them to the source `/assets` directory and re-configure CMake to copy them over to the output directory.
 
 If you don't want to bother with compiling, you can simply download the pre-compiled binaries from the [Releases](https://github.com/JiriPocar/Polygonal-mesh-simplification-and-LOD/releases) page.
@@ -106,7 +108,7 @@ If you don't want to bother with compiling, you can simply download the pre-comp
 
 # Acknowledgements
 
-- During the development, a large language model *Google Gemini 3* was used for programming tasks, namely tracking rather difficult bugs, refactoring and optimization suggestions and general help with the used libraries.
+- During the development, a large language model *Google Gemini 3* was used for programming tasks, namely tracking rather difficult bugs, refactoring and optimization suggestions and general help with the used libraries. GitHub Copilot was used for code completions and syntax corrections.
 - The Vulkan abstraction layer (```core/```, ```rendering/``` and ```resources/```) is based on the public Vulkan tutorials, namely Alexander Overvoorde's [Vulkan Tutorial](https://vulkan-tutorial.com/) and Victor Blanco's [Vulkan Guide](https://vkguide.dev/).
 - Other specific resources, if used, are either specified in the headers of the source (```.cpp```) files or in the adapted parts of the code itself. 
 
@@ -115,14 +117,14 @@ Several models were used for testing the simplification algorithms and benchmark
 
 | Asset | Source | Author | Licence |Note |
 | ------------- | ------------- | --------- | ---- | ---- |
-| Duck  | [Khronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Duck/glTF)|KhronosGroup| ```SCEA 1.0```| |
-| Suzanne | [Kronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Suzanne) |Norbert Nopper|```none (donated to the repository by Norbert Nopper)```| |
-| Stanford bunny | [SketchFab](https://sketchfab.com/3d-models/stanford-bunny-43f266d6cd6e4c6888b9943557528c0f)|darwinsenior|```CC BY 4.0```| |
-| Happy Buddha | [SketchFab](https://sketchfab.com/3d-models/happy-buddha-stanford-5f2a444ff26c4a3bb194f6d79502ee54) |3D graphics 101|```CC BY-NC 4.0```| |
-| Skull | [SketchFab](https://sketchfab.com/3d-models/skull-downloadable-1a9db900738d44298b0bc59f68123393) |martinjario|```CC BY 4.0```| |
+| Duck  | [Khronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Duck/glTF)|KhronosGroup| ```SCEA 1.0```| Textured with UV seams |
+| Suzanne | [Kronos repository](https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Suzanne) |Norbert Nopper|```none (donated to the repository by Norbert Nopper)```| Polygon soup with texture|
+| Stanford bunny | [SketchFab](https://sketchfab.com/3d-models/stanford-bunny-43f266d6cd6e4c6888b9943557528c0f)|darwinsenior|```CC BY 4.0```| Polygon soup |
+| Happy Buddha | [SketchFab](https://sketchfab.com/3d-models/happy-buddha-stanford-5f2a444ff26c4a3bb194f6d79502ee54) |3D graphics 101|```CC BY-NC 4.0```| Partly damaged mesh |
+| Skull | [SketchFab](https://sketchfab.com/3d-models/skull-downloadable-1a9db900738d44298b0bc59f68123393) |martinjario|```CC BY 4.0```| Textured with uv seams |
 | Male Body | [SketchFab](https://sketchfab.com/3d-models/male-body-base-mesh-highpoly-9311f4f8fa1a4fe4bb0027ff7e8fd795) |Mandrake|```CC BY 4.0```| Fixed in Blender|
 | Boot | [SketchFab](https://sketchfab.com/3d-models/caterpillar-work-boot-d551ce74dcd24528a05cbb0f4b7434d7) |inciprocal| ```CC BY 4.0```| Stripped off of the 4k PBR textures |
-| sphere | Created in Blender |```none```|
+| sphere | Exported from Blender |```none```| ```none``` | Partly damaged mesh |
 
 # Citation
 If you find this code or the benchmark results useful in your academic or professional work, please consider citing the thesis as follows:
