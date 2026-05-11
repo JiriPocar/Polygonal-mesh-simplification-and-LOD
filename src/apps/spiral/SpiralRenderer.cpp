@@ -111,13 +111,14 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
         );
 
 		// bind compute pipeline and descriptor sets
+        vk::DescriptorSet computeDesc = m_descriptor.getCompute(currentFrame);
         cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, m_computePipeline->get());
         cmdBuffer.bindDescriptorSets(
             vk::PipelineBindPoint::eCompute,
             m_computePipeline->getLayout(),
             0,
             1,
-            &m_descriptor.getCompute(currentFrame),
+            &computeDesc,
             0,
             nullptr
         );
@@ -207,12 +208,13 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
         cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_wireframePipeline->get());
 
         // bind descriptor sets
+        vk::DescriptorSet descriptorSet = m_descriptor.get(currentFrame);
         cmdBuffer.bindDescriptorSets(
             vk::PipelineBindPoint::eGraphics,
             m_wireframePipeline->getLayout(),
             0,
             1,
-            &m_descriptor.get(currentFrame),
+            &descriptorSet,
             0,
             nullptr
         );
@@ -222,12 +224,13 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
         cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
         // bind descriptor sets
+        vk::DescriptorSet descriptorSet = m_descriptor.get(currentFrame);
         cmdBuffer.bindDescriptorSets(
             vk::PipelineBindPoint::eGraphics,
             m_pipeline.getLayout(),
             0,
             1,
-            &m_descriptor.get(currentFrame),
+            &descriptorSet,
             0,
             nullptr
         );

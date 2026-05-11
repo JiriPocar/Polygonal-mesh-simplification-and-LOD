@@ -87,12 +87,13 @@ void SimplificatorRenderer::drawSplitScreen(const Camera& camera, const Transfor
 
     m_uniformBuffer.update(ubo, currentFrame);
 
+	vk::DescriptorSet descriptor = m_descriptor.get(currentFrame);
     cmdBuffer.bindDescriptorSets(
         vk::PipelineBindPoint::eGraphics,
         m_pipeline.getLayout(),
         0,
         1,
-        &m_descriptor.get(currentFrame),
+        &descriptor,
         0,
         nullptr
     );
