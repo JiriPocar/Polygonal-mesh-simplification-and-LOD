@@ -18,8 +18,8 @@ set(ENGINE_SOURCES
     "src/common/window.cpp"
     "src/common/window.h"
 
-    "src/apps/demo/SpiralRenderer.cpp"
-    "src/apps/demo/Benchmark.cpp"
+    "src/apps/spiral/SpiralRenderer.cpp"
+    "src/apps/spiral/Benchmark.cpp"
     "src/apps/simplificator/SimplificatorRenderer.cpp"
 
     # Core
@@ -49,7 +49,7 @@ set(ENGINE_SOURCES
     "src/common/scene/Camera.cpp"
     "src/common/scene/Transform.cpp"
     
-    "src/apps/demo/SpiralScene.cpp"
+    "src/apps/spiral/SpiralScene.cpp"
 
     # Simplification
     "src/common/simplification/Simplificator.cpp"
@@ -103,4 +103,4 @@ set_target_properties(BPEngine PROPERTIES
 
 # DEMO APPLICATIONS
 add_subdirectory(src/apps/simplificator)
-add_subdirectory(src/apps/demo)
+add_subdirectory(src/apps/spiral)

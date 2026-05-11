@@ -27,8 +27,8 @@
 #include "common/resources/DualModel.hpp"
 #include "common/simplification/Simplificator.hpp"
 #include "apps/simplificator/SimplificatorRenderer.hpp"
-#include "apps/demo/SpiralRenderer.hpp"
-#include "apps/demo/Benchmark.hpp"
+#include "apps/spiral/SpiralRenderer.hpp"
+#include "apps/spiral/Benchmark.hpp"
 
 class SpiralScene;
 class SimplificatorRenderer;
