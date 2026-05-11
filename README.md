@@ -1,16 +1,15 @@
 ﻿# Polygonal mesh simplification and rendering optimization using Level of Detail techniques
 
-## Beforeword
+## Foreword
 This repository contains the implementation of a bachelor's thesis at **Brno University of Technology, Faculty of Information Technology** focused on polygonal mesh
 simplification and rendering optimization using Level of Detail (LOD) techniques. The thesis is supervised by **Ing. Jan Pečiva, Ph.D.**
 
-The project
-is developed in ```C++``` using the ```Vulkan API``` for rendering and includes various simplification
+The project is developed in ```C++``` using the ```Vulkan API``` for rendering and includes various simplification
 algorithms, an application for polygonal mesh simplification and an application for benchmarking
 the effects of Level of Detail techniques and GPU-driven rendering.
 
 - Once published, the thesis in Czech can be found [here](https://www.vut.cz/studenti/zav-prace/detail/172919).
-- The project is published on the **Vulkan-FIT** repository, which can be found [here](https://github.com/Vulkan-FIT).
+- The project is published in the **Vulkan-FIT** repository, which can be found [here](https://github.com/Vulkan-FIT).
 
 
 ## Simplificator
@@ -36,8 +35,7 @@ The simplification application (```Simplificator```) can be freely used for mesh
 - ```Simplificator``` works best with manifold meshes for geometric simplification.
 - For textured models, only ```QEM``` algorithm is currently supported via ```Lock UV Seams```
 and ```Simplify with UV Seams``` options. If there are no UV seams in the textured model, the simplification
-may not preserve the texture coordinates properly, leading to visual artifacts.
-In such cases, it is recommended to use the ```QEM``` algorithm without UV seam approaches for better results.
+may not preserve the texture coordinates properly.
 - Hausdorff distance and MSE metrics are not optimized and may take longer for complex models.
 - Damaged models (ie. models with scattered meshes) are not supported by most of the simplification algoritms
 and may create holes in the mesh during simplification proccess.
@@ -47,7 +45,7 @@ and may create holes in the mesh during simplification proccess.
 
 ## Spiral scene
 The benchmarking application (```SpiralApp```) is designed to demonstrate the performance benefits
-of LOD techniques and GPU-driven rendering.
+of LOD techniques and GPU-driven rendering. Focused on the geometry through-put of hardware configurations
 
 ![SPIRAL](images/spiral.PNG)
 
@@ -96,7 +94,7 @@ of LOD techniques and GPU-driven rendering.
 5. Once the build is complete, you can run the applications directly from Visual Studio or from the output directory.
 6. You can add more 3D models to the output `/assets` directory, or add them to the source `/assets` directory and re-configure CMake to copy them over to the output directory.
 
-If you don't want to bother with compiling, you can simply download the pre-compiled binaries from the **Releases** page.
+If you don't want to bother with compiling, you can simply download the pre-compiled binaries from the [Releases](https://github.com/JiriPocar/Polygonal-mesh-simplification-and-LOD/releases) page.
 
 # Used libraries
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
@@ -105,6 +103,12 @@ If you don't want to bother with compiling, you can simply download the pre-comp
 - [Dear ImGui](https://github.com/ocornut/imgui)
 - [TinyGLTF](https://github.com/syoyo/tinygltf)
 - [GLM](https://github.com/g-truc/glm)
+
+# Acknowledgements
+
+- During the development, a large language model *Google Gemini 3* was used for programming tasks, namely tracking rather difficult bugs, refactoring and optimization suggestions and general help with the used libraries.
+- The Vulkan abstraction layer (```core/```, ```rendering/``` and ```resources/```) is based on the public Vulkan tutorials, namely Alexander Overvoorde's [Vulkan Tutorial](https://vulkan-tutorial.com/) and Victor Blanco's [Vulkan Guide](https://vkguide.dev/).
+- Other specific resources, if used, are either specified in the headers of the source (```.cpp```) files or in the adapted parts of the code itself. 
 
 # Assets table
 Several models were used for testing the simplification algorithms and benchmarking the rendering performance. Below is a table listing the assets and their sources.
@@ -137,12 +141,12 @@ If you find this code or the benchmark results useful in your academic or profes
 }
 
 @misc{pocarovsky:2026:program,
-	author		= {Počarovský, Jiří},
-	title		= {Polygonal Mesh Simplification and Rendering Optimization
-				   Using Level of Detail Techniques - Code Repository},
-	year		= {2026},
-	month		= {5},
-	url			= {https://github.com/JiriPocar/Polygonal-mesh-simplification-and-LOD}
+	author			= {Počarovský, Jiří},
+	title			= {Polygonal Mesh Simplification and Rendering Optimization
+				       Using Level of Detail Techniques - Code Repository},
+	year			= {2026},
+	month			= {5},
+	url				= {https://github.com/JiriPocar/Polygonal-mesh-simplification-and-LOD}
 	howpublished	= {online}
 }
 ```
