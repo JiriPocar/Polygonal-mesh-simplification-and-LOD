@@ -79,13 +79,17 @@ vk::CommandBuffer Renderer::beginFrame(uint32_t& outImgIdx)
     }
 
     // wait for gpu to finish frame
-    m_device.operator*().waitForFences(1, &*inFlightFence[currentFrame], VK_TRUE, UINT64_MAX);
+    vk::Result result = m_device.operator*().waitForFences(1, &*inFlightFence[currentFrame], VK_TRUE, UINT64_MAX);
+    if (result != vk::Result::eSuccess)
+    {
+		throw std::runtime_error("Failed to wait for in-flight fence!");
+    }
 
     try {
 		// get next image from swapchain
         outImgIdx = m_swapchain.acquireNextImage(*imageAvailableSemaphores[currentFrame]);
     }
-    catch (const vk::OutOfDateKHRError& e) {
+    catch (const vk::OutOfDateKHRError&) {
         recreateSwapchain();
         return nullptr;
     }
@@ -93,19 +97,27 @@ vk::CommandBuffer Renderer::beginFrame(uint32_t& outImgIdx)
 	// if a previous frame is still using this image, wait for it to finish
     if (imagesInFlight[outImgIdx] != VK_NULL_HANDLE)
     {
-        m_device.operator*().waitForFences(
+        result = m_device.operator*().waitForFences(
             1,
             &imagesInFlight[outImgIdx],
             VK_TRUE,
             UINT64_MAX
         );
+		if (result != vk::Result::eSuccess)
+		{
+			throw std::runtime_error("Failed to wait for in-flight fence of an image!");
+		}
     }
 
 	// mark image as now being in use by this frame
     imagesInFlight[outImgIdx] = *inFlightFence[currentFrame];
 
 	// reset fence for current frame
-    m_device.operator*().resetFences(1, &*inFlightFence[currentFrame]);
+    result = m_device.operator*().resetFences(1, &*inFlightFence[currentFrame]);
+	if (result != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("Failed to reset in-flight fence!");
+	}
 
 	// record command buffer
     vk::CommandBuffer cmdBuffer = m_commandManager.getCommandBuffer(outImgIdx);
@@ -137,7 +149,11 @@ void Renderer::endFrame(vk::CommandBuffer cmdBuffer, uint32_t imgIdx)
         signalSemaphores
     );
 
-    m_device.getGraphicsQueue().submit(1, &submitInfo, *inFlightFence[currentFrame]);
+    vk::Result result = m_device.getGraphicsQueue().submit(1, &submitInfo, *inFlightFence[currentFrame]);
+    if (result != vk::Result::eSuccess)
+    {
+		throw std::runtime_error("Failed to submit command buffer!");
+    }
 
     // present image
     vk::SwapchainKHR rawSwapchains[] = { m_swapchain.get().get() };
@@ -151,9 +167,17 @@ void Renderer::endFrame(vk::CommandBuffer cmdBuffer, uint32_t imgIdx)
     );
 
     try {
-        m_device.getPresentQueue().presentKHR(presentInfo);
+        result = m_device.getPresentQueue().presentKHR(presentInfo);
+        if (result == vk::Result::eSuboptimalKHR)
+        {
+            framebufferResized = true;
+		}
+        else if (result != vk::Result::eSuccess)
+        {
+            throw std::runtime_error("Failed to present swapchain image!");
+        }
     }
-    catch (const vk::OutOfDateKHRError& e) {
+    catch (const vk::OutOfDateKHRError&) {
         framebufferResized = true;
     }
 

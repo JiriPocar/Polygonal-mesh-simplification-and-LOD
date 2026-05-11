@@ -78,7 +78,12 @@ void CommandManager::endSingleTimeCommands(vk::CommandBuffer commandBuffer)
 	);
 
 	// send to GPU
-	dev.getGraphicsQueue().submit(1, &submitInfo, nullptr);
+	vk::Result result = dev.getGraphicsQueue().submit(1, &submitInfo, nullptr);
+	if (result != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("Failed to submit command buffer!");
+	}
+
 	// wait for the GPU to finish executing the command buffer
 	dev.getGraphicsQueue().waitIdle();
 	// free the command buffer back to the pool
