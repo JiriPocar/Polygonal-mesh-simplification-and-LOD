@@ -13,7 +13,7 @@
 
 VulkanApp::VulkanApp(int width, int height, bool enableVsync, const char* appName)
 	: window(width, height, appName),
-	  instance(true),
+	  instance(false),
 	  surface(window.createSurface(instance)),
 	  device(instance, *surface),
 	  swapchain(device, *surface, enableVsync, window.getWidth(), window.getHeight()),

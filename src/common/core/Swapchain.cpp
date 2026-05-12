@@ -46,8 +46,10 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 
 	// pick the best surface format
 	imageFormat = supportDetails.formats[0].format;
-	for (const auto& availableFormat : supportDetails.formats) {
-		if (availableFormat.format == vk::Format::eB8G8R8A8Srgb && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+	for (const auto& availableFormat : supportDetails.formats)
+	{
+		if (availableFormat.format == vk::Format::eB8G8R8A8Srgb && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
+		{
 			imageFormat = availableFormat.format;
 			break;
 		}
@@ -75,7 +77,7 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 
 	// determine the image count
 	uint32_t imageCount = supportDetails.capabilities.minImageCount + 1;
-	if(supportDetails.capabilities.minImageCount > 0 && imageCount > supportDetails.capabilities.maxImageCount)
+	if(supportDetails.capabilities.maxImageCount > 0 && imageCount > supportDetails.capabilities.maxImageCount)
 	{
 		imageCount = supportDetails.capabilities.maxImageCount;
 	}

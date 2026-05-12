@@ -89,6 +89,7 @@ target_include_directories(BPEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends
     ${CMAKE_CURRENT_SOURCE_DIR}/external/vma
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/glm
 )
 
 # LIBRARY LINKING

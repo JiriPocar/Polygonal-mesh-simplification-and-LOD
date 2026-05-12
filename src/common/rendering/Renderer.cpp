@@ -46,21 +46,30 @@ void Renderer::createSyncObjects()
     vk::FenceCreateInfo fenceInfo(vk::FenceCreateFlagBits::eSignaled);
 
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFence.resize(MAX_FRAMES_IN_FLIGHT);
 
     size_t imgCount = m_swapchain.getImages().size();
     imagesInFlight.resize(imgCount, VK_NULL_HANDLE);
+    renderFinishedSemaphores.resize(imgCount);
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         imageAvailableSemaphores[i] = m_device.operator*().createSemaphoreUnique(semaphoreInfo);
-        renderFinishedSemaphores[i] = m_device.operator*().createSemaphoreUnique(semaphoreInfo);
         inFlightFence[i] = m_device.operator*().createFenceUnique(fenceInfo);
 
-        if (!imageAvailableSemaphores[i] || !renderFinishedSemaphores[i] || !inFlightFence[i])
+        if (!imageAvailableSemaphores[i] || !inFlightFence[i])
         {
             throw std::runtime_error("Failed to create synchronization objects for a frame!");
+        }
+    }
+
+    for (size_t i = 0; i < imgCount; i++)
+    {
+        renderFinishedSemaphores[i] = m_device.operator*().createSemaphoreUnique(semaphoreInfo);
+
+        if (!renderFinishedSemaphores[i])
+        {
+            throw std::runtime_error("Failed to create render finished semaphore for an image!");
         }
     }
 }
@@ -137,7 +146,7 @@ void Renderer::endFrame(vk::CommandBuffer cmdBuffer, uint32_t imgIdx)
     vk::PipelineStageFlags pipelineStageFlags[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
     
     vk::Semaphore waitSemaphores[] = { *imageAvailableSemaphores[currentFrame] };
-    vk::Semaphore signalSemaphores[] = { *renderFinishedSemaphores[currentFrame] };
+    vk::Semaphore signalSemaphores[] = { *renderFinishedSemaphores[imgIdx] };
 
     vk::SubmitInfo submitInfo(
         1,
