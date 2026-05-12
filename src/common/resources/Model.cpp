@@ -150,9 +150,9 @@ void Mesh::loadVertices(const tinygltf::Model& model, const tinygltf::Primitive&
 	}
 
 	// create vertices
-	vertexCount = positionsAccessor.count;
+	vertexCount = static_cast<uint32_t>(positionsAccessor.count);
 	vertices.resize(vertexCount);
-	for (size_t i = 0; i < vertexCount; i++)
+	for (uint32_t i = 0; i < vertexCount; i++)
 	{
 		vertices[i].pos = glm::vec3(
 			positionsData[i * 3 + 0],
@@ -207,13 +207,13 @@ void Mesh::loadIndices(const tinygltf::Model& model, const tinygltf::Primitive& 
 	const tinygltf::BufferView& indicesView = model.bufferViews[indicesAccessor.bufferView];
 	const tinygltf::Buffer& buffer = model.buffers[indicesView.buffer];
 
-	indexCount = indicesAccessor.count;
+	indexCount = static_cast<uint32_t>(indicesAccessor.count);
 	indices.resize(indexCount);
 
 	if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)
 	{
 		const uint8_t* indicesData = reinterpret_cast<const uint8_t*>(&buffer.data[indicesView.byteOffset + indicesAccessor.byteOffset]);
-		for (size_t i = 0; i < indexCount; i++)
+		for (uint32_t i = 0; i < indexCount; i++)
 		{
 			indices[i] = indicesData[i];
 		}
@@ -221,7 +221,7 @@ void Mesh::loadIndices(const tinygltf::Model& model, const tinygltf::Primitive& 
 	else if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
 	{
 		const uint16_t* indicesData = reinterpret_cast<const uint16_t*>(&buffer.data[indicesView.byteOffset + indicesAccessor.byteOffset]);
-		for (size_t i = 0; i < indexCount; i++)
+		for (uint32_t i = 0; i < indexCount; i++)
 		{
 			indices[i] = indicesData[i];
 		}
@@ -229,7 +229,7 @@ void Mesh::loadIndices(const tinygltf::Model& model, const tinygltf::Primitive& 
 	else if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
 	{
 		const uint32_t* indicesData = reinterpret_cast<const uint32_t*>(&buffer.data[indicesView.byteOffset + indicesAccessor.byteOffset]);
-		for (size_t i = 0; i < indexCount; i++)
+		for (uint32_t i = 0; i < indexCount; i++)
 		{
 			indices[i] = indicesData[i];
 		}
@@ -331,7 +331,7 @@ Model::Model(const Model& other) : dev(other.dev), indexCount(other.indexCount),
 }
 
 Model::Model(Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
-	: dev(device), vertexCount(vertices.size()), indexCount(indices.size())
+	: dev(device), vertexCount(static_cast<uint32_t>(vertices.size())), indexCount(static_cast<uint32_t>(indices.size()))
 {
 	createFromData(vertices, indices);
 }

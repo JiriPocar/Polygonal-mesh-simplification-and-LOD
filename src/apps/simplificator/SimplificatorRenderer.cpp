@@ -51,7 +51,7 @@ void SimplificatorRenderer::drawSplitScreen(const Camera& camera, const Transfor
         m_renderPass.get(),
         m_framebuffer.getFrameBufferAt(imgIdx),
         vk::Rect2D({ 0,0 }, m_swapchain.getExtent()),
-        clearValues.size(),
+        static_cast<uint32_t>(clearValues.size()),
         clearValues.data()
     );
 

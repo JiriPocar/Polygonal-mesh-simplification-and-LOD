@@ -188,16 +188,13 @@ Device::QueueFamilyIndices Device::findQueueFamilies(vk::PhysicalDevice device, 
 
 vk::Format Device::findSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features)
 {
-	// check each candidate format for support
 	for (vk::Format format : candidates)
 	{
 		vk::FormatProperties properties = physicalDevice.getFormatProperties(format);
 
-		if (tiling == vk::ImageTiling::eLinear && (properties.linearTilingFeatures & features) == features)
-		{
-			return format;
-		}
-		else if (tiling == vk::ImageTiling::eOptimal && (properties.optimalTilingFeatures & features) == features)
+		// check if the format supports the required features for the specified tiling
+		if ((tiling == vk::ImageTiling::eLinear && (properties.linearTilingFeatures & features) == features) ||
+			(tiling == vk::ImageTiling::eOptimal && (properties.optimalTilingFeatures & features) == features))
 		{
 			return format;
 		}

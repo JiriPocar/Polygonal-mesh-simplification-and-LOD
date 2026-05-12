@@ -40,7 +40,7 @@
 
 namespace VertexDecimation {
 
-	double computeVertexError(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info, SimplificationOptions& options, std::vector<bool>& isLocked)
+	double computeVertexError(uint32_t vertexIdx, std::vector<Vertex>& vertices, VertexInfo& info, SimplificationOptions& options, std::vector<bool>& isLocked)
 	{
 		if (isLocked[vertexIdx])
 		{
@@ -103,7 +103,7 @@ namespace VertexDecimation {
 		case VertexClassification::InteriorEdge:
 		{
 			// TODO: think about whether to do this
-			// for now, treat as complex to avoid collapsing
+			// for now the interior edge is defined by feature edges
 			return DONT_DECIMATE_ERROR;
 		}
 		case VertexClassification::Complex:
@@ -351,31 +351,7 @@ namespace VertexDecimation {
 		return baseClassification;
 	}
 
-	std::vector<VertexInfo> computeVertexInfo(std::vector<uint32_t>& indices, size_t vertexCount)
-	{
-		std::vector<VertexInfo> vertexInfo(vertexCount);
-
-		// for each vertex build its neighborhood
-		for (size_t i = 0; i < vertexCount; i++)
-		{
-			vertexInfo[i].neighborhood = Topology::getVertexNeighborhood(i, indices);
-		}
-
-		// remove duplicate neighbor vertices and classify vertices
-		for (auto& info : vertexInfo)
-		{
-			// sort neighbor vertices and remove duplicates
-			std::sort(info.neighborhood.vertices.begin(), info.neighborhood.vertices.end());
-			info.neighborhood.vertices.erase(std::unique(info.neighborhood.vertices.begin(), info.neighborhood.vertices.end()), info.neighborhood.vertices.end());
-
-			info.classification = VertexClassification::Undefined;
-			info.isActive = true;
-		}
-
-		return vertexInfo;
-	}
-
-	std::vector<uint32_t> triangulateHole(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, VertexInfo& info)
+	std::vector<uint32_t> triangulateHole(std::vector<Vertex>& vertices, VertexInfo& info)
 	{
 		std::vector<uint32_t> newTriangles;
 
@@ -415,7 +391,7 @@ namespace VertexDecimation {
 		{
 			int bestEarIdx = -1;
 			float bestEarScore = -1.0f;
-			int n = activeIndices.size();
+			int n = static_cast<int>(activeIndices.size());
 
 			// evaluate all potential ears and find the best one based on geometric quality
 			for (int i = 0; i < n; i++)
@@ -586,7 +562,7 @@ namespace VertexDecimation {
 			vInfo.classification = classifyVertex(boundaryVertex, vertices, indices, vInfo, options);
 			if (vInfo.classification != VertexClassification::Complex && vInfo.classification != VertexClassification::Undefined)
 			{
-				double newError = computeVertexError(boundaryVertex, vertices, indices, vInfo, options, isLocked);
+				double newError = computeVertexError(boundaryVertex, vertices, vInfo, options, isLocked);
 
 				// re-add to the priority queue with the new error
 				candidatesQueue.push({ boundaryVertex, newError });

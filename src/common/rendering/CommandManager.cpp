@@ -59,7 +59,7 @@ vk::CommandBuffer CommandManager::beginSingleTimeCommands()
 		1									// allocate one command buffer
 	);
 
-	auto commandBuffer = std::move(dev.operator*().allocateCommandBuffers(info)[0]);
+	auto commandBuffer = dev.operator*().allocateCommandBuffers(info)[0];
 
 	// one-time submit flag
 	vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);

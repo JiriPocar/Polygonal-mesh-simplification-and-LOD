@@ -30,8 +30,6 @@ struct Vertex {
 
 	static vk::VertexInputBindingDescription getBindingDesc();
 	static std::array<vk::VertexInputAttributeDescription, 3> getAttributeDesc();
-
-	
 };
 
 // represents a single mesh in the model

@@ -3,7 +3,8 @@
  * @file Naive.cpp
  * @brief Naive algorithm implementation.
  *
- * This file contains ...
+ * This file contains helper funtions for naive shortest edge collapse algorithm.
+ * Used for comparison with more complex algorithms.
  */
 
 #include "Naive.hpp"
@@ -67,7 +68,7 @@ namespace Naive {
 		return shortestEdge;
 	}
 
-	int collapseEdge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const Edge& edgeToCollapse, std::vector<bool>& vertexDeleted, std::vector<Topology::Neighborhood>& allNeighborhoods)
+	int collapseEdge(std::vector<uint32_t>& indices, const Edge& edgeToCollapse, std::vector<bool>& vertexDeleted, std::vector<Topology::Neighborhood>& allNeighborhoods)
     {
         uint32_t keepIdx = edgeToCollapse.v1;
         uint32_t removeIdx = edgeToCollapse.v2;

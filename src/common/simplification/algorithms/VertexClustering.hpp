@@ -78,12 +78,11 @@ namespace VertexClustering {
     * 
 	* @param vertexIdx The index of the vertex being evaluated for weight calculation
 	* @param vertices The vertices of the mesh to be simplified
-	* @param indices The triangle indices of the mesh to be simplified
 	* @param neighborhood The neighborhood structure containing adjacent vertices and triangles
     * 
 	* @return weight of vertex at vertexIdx
     */
-    float calculateVertexWeight(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Topology::Neighborhood& neighborhood);
+    float calculateVertexWeight(uint32_t vertexIdx, std::vector<Vertex>& vertices, Topology::Neighborhood& neighborhood);
 
     /**
     * @brief Strategies to select representative vertex for each cell of the uniform 3D grid.

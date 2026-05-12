@@ -781,7 +781,7 @@ void UserInterface::showBenchmarkStatus(Benchmark& benchmark)
 		if (benchmark.isRunning() && benchmark.getMethod() == BenchmarkMethod::STATIC_CAMERA && benchmark.getCalibrationStatus())
 		{
 			int currentIdx = benchmark.getCurrentConfigIndex();
-			int totalConfigs = benchmark.getNumberOfConfigs();
+			int totalConfigs = static_cast<int>(benchmark.getNumberOfConfigs());
 			BenchmarkConfig cfg = benchmark.getConfigAtIdx(currentIdx);
 
 			ImGui::Text("Overall Progress: %d / %d", currentIdx, totalConfigs);
@@ -949,7 +949,7 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 	// twice per second update the number of drawn faces
 	// a bit of a hack, since its costly operation
 	static float updateTimer = 0.0f;
-	static uint32_t currentDrawnTriangles = 0;
+	static uint64_t currentDrawnTriangles = 0;
 	updateTimer += ImGui::GetIO().DeltaTime;
 	static std::array<uint32_t, 4> lodInstances;
 	if (updateTimer >= 0.5f)
@@ -959,7 +959,7 @@ void UserInterface::showSceneInfo(SpiralScene& scene, glm::vec3 camPos)
 	}
 	ImGui::Text("Drawn triangles:");
 	ImGui::SameLine();
-	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%u", currentDrawnTriangles);
+	ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%llu", currentDrawnTriangles);
 
 	ImGui::Text("Max length:");
 	ImGui::SameLine();

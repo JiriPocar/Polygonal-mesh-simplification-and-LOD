@@ -74,7 +74,7 @@ void Window::mouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
 	auto* win = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
 
-	if (win && win->mouseCallback)
+	if (win && win->mouseMoveCallback)
 	{
 		win->mouseMoveCallback(xpos, ypos);
 	}

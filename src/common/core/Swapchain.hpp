@@ -31,14 +31,6 @@ public:
 	uint32_t acquireNextImage(vk::Semaphore signalSemaphore);
 
 	/**
-	* @brief Presents the rendered image to the screen.
-	* 
-	* @param imageIndex Index of the image to present, obtained from acquireNextImage()
-	* @param waitSemaphore Semaphore to wait for before presenting the image
-	*/
-	void presentImage(uint32_t imageIndex,vk::Semaphore waitSemaphore);
-
-	/**
 	* @brief Recreates the swapchain when the window is resized.
 	* 
 	* @param surface Vulkan surface associated with the swapchain

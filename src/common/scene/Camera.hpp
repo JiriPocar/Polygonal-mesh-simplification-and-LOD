@@ -30,7 +30,7 @@ public:
 	* @param x The current x position of the mouse
 	* @param y The current y position of the mouse
 	*/
-	void handleMouseInput(double x, double y);
+	void handleMouseInput(float x, float y);
 
 	/**
 	* @brief Handles mouse movement input for camera orientation.

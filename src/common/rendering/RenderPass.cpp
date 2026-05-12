@@ -85,7 +85,7 @@ void RenderPass::createRenderpass(vk::Format swapchainImageFormat)
 
 	vk::RenderPassCreateInfo renderPassInfo(
 		{},											// flags
-		attachments.size(),							// attachments
+		static_cast<uint32_t>(attachments.size()),	// attachments
 		attachments.data(),							// attachments
 		1, &subpass,								// subpasses
 		1, &dependency								// dependencies

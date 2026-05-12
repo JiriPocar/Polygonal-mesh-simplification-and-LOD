@@ -8,7 +8,7 @@
  * 
  * Parts of the code may be inspired or adapted from:
  *		- Alexander Overvoorde's "Vulkan Tutorial"
- *			- @url https://vulkan-tutorial.com/
+ *			- @url https://vulkan-tutorial.com/Texture_mapping/Images
  *			- @url https://github.com/Overv/VulkanTutorial
  *		- VMA's "VulkanSample"
  *			- @url https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/blob/master/src/VulkanSample.cpp

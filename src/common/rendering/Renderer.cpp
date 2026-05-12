@@ -77,6 +77,10 @@ void Renderer::createSyncObjects()
 void Renderer::cleanupSyncObjects()
 {
     m_device.operator*().waitIdle();
+    imageAvailableSemaphores.clear();
+    renderFinishedSemaphores.clear();
+    inFlightFence.clear();
+    imagesInFlight.clear();
 }
 
 vk::CommandBuffer Renderer::beginFrame(uint32_t& outImgIdx)
@@ -84,7 +88,7 @@ vk::CommandBuffer Renderer::beginFrame(uint32_t& outImgIdx)
     if (framebufferResized)
     {
         recreateSwapchain();
-        return nullptr;
+        return VK_NULL_HANDLE;
     }
 
     // wait for gpu to finish frame
@@ -100,7 +104,7 @@ vk::CommandBuffer Renderer::beginFrame(uint32_t& outImgIdx)
     }
     catch (const vk::OutOfDateKHRError&) {
         recreateSwapchain();
-        return nullptr;
+        return VK_NULL_HANDLE;
     }
 
 	// if a previous frame is still using this image, wait for it to finish
@@ -208,13 +212,7 @@ void Renderer::recreateSwapchain()
         glfwWaitEvents();
     }
 
-    m_device.operator*().waitIdle();
-
-    // prevent validation errors
-    imageAvailableSemaphores.clear();
-    renderFinishedSemaphores.clear();
-    inFlightFence.clear();
-    imagesInFlight.clear();
+	cleanupSyncObjects();
 
     m_swapchain.recreateOnResize(m_surface, width, height);
     recreateFramebuffers();

@@ -45,7 +45,7 @@ public:
     ~SimplificatorRenderer() override = default;
 
     /**
-	* @brief Draws the current frame, rendering the original model on the left and the simplified model on the right.
+	* @brief Records command buffer for split-screen rendering of the original and simplified models.
     * 
 	* @param camera The camera object containing the view and projection matrices
 	* @param transform The transform object containing the model matrix

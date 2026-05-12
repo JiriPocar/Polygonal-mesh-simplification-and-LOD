@@ -84,7 +84,7 @@ namespace VertexClustering {
 		}
 	}
 
-	float calculateVertexWeight(uint32_t vertexIdx, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Topology::Neighborhood& neighborhood)
+	float calculateVertexWeight(uint32_t vertexIdx, std::vector<Vertex>& vertices, Topology::Neighborhood& neighborhood)
 	{
 		// using a grading procedure from Low & Tan (Floating Cell clustering, 1997)
 		float maxLength = 0.0f;
@@ -200,18 +200,19 @@ namespace VertexClustering {
 					massCenter /= static_cast<float>(cell.size());
 
 					// compute optimal position by minimizing v^T * Q * v
-					glm::mat3 MAT(
+					glm::dmat3 MAT(
 						sumQ.q11, sumQ.q12, sumQ.q13,
 						sumQ.q12, sumQ.q22, sumQ.q23,
 						sumQ.q13, sumQ.q23, sumQ.q33
 					);
 
-					glm::vec3 optPos;
-					float det = glm::determinant(MAT);
+					glm::dvec3 optPos;
+					double det = glm::determinant(MAT);
 
 					// if regular, compute optimal position by solving the linear system
-					if (std::abs(det) > 1e-3f) {
-						glm::vec3 b(sumQ.q14, sumQ.q24, sumQ.q34);
+					if (std::abs(det) > 1e-6f)
+					{
+						glm::dvec3 b(sumQ.q14, sumQ.q24, sumQ.q34);
 						optPos = -glm::inverse(MAT) * b;
 
 						glm::vec3 cellMin = grid.minBounds + glm::vec3(x, y, z) * grid.cellSize;
@@ -225,7 +226,8 @@ namespace VertexClustering {
 							optPos = massCenter;
 						}
 					}
-					else {
+					else
+					{
 						// if singular, fallback to mass center
 						optPos = massCenter;
 					}
@@ -267,10 +269,11 @@ namespace VertexClustering {
 					float bestWeight = vertexWeights[bestIdx];
 
 					// iterate through cell to find higher weight vertex
-					for (size_t i = 1; i < cell.size(); i++) {
+					for (size_t i = 1; i < cell.size(); i++)
+					{
 						uint32_t currentIdx = cell[i];
-
-						if (vertexWeights[currentIdx] > bestWeight) {
+						if (vertexWeights[currentIdx] > bestWeight)
+						{
 							bestWeight = vertexWeights[currentIdx];
 							bestIdx = currentIdx;
 						}
@@ -341,8 +344,10 @@ namespace VertexClustering {
 					vertices[bestIdx].pos = finalPos;
 
 					// remap indices
-					for (uint32_t idx : cell) {
-						if (idx != bestIdx) {
+					for (uint32_t idx : cell)
+					{
+						if (idx != bestIdx)
+						{
 							indexRemap[idx] = bestIdx;
 						}
 					}

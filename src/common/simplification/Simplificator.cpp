@@ -307,7 +307,7 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 		vInfo[i].classification = VertexDecimation::classifyVertex(i, vertices, indices, vInfo[i], options);
 		if (vInfo[i].classification != VertexDecimation::VertexClassification::Complex && vInfo[i].classification != VertexDecimation::VertexClassification::Undefined)
 		{
-			double err = VertexDecimation::computeVertexError(i, vertices, indices, vInfo[i], options, isLockedVertex);
+			double err = VertexDecimation::computeVertexError(i, vertices, vInfo[i], options, isLockedVertex);
 			candidatesQueue.push({ i, err });
 		}
 	}
@@ -322,7 +322,7 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 			if (!vInfo[c.vertexIdx].isActive) return false;
 
 			// compare stored error with actual error to detect outdated candidates
-			double actualError = VertexDecimation::computeVertexError(c.vertexIdx, vertices, indices, vInfo[c.vertexIdx], options, isLockedVertex);
+			double actualError = VertexDecimation::computeVertexError(c.vertexIdx, vertices, vInfo[c.vertexIdx], options, isLockedVertex);
 			if (std::abs(c.error - actualError) > 1e-5)
 			{
 				return false;
@@ -340,7 +340,7 @@ MeshData Simplificator::simplifyVertexDecimation(std::vector<Vertex> vertices, s
 
 		// retriangulate the hole left by vertex removal
 		uint32_t vIdx = minErrCandidate.vertexIdx;
-		std::vector<uint32_t> newTriangles = VertexDecimation::triangulateHole(vIdx, vertices, indices, vInfo[vIdx]);
+		std::vector<uint32_t> newTriangles = VertexDecimation::triangulateHole(vertices, vInfo[vIdx]);
 
 		// if triangulation failed, mark vertex as complex to avoid trying to delete it again
 		if (newTriangles.empty())
@@ -404,36 +404,30 @@ MeshData Simplificator::simplifyVertexClustering(std::vector<Vertex> vertices, s
 		{
 			auto quadrics = QEM::initQuadrics(vertices, indices);
 			indexMap = VertexClustering::computeRepresentativesQEM(grid, vertices, quadrics);
-		}
 			break;
+		}
 		case ClusteringStrategy::HighestWeightedVertex:
 		{
 			std::vector<float> vertexWeights(vertices.size(), 0.0f);
-
 			auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
-
 			for (uint32_t i = 0; i < vertices.size(); i++)
 			{
-				vertexWeights[i] = VertexClustering::calculateVertexWeight(i, vertices, indices, allNeighborhoods[i]);
+				vertexWeights[i] = VertexClustering::calculateVertexWeight(i, vertices, allNeighborhoods[i]);
 			}
-
 			indexMap = VertexClustering::computeRepresentativesHighestWeight(grid, vertices, vertexWeights);
-		}
 			break;
+		}
 		case ClusteringStrategy::WeightedAverage:
 		{
 			std::vector<float> vertexWeights(vertices.size(), 0.0f);
-
 			auto allNeighborhoods = Topology::buildAllNeighborhoods(vertices.size(), indices);
-
 			for (uint32_t i = 0; i < vertices.size(); i++)
 			{
-				vertexWeights[i] = VertexClustering::calculateVertexWeight(i, vertices, indices, allNeighborhoods[i]);
+				vertexWeights[i] = VertexClustering::calculateVertexWeight(i, vertices, allNeighborhoods[i]);
 			}
-
 			indexMap = VertexClustering::computeRepresentativesMeanWeight(grid, vertices, vertexWeights);
-		}
 			break;
+		}
 		default:
 			break;
 	}
@@ -483,7 +477,6 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 	MeshData result;
 
 	auto reps = Topology::buildSamePlaceRepresentatives(vertices);
-	auto twinMap = Topology::buildTwinMap(reps);
 	std::vector<bool> isBorderVertex = Topology::findLockedVertices(vertices, indices, reps, options);
 
 	size_t currentFaceCount = indices.size() / 3;
@@ -523,16 +516,18 @@ MeshData Simplificator::simplifyNaive(std::vector<Vertex> vertices, std::vector<
 			continue;
 		}
 		
-		int deletedFaces = Naive::collapseEdge(vertices, indices, shortestEdge, vertexDeleted, allNeighborhoods);
+		int deletedFaces = Naive::collapseEdge(indices, shortestEdge, vertexDeleted, allNeighborhoods);
 		currentFaceCount -= deletedFaces;
 		uint32_t keepIdx = shortestEdge.v1;
 
+		// update new lengths for non-degenerated triangles of the kept index
 		for (uint32_t tri : allNeighborhoods[keepIdx].triangles)
 		{
 			uint32_t i0 = indices[tri];
 			uint32_t i1 = indices[tri + 1];
 			uint32_t i2 = indices[tri + 2];
 
+			// is degenerate?
 			if (i0 == i1 || i1 == i2 || i2 == i0) continue;
 
 			Naive::Edge e1 = { std::min(i0, i1), std::max(i0, i1), glm::distance(vertices[i0].pos, vertices[i1].pos) };
@@ -694,7 +689,7 @@ void Simplificator::exportOBJ(std::string& filename, const std::vector<MeshData>
 		}
 
 		// update vertex offset for the next mesh
-		vertexOffset += mesh.vertices.size();
+		vertexOffset += static_cast<uint32_t>(mesh.vertices.size());
 	}
 
 	objFile.close();

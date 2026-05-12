@@ -128,21 +128,6 @@ public:
 	*/
 	void rebuildLODs(CommandManager& cmd);
 
-	// getters and setters
-	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return gpuInstanceBuffers[currentFrame]->getBuffer(); }
-	uint32_t getMaxInstanceCount() const { return maxInstanceCount; }
-	void setMaxInstanceCount(uint32_t newMax) { maxInstanceCount = newMax; }
-	uint32_t getLODCount(uint32_t lodLevel) const { return lodCounts[lodLevel]; }
-	uint32_t getLODOffset(uint32_t lodLevel) const { return lodOffsets[lodLevel]; }
-	ModelLODSet& getModelLODSet() { return modelLODSet; }
-	const std::vector<SpiralInstanceData>& getInstanceData() const { return instanceData; }
-	vk::Buffer getIndirectBuffer(uint32_t currentFrame) const { return indirectBuffers[currentFrame]->getBuffer(); }
-	UniformBuffer& getUniformBuffer() const { return uniformBuffer; }
-	vk::Buffer getOutputInstanceBuffer(uint32_t currentFrame) const { return outputInstanceBuffers[currentFrame]->getBuffer(); }
-	float getAnimationTime() const { return animationTime; }
-	vk::Buffer getVRAMVertexBuffer(uint32_t lodLevel) const { return vramVertexBuffers[lodLevel]->getBuffer(); }
-	vk::Buffer getVRAMIndexBuffer(uint32_t lodLevel) const { return vramIndexBuffers[lodLevel]->getBuffer(); }
-
 	/**
 	* @brief Calculates the total number of triangles currently being drawn based on the camera position and LOD counts.
 	* 
@@ -179,6 +164,21 @@ public:
 	// resets animation time
 	void resetAnimation() { animationTime = 0.0f; }
 	SpiralConfig config;
+
+	// getters and setters
+	vk::Buffer getInstanceBuffer(uint32_t currentFrame) const { return gpuInstanceBuffers[currentFrame]->getBuffer(); }
+	uint32_t getMaxInstanceCount() const { return maxInstanceCount; }
+	void setMaxInstanceCount(uint32_t newMax) { maxInstanceCount = newMax; }
+	uint32_t getLODCount(uint32_t lodLevel) const { return lodCounts[lodLevel]; }
+	uint32_t getLODOffset(uint32_t lodLevel) const { return lodOffsets[lodLevel]; }
+	ModelLODSet& getModelLODSet() { return modelLODSet; }
+	const std::vector<SpiralInstanceData>& getInstanceData() const { return instanceData; }
+	vk::Buffer getIndirectBuffer(uint32_t currentFrame) const { return indirectBuffers[currentFrame]->getBuffer(); }
+	UniformBuffer& getUniformBuffer() const { return uniformBuffer; }
+	vk::Buffer getOutputInstanceBuffer(uint32_t currentFrame) const { return outputInstanceBuffers[currentFrame]->getBuffer(); }
+	float getAnimationTime() const { return animationTime; }
+	vk::Buffer getVRAMVertexBuffer(uint32_t lodLevel) const { return vramVertexBuffers[lodLevel]->getBuffer(); }
+	vk::Buffer getVRAMIndexBuffer(uint32_t lodLevel) const { return vramIndexBuffers[lodLevel]->getBuffer(); }
 
 private:
 	/**

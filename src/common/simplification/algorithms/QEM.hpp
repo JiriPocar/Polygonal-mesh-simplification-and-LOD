@@ -47,9 +47,9 @@ namespace QEM {
         double                q44;
 
         Quadric() : q11(0), q12(0), q13(0), q14(0),
-            q22(0), q23(0), q24(0),
-            q33(0), q34(0),
-            q44(0) {}
+                            q22(0), q23(0), q24(0),
+                                    q33(0), q34(0),
+                                            q44(0) {}
 
         Quadric operator+(const Quadric& other) const;
         double evalError(const glm::vec3& v) const;
@@ -60,10 +60,6 @@ namespace QEM {
         uint32_t v1, v2;
         glm::vec3 optimalPos;
         double error;
-
-        bool operator>(const Qedge& other) const {
-            return error > other.error;
-        }
     };
 
 	// comparator for the priority queue of edges

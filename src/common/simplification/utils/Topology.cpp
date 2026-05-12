@@ -17,7 +17,8 @@ namespace Topology
 	{
 		Topology::Neighborhood neighborhood;
 
-		for (size_t i = 0; i < indices.size(); i += 3)
+		uint32_t indSize = static_cast<uint32_t>(indices.size());
+		for (uint32_t i = 0; i < indSize; i += 3)
 		{
 			uint32_t i0 = indices[i];
 			uint32_t i1 = indices[i + 1];
@@ -44,7 +45,8 @@ namespace Topology
 	{
 		std::vector<Topology::Neighborhood> neighborhoods(vertexCount);
 
-		for (size_t i = 0; i < indices.size(); i += 3)
+		uint32_t indSize = static_cast<uint32_t>(indices.size());
+		for (uint32_t i = 0; i < indSize; i += 3)
 		{
 			uint32_t i0 = indices[i];
 			uint32_t i1 = indices[i + 1];

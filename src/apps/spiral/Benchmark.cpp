@@ -93,8 +93,7 @@ void Benchmark::calibrate(float deltaTime)
 			stepSize = std::max(stepSize, 10000u);
 
 			// set max instances and cap to 100mil if needed
-			maxInstanceCount = static_cast<uint32_t>(estimatedMax);
-			if (maxInstanceCount > 1e8) maxInstanceCount = 1e8;
+			maxInstanceCount = std::min(static_cast<uint32_t>(estimatedMax), 100000000u);
 
 			isCalibrated = true;
 		}

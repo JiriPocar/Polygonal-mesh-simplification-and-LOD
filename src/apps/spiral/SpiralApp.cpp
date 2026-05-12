@@ -25,7 +25,7 @@ void SpiralApp::init()
     wireframePipeline = std::make_unique<Pipeline>(device, renderPass, swapchain.getExtent(), descriptor.getLayout(), PipelineType::Spiral, vk::PolygonMode::eLine);
     spiralScene = std::make_unique<SpiralScene>(device, commandManager, "assets/sphere/sphere.gltf", uniformBuffer);
     descriptor.createComputeDescriptors(*spiralScene);
-    computePipeline = std::make_unique<ComputePipeline>(device, descriptor.getComputeLayout(), sizeof(ComputePushConstants));
+    computePipeline = std::make_unique<ComputePipeline>(device, descriptor.getComputeLayout(), static_cast<uint32_t>(sizeof(ComputePushConstants)));
 
     camera.setPerspective(60.0f, static_cast<float>(swapchain.getExtent().width) / static_cast<float>(swapchain.getExtent().height), 0.1f, 50000.0f);
     camera.setView(

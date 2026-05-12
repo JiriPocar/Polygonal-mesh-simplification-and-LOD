@@ -74,6 +74,7 @@ private:
 	*/
 	static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 
+	// callback function
 	std::function<void(double, double)> mouseMoveCallback;
 
 	int width = 1800;

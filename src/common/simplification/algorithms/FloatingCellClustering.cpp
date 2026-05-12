@@ -66,7 +66,7 @@ namespace FloatingCellClustering {
 
 		for (uint32_t i = 0; i < vertexCount; i++)
 		{
-			weights[i] = VertexClustering::calculateVertexWeight(i, vertices, indices, neighborhoods[i]);
+			weights[i] = VertexClustering::calculateVertexWeight(i, vertices, neighborhoods[i]);
 			sortedWeigthIndices[i] = i;
 		}
 

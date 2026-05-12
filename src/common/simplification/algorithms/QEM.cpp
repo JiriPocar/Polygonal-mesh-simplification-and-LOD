@@ -102,16 +102,25 @@ namespace QEM {
 		double a = n.x, b = n.y, c = n.z;
 		double d = -glm::dot(n, v1);
 
-		// get area of the triangle
-		double area = 0.5 * glm::length(cross);
+		// =============================================================================
+		// NOT USED FOR THE MEASURE OF ERROR IN THESIS - FURTHER OPTIMIZATION EXPERIMENT
+		// area-weighted quadrics
+		// double area = 0.5 * glm::length(cross);
 
 		// multiply the coefficients of the plane equation by the area of the triangle
 		// this makes bigger triangles in the mesh more important
-		Quadric q;
+		/*Quadric q;
 		q.q11 = a * a * area;	q.q12 = a * b * area;	q.q13 = a * c * area;	q.q14 = a * d * area;
 		q.q22 = b * b * area;	q.q23 = b * c * area;	q.q24 = b * d * area;
 		q.q33 = c * c * area;	q.q34 = c * d * area;
-		q.q44 = d * d * area;
+		q.q44 = d * d * area;*/
+		// =============================================================================
+
+		Quadric q;
+		q.q11 = a * a;	q.q12 = a * b;	q.q13 = a * c;	q.q14 = a * d;
+		q.q22 = b * b;	q.q23 = b * c;	q.q24 = b * d;
+		q.q33 = c * c;	q.q34 = c * d;
+		q.q44 = d * d;
 
 		return q;
 	}
@@ -129,8 +138,8 @@ namespace QEM {
 		);
 
 		// if determinant is non-zero, we can find optimal position by solving the linear system
-		float det = glm::determinant(MAT);
-		if (std::abs(det) > 1e-6)
+		double det = glm::determinant(MAT);
+		if (std::abs(det) > 1e-12)
 		{
 			// vector b is the negation of the last column of Q
 			glm::dvec3 b(q.q14, q.q24, q.q34);

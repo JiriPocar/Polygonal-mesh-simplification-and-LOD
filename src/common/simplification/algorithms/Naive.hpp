@@ -52,7 +52,6 @@ namespace Naive {
     /**
 	* @brief Collapses the given edge by merging its two vertices and updating the mesh connectivity.
     * 
-	* @param vertices The vertices of the mesh
 	* @param indices The index buffer of the mesh
 	* @param edgeToCollapse The edge to be collapsed
 	* @param vertexDeleted A vector of booleans indicating which vertices have been deleted
@@ -60,7 +59,7 @@ namespace Naive {
     * 
 	* @return The number of triangles removed by the edge collapse operation.
     */
-    int collapseEdge(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const Edge& edgeToCollapse, std::vector<bool>& vertexDeleted, std::vector<Topology::Neighborhood>& allNeighborhoods);
+    int collapseEdge(std::vector<uint32_t>& indices, const Edge& edgeToCollapse, std::vector<bool>& vertexDeleted, std::vector<Topology::Neighborhood>& allNeighborhoods);
     
     /**
 	* @brief Checks if collapsing the edge defined by vertices v1 and v2 is valid.

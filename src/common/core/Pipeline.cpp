@@ -179,8 +179,8 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		VK_FALSE,					// depth clamp
 		VK_FALSE,					// rasterizer discard
 		polygonMode,				// polygon mode
-		vk::CullModeFlagBits::eBack,
-		vk::FrontFace::eCounterClockwise,
+		vk::CullModeFlagBits::eBack,		// cull back faces
+		vk::FrontFace::eCounterClockwise,	// front faces are counter-clockwise
 		VK_FALSE,					// depth bias
 		0.0f, 0.0f, 0.0f,			// depth bias params
 		1.0f						// line width
@@ -223,10 +223,10 @@ void Pipeline::createPipeline(RenderPass& renderPass, vk::Extent2D swapchainExte
 		vk::CompareOp::eLess,	// depthCompareOp
 		VK_FALSE,				// depthBoundsTestEnable
 		VK_FALSE,				// stencilTestEnable
-		{},
-		{},
-		0.0f,
-		1.0f
+		{},						// front stencil state
+		{},						// back stencil state
+		0.0f,					// min depth bounds
+		1.0f					// max depth bounds	
 	);
 
 	// dynamic state for viewport and scissor

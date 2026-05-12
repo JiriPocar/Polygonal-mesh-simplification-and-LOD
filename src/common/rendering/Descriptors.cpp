@@ -53,7 +53,7 @@ void Descriptor::createDescriptorSetLayout()
 
 	vk::DescriptorSetLayoutCreateInfo layoutInfo(
 		{},
-		bindings.size(),
+		static_cast<uint32_t>(bindings.size()),
 		bindings.data()
 	);
 
@@ -72,7 +72,7 @@ void Descriptor::createDescriptorPool(uint32_t maxFrames)
 	vk::DescriptorPoolCreateInfo poolInfo(
 		vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
 		maxFrames * 2, // maxFrames for graphics + maxFrames for compute
-		poolSizes.size(),
+		static_cast<uint32_t>(poolSizes.size()),
 		poolSizes.data()
 	);
 
@@ -91,7 +91,7 @@ void Descriptor::createDescriptorSets(UniformBuffer& uniformBuffer, uint32_t max
 
 	descriptorSets = dev.operator*().allocateDescriptorSetsUnique(allocInfo);
 
-	for (int i = 0; i < maxFrames; i++)
+	for (uint32_t i = 0; i < maxFrames; i++)
 	{
 		vk::DescriptorBufferInfo bufferInfo(
 			uniformBuffer.getBuffer(i),
@@ -171,7 +171,7 @@ void Descriptor::createComputeDescriptors(SpiralScene& scene, uint32_t maxFrames
 	);
 
 	std::array bindings = { uboBinding, inBinding, outBinding, indBinding };
-	vk::DescriptorSetLayoutCreateInfo layoutInfo({}, bindings.size(), bindings.data());
+	vk::DescriptorSetLayoutCreateInfo layoutInfo({}, static_cast<uint32_t>(bindings.size()), bindings.data());
 	computeDescriptorSetLayout = dev.operator*().createDescriptorSetLayoutUnique(layoutInfo);
 
 	std::vector<vk::DescriptorSetLayout> layouts(maxFrames, *computeDescriptorSetLayout);
@@ -232,7 +232,13 @@ void Descriptor::updateDescriptorsCompute(class SpiralScene& scene, uint32_t max
 				nullptr
 			)
 		};
-		dev.operator*().updateDescriptorSets(writes.size(), writes.data(), 0, nullptr);
+
+		dev.operator*().updateDescriptorSets(
+			static_cast<uint32_t>(writes.size()),
+			writes.data(),
+			0,
+			nullptr
+		);
 	}
 }
 

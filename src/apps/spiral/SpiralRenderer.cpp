@@ -181,7 +181,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
             {},
             0,
             nullptr,
-            barriers.size(),
+            static_cast<uint32_t>(barriers.size()),
             barriers.data(),
             0,
             nullptr
@@ -196,7 +196,7 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
         m_renderPass.get(),
         m_framebuffer.getFrameBufferAt(imgIdx),
         vk::Rect2D({ 0, 0 }, m_swapchain.getExtent()),
-        clearValues.size(),
+        static_cast<uint32_t>(clearValues.size()),
         clearValues.data()
     );
 

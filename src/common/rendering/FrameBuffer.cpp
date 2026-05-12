@@ -46,7 +46,7 @@ void FrameBuffer::createFramebuffers(RenderPass& renderPass, Swapchain& swapchai
 		vk::FramebufferCreateInfo fbInfo(
 			{},					// flags
 			renderPass.get(),	// render pass
-			attachments.size(),	// attachment count
+			static_cast<uint32_t>(attachments.size()),	// attachment count
 			attachments.data(),	// attachment array
 			extent.width,		// width
 			extent.height,	    // height

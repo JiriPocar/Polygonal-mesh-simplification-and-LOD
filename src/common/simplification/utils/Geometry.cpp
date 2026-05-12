@@ -160,7 +160,8 @@ namespace Geometry
 		}
 
 		// remap indices to the representative vertex index
-		for (auto& idx : indices) {
+		for (auto& idx : indices)
+		{
 			idx = indexMap[idx];
 		}
 
@@ -173,7 +174,9 @@ namespace Geometry
 		std::vector<uint32_t> flatIndices;
 
 		// for each triangle
-		for (size_t i = 0; i < indices.size(); i += 3) {
+		uint32_t indSize = static_cast<uint32_t>(indices.size());
+		for (uint32_t i = 0; i < indSize; i += 3)
+		{
 			Vertex v0 = vertices[indices[i]];
 			Vertex v1 = vertices[indices[i + 1]];
 			Vertex v2 = vertices[indices[i + 2]];
@@ -185,13 +188,15 @@ namespace Geometry
 			v2.normal = normal;
 
 			// set each vertex normal to the trinangle normal
-			flatIndices.push_back(flatVertices.size());
+			uint32_t vertSize = static_cast<uint32_t>(flatVertices.size());
+
+			flatIndices.push_back(vertSize);
 			flatVertices.push_back(v0);
 
-			flatIndices.push_back(flatVertices.size());
+			flatIndices.push_back(vertSize + 1);
 			flatVertices.push_back(v1);
 
-			flatIndices.push_back(flatVertices.size());
+			flatIndices.push_back(vertSize + 2);
 			flatVertices.push_back(v2);
 		}
 
@@ -202,8 +207,6 @@ namespace Geometry
 
 	void recalculateSmoothNormals(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 	{
-		// TODO: (?) resolve this for UV seams (disconnected parts of meshes)
-
 		// reset normals
 		for (auto& v : vertices)
 		{
@@ -250,9 +253,13 @@ namespace Geometry
 		{
 			if (oldToNew.find(oldIdx) == oldToNew.end())
 			{
+				// map index that is not mapped yet
 				oldToNew[oldIdx] = static_cast<uint32_t>(newVertices.size());
+				// if the index wasnt mapped, the vertex isnt yet added
 				newVertices.push_back(vertices[oldIdx]);
 			}
+
+			// pusback new mapped index
 			newIndices.push_back(oldToNew[oldIdx]);
 		}
 
@@ -298,7 +305,12 @@ namespace Geometry
 	bool isPointInTriangle2D(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b, const glm::vec2& c)
 	{
 		/**
-		* Inspired by https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
+		* Adapted from Stack Overflow
+		* 
+		* Original question: https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
+		* 
+		* Asked by: ET 0.618 (https://stackoverflow.com/users/237460/et-0-618)
+		* Answered by: Kornel Kisielewicz (https://stackoverflow.com/users/233522/kornel-kisielewicz)
 		*/
 
 		// Computes the Z-component of the cross product to determine on which side of a line a point lies

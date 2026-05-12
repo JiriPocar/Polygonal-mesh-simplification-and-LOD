@@ -195,22 +195,6 @@ uint32_t Swapchain::acquireNextImage(vk::Semaphore signalSemaphore)
 	return result.value;
 }
 
-void Swapchain::presentImage(uint32_t imageIndex, vk::Semaphore waitSemaphore)
-{
-	vk::PresentInfoKHR presentInfo(
-		1, &waitSemaphore,
-		1, &(*swapchain),
-		&imageIndex,
-		nullptr // pResults
-	);
-
-	auto result = m_device.getPresentQueue().presentKHR(presentInfo);
-	if (result != vk::Result::eSuccess)
-	{
-		throw std::runtime_error("Failed to present swapchain image.");
-	}
-}
-
 void Swapchain::recreateOnResize(vk::SurfaceKHR surface, uint32_t width, uint32_t height)
 {
 	// wait for the device to be idle before recreating
