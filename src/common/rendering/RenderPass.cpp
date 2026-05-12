@@ -72,13 +72,13 @@ void RenderPass::createRenderpass(vk::Format swapchainImageFormat)
 	);
 
 	vk::SubpassDependency dependency(
-		VK_SUBPASS_EXTERNAL,																				// source subpass
-		0,																									// dest subpass
-		vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,	// source stage
-		vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,	// dest stage
-		{},																									// no source access mask
+		VK_SUBPASS_EXTERNAL,	// source subpass
+		0,						// dest subpass
+		vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,	// source stage
+		vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,	// dest stage
+		vk::AccessFlagBits::eDepthStencilAttachmentWrite,	// source access mask
 		vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite,		// dest access mask
-		{}																									// no dependency flags
+		{}	// no dependency flags
 	);
 
 	std::array<vk::AttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };

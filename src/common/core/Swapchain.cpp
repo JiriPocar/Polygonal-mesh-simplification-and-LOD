@@ -99,7 +99,7 @@ void Swapchain::createSwapchain(vk::SurfaceKHR surface, uint32_t width, uint32_t
 		vk::ImageUsageFlagBits::eColorAttachment,	// imageUsage
 		vk::SharingMode::eExclusive,				// imageSharingMode
 		0, nullptr,									// queueFamilyIndices
-		vk::SurfaceTransformFlagBitsKHR::eIdentity, // preTransform
+		supportDetails.capabilities.currentTransform, // preTransform
 		vk::CompositeAlphaFlagBitsKHR::eOpaque,		// compositeAlpha
 		presentMode,								// presentMode
 		VK_TRUE										// clipped
