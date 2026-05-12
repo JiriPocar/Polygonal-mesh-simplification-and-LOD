@@ -43,7 +43,11 @@ void SpiralRenderer::drawFrame(const Camera& camera, UserInterface& ui)
     vk::CommandBuffer cmdBuffer = beginFrame(imgIdx);
 
     // handle window resize
-    if (!cmdBuffer) return;
+    if (!cmdBuffer)
+    {
+		ImGui::EndFrame();
+        return;
+    }
 
 	// update uniform buffer
     UniformBufferObject ubo{};

@@ -30,7 +30,7 @@ SimplificatorRenderer::SimplificatorRenderer(Device& device, Swapchain& swapchai
 
 void SimplificatorRenderer::drawSplitScreen(const Camera& camera, const Transform& transform, UserInterface& ui)
 {
-	// throw if dual model is not set, as its required for split-screen rendering
+    // throw if dual model is not set, as its required for split-screen rendering
     if (!m_dualModel)
     {
         throw std::runtime_error("Dual model not set for split-screen rendering.");
@@ -41,7 +41,11 @@ void SimplificatorRenderer::drawSplitScreen(const Camera& camera, const Transfor
     vk::CommandBuffer cmdBuffer = beginFrame(imgIdx);
 
     // handle window resize
-    if (!cmdBuffer) return;
+    if (!cmdBuffer)
+    {
+        ImGui::EndFrame();
+        return;
+    }
 
     std::array<vk::ClearValue, 2> clearValues = {};
 	clearValues[0].color = vk::ClearColorValue(0.1f, 0.1f, 0.15f, 1.0f); // background color
