@@ -678,13 +678,27 @@ void UserInterface::showSimplificationResults(std::unique_ptr<DualModel>& curren
 
 			// get Duck from assets/Duck.gltf
 			std::string baseName = std::filesystem::path(selectedModel).stem().string();
-			std::string outDir = "out/" + baseName;
 
+			char lastChar = baseName.back();
+			if (isdigit(lastChar))
+			{
+				baseName.pop_back();
+				baseName.pop_back();
+			}
+
+			std::string outDir = "out/" + baseName;
 			std::filesystem::create_directories(outDir);
 
+			int cnt = 1;
+			std::string simplifiedPath = outDir + "/" + baseName + "_" + std::to_string(cnt) + ".obj";
+			while (std::filesystem::exists(simplifiedPath))
+			{
+				simplifiedPath = outDir + "/" + baseName + "_" + std::to_string(cnt) + ".obj";
+				cnt++;
+			}
+
 			// export simplified model
-			std::string simpPath = outDir + "/" + baseName + "_simp.obj";
-			simplificator.exportOBJ(simpPath, lastResult.meshesData);
+			simplificator.exportOBJ(simplifiedPath, lastResult.meshesData);
 
 			scanModels();
 		}

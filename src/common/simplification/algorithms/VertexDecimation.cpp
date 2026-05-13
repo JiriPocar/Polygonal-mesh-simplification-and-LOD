@@ -47,11 +47,6 @@ namespace VertexDecimation {
 			return DONT_DECIMATE_ERROR;
 		}
 
-		if (options.preserveBorders && info.classification == VertexClassification::Boundary)
-		{
-			return DONT_DECIMATE_ERROR;
-		}
-
 		switch (info.classification)
 		{
 		case VertexClassification::Simple:
