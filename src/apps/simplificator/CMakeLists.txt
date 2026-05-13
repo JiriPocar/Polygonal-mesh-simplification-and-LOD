@@ -2,6 +2,12 @@ set(APP_NAME Simplificator)
 
 add_executable(${APP_NAME} main.cpp SimplificatorApp.cpp)
 
+set_target_properties(${APP_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 # LINK ENGINE
 target_link_libraries(${APP_NAME} PRIVATE BPEngine)
 

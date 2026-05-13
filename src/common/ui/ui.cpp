@@ -35,6 +35,8 @@ void UserInterface::init()
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.IniFilename = nullptr;
 	ImGui::StyleColorsClassic();
 	ImGui_ImplGlfw_InitForVulkan(m_window.getGLFWWindow(), true);
 
