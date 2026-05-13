@@ -50,6 +50,7 @@ void SpiralScene::generateLODVersions(CommandManager& cmd)
 
 	// setup simplificator
 	simplificator.setCurrentAlgorithm(Algorithm::QEM);
+	simplificator.enableFlatShading(false);
 	simplificator.options.checkConnectivity = true;
 	simplificator.options.checkFaceFlipping = true;
 	simplificator.options.enableMerging = true;
