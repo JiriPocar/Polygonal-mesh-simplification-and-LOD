@@ -32,6 +32,7 @@ The simplification application (```Simplificator```) can be freely used for mesh
 - Export of the simplified model to a simple ```.obj``` file and loading it back in for further simplifications.
 
 ### Limitations and known issues
+- The simplification is **user-defined**.
 - ```Simplificator``` works best with manifold meshes for geometric simplification.
 - For textured models, only ```QEM``` algorithm is currently supported via ```Lock UV Seams```
 and ```Simplify with UV Seams``` options. If there are no UV seams in the textured model, the simplification
