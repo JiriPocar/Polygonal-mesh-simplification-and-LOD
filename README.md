@@ -79,7 +79,7 @@ of LOD techniques and GPU-driven rendering. Focused on the geometry through-put 
 # Requirements
 
 - Windows 10 or later.
-- Visual Studio 2022 or later and MSVC compiler with C++17 support.
+- Visual Studio 2022 or later with MSVC compiler that supports C++17 and CMake extension.
 - Vulkan-compatible GPU and drivers.
 - ```Vulkan SDK``` [found here](https://vulkan.lunarg.com/sdk/home). Make sure to restart Visual Studio after the installation.
 - ```CMake``` (version 3.10.2 or later) for building the project
@@ -89,12 +89,21 @@ of LOD techniques and GPU-driven rendering. Focused on the geometry through-put 
 
 Make sure to see [requirements](#requirements)
 
+## In Visual Studio
 1. Clone the repository.
 2. Open the cloned repository in Visual Studio.
 3. Wait for Visual Studio to automatically generate the CMake cache.
 4. The `Simplificator` and `SpiralApp` applications are separate CMake targets and you can select which one to build in the Visual Studio.
 5. Once building is complete, you can run the executables directly from Visual Studio or from the build directory.
 6. You can add more 3D models to the output `/assets` directory, or add them to the source `/assets` directory and re-configure CMake to copy them over to the output directory.
+
+## In command line
+1. Open ```cmd```
+2. Navigate to the project folder
+3. Run ```cmake -S . -B build -G "Visual Studio 17 2022" -A x64``` (or other Visual Studio release as such)
+4. Run ```cmake --build build --config Release```
+5. Navigate to ```build/src/apps``` from where you should see ```spiral/``` and ```simplificator``` folders
+6. Run the ```.exe``` for the application to run
 
 If you don't want to bother with compiling, you can simply download the pre-compiled binaries from the [Releases](https://github.com/JiriPocar/Polygonal-mesh-simplification-and-LOD/releases) page.
 
