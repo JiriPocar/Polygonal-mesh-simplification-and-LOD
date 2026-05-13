@@ -852,7 +852,7 @@ void UserInterface::showSmoothingControls()
 	ImGui::SetNextWindowSize(ImVec2(180, 60));
 	ImGui::Begin("Shading");
 
-	static bool flatShading = false;
+	static bool flatShading = true;
 	if (ImGui::Checkbox("Flat Shading", &flatShading))
 	{
 		simplificator.enableFlatShading(flatShading);

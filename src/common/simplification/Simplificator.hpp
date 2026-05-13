@@ -102,7 +102,7 @@ public:
 private:
 	Algorithm currentAlgorithm;
 	ClusteringStrategy clusteringStrategy = ClusteringStrategy::CellCenter;
-	bool flatShading = false;
+	bool flatShading = true;
 
 	/**
 	* @brief Simplifies a mesh via the Quadric Error Metric using edge collapse.
